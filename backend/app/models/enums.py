@@ -1,0 +1,77 @@
+import enum
+
+class UserRole(str, enum.Enum):
+    ADMIN_MANAGER = "ADMIN_MANAGER"
+    INBOUND_OPERATOR = "INBOUND_OPERATOR"
+    PICKER = "PICKER"
+    PACKER_DISPATCHER = "PACKER_DISPATCHER"
+
+class WorkerStatus(str, enum.Enum):
+    OFFLINE = "OFFLINE"
+    IDLE = "IDLE"
+    RECEIVING = "RECEIVING"
+    PUTAWAY = "PUTAWAY"
+    PICKING = "PICKING"
+    SORTING = "SORTING"
+    DISPATCHING = "DISPATCHING"
+    BREAK = "BREAK"
+
+class LocationType(str, enum.Enum):
+    RECEIVING = "RECEIVING"
+    STORAGE = "STORAGE"
+    PICKING = "PICKING"
+    STAGING_SORTING = "STAGING_SORTING"
+    SHIPPING = "SHIPPING"
+
+class TransactionType(str, enum.Enum):
+    RECEIPT = "RECEIPT"
+    PUTAWAY = "PUTAWAY"
+    WAVE_PICK_BATCH = "WAVE_PICK_BATCH"
+    SORTING_TRANSFER = "SORTING_TRANSFER"
+    ADJUSTMENT = "ADJUSTMENT"
+    SHIPMENT = "SHIPMENT"
+
+class InboundStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    IN_RECEIVING = "IN_RECEIVING"
+    RECEIVED = "RECEIVED"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+
+class OrderStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    IN_WAVE = "IN_WAVE"
+    PICKED_BATCH = "PICKED_BATCH"
+    SORTED = "SORTED"
+    PACKED = "PACKED"
+    SHIPPED = "SHIPPED"
+    CANCELLED = "CANCELLED"
+
+class OrderPriority(str, enum.Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    URGENT = "URGENT"
+
+class WaveStatus(str, enum.Enum):
+    DRAFT = "DRAFT"
+    RELEASED = "RELEASED"
+    IN_PROGRESS = "IN_PROGRESS"
+    PICKED = "PICKED"
+    SORTING = "SORTING"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+
+class TaskStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    ASSIGNED = "ASSIGNED"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+
+class TaskType(str, enum.Enum):
+    RECEIVE_INBOUND = "RECEIVE_INBOUND"
+    PUTAWAY = "PUTAWAY"
+    BATCH_PICK = "BATCH_PICK"
+    PUT_WALL_SORT = "PUT_WALL_SORT"
+    DISPATCH = "DISPATCH"
