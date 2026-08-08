@@ -20,23 +20,31 @@ export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [waves, setWaves] = useState<Wave[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [isCreatingWave, setIsCreatingWave] = useState(false);
+
+  const fetchOrdersAndWaves = async () => {
+    try {
+      setIsLoading(true);
+      const [ordersData, wavesData] = await Promise.all([
+        orderService.getOrders(),
+        orderService.getWaves()
+      ]);
+      setOrders(ordersData);
+      setWaves(wavesData);
+    } catch (error) {
+      console.error('Failed to fetch orders data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [ordersData, wavesData] = await Promise.all([
-          orderService.getOrders(),
-          orderService.getWaves()
-        ]);
-        setOrders(ordersData);
-        setWaves(wavesData);
-      } catch (error) {
-        console.error('Failed to fetch orders data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
+    fetchOrdersAndWaves();
+    const interval = setInterval(() => {
+      fetchOrdersAndWaves();
+    }, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const filteredOrders = orders.filter((order) => {
@@ -56,6 +64,37 @@ export default function Orders() {
       case 'LOW':
       default:
         return 'badge badge-muted';
+    }
+  };
+
+  const toggleSelectOrder = (id: string) => {
+    setSelectedOrders((prev) =>
+      prev.includes(id) ? prev.filter((orderId) => orderId !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    const pendingOrders = filteredOrders.filter(o => o.status === 'PENDING');
+    if (selectedOrders.length === pendingOrders.length && pendingOrders.length > 0) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(pendingOrders.map(o => o.id));
+    }
+  };
+
+  const handleCreateWave = async () => {
+    if (selectedOrders.length === 0) return;
+    
+    setIsCreatingWave(true);
+    try {
+      await orderService.createWave(selectedOrders);
+      setSelectedOrders([]); // Clear selection
+      await fetchOrdersAndWaves(); // Refresh data
+    } catch (error) {
+      console.error('Failed to create wave:', error);
+      alert('Failed to create wave. Check console for details.');
+    } finally {
+      setIsCreatingWave(false);
     }
   };
 
@@ -89,9 +128,17 @@ export default function Orders() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <button className="btn-primary">
+          <button 
+            className="btn-primary" 
+            onClick={handleCreateWave}
+            disabled={selectedOrders.length === 0 || isCreatingWave}
+            style={{ 
+              opacity: selectedOrders.length === 0 ? 0.5 : 1,
+              cursor: selectedOrders.length === 0 ? 'not-allowed' : 'pointer'
+            }}
+          >
             <Plus size={18} />
-            Create Wave
+            {isCreatingWave ? 'Creating...' : `Create Wave ${selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}`}
           </button>
           <button className="btn-ghost">
             <Download size={18} />
@@ -258,6 +305,18 @@ export default function Orders() {
           <table className="wms-table">
             <thead>
               <tr>
+                <th style={{ width: '40px' }}>
+                  <input
+                    type="checkbox"
+                    className="wms-checkbox"
+                    checked={
+                      filteredOrders.filter(o => o.status === 'PENDING').length > 0 &&
+                      selectedOrders.length === filteredOrders.filter(o => o.status === 'PENDING').length
+                    }
+                    onChange={toggleSelectAll}
+                    disabled={filteredOrders.filter(o => o.status === 'PENDING').length === 0}
+                  />
+                </th>
                 <th>Order #</th>
                 <th>Customer</th>
                 <th>Items</th>
@@ -270,15 +329,24 @@ export default function Orders() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                  <td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                     Loading orders...
                   </td>
                 </tr>
               ) : filteredOrders.length > 0 ? (
                 filteredOrders.map((order) => {
-                  const relatedWave = waves.find(w => w.id === order.id); // В реальному API тут буде зв'язок через order.wave_id
+                  const isPending = order.status === 'PENDING';
                   return (
-                    <tr key={order.id}>
+                    <tr key={order.id} style={{ opacity: !isPending && activeFilter === 'All' ? 0.7 : 1 }}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          className="wms-checkbox"
+                          checked={selectedOrders.includes(order.id)}
+                          onChange={() => toggleSelectOrder(order.id)}
+                          disabled={!isPending}
+                        />
+                      </td>
                       <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--text-main)' }}>
                         {order.orderNumber}
                       </td>
@@ -295,7 +363,7 @@ export default function Orders() {
                         </span>
                       </td>
                       <td style={{ fontFamily: 'var(--font-mono)', color: '#e359ac' }}>
-                        WAVE-MOCK
+                        {order.waveNumber || '-'}
                       </td>
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                         {new Date(order.createdAt).toLocaleDateString()}
@@ -305,7 +373,7 @@ export default function Orders() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                  <td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                     No orders match filter "{activeFilter}".
                   </td>
                 </tr>

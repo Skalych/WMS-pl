@@ -25,6 +25,7 @@ async def list_orders(
             customer_name=o.customer_name,
             shipping_address=o.shipping_address,
             item_count=len(o.items) if o.items else 0,
+            wave_number=o.wave_orders[0].wave.wave_number if getattr(o, "wave_orders", None) else None,
             created_at=o.created_at,
         )
         for o in orders
@@ -43,7 +44,8 @@ async def create_order(data: OrderCreate, db: AsyncSession = Depends(get_db)):
         priority=order.priority,
         customer_name=order.customer_name,
         shipping_address=order.shipping_address,
-        item_count=len(order.items) if order.items else 0,
+        item_count=len(order.items) if getattr(order, "items", None) else 0,
+        wave_number=order.wave_orders[0].wave.wave_number if getattr(order, "wave_orders", None) else None,
         created_at=order.created_at,
     )
 
@@ -60,7 +62,8 @@ async def get_order(order_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
         priority=order.priority,
         customer_name=order.customer_name,
         shipping_address=order.shipping_address,
-        item_count=len(order.items) if order.items else 0,
+        item_count=len(order.items) if getattr(order, "items", None) else 0,
+        wave_number=order.wave_orders[0].wave.wave_number if getattr(order, "wave_orders", None) else None,
         created_at=order.created_at,
     )
 
@@ -81,6 +84,7 @@ async def update_order_status(
         priority=order.priority,
         customer_name=order.customer_name,
         shipping_address=order.shipping_address,
-        item_count=len(order.items) if order.items else 0,
+        item_count=len(order.items) if getattr(order, "items", None) else 0,
+        wave_number=order.wave_orders[0].wave.wave_number if getattr(order, "wave_orders", None) else None,
         created_at=order.created_at,
     )

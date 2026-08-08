@@ -75,6 +75,7 @@ export interface Order {
   itemCount: number;
   status: OrderStatus;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  waveNumber?: string;
   createdAt: string;
 }
 

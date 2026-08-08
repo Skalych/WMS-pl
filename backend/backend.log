@@ -1,52 +1,43 @@
-INFO:     Started server process [15394]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:54767 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54767 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54766 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54781 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54781 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54780 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54792 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54792 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54791 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54792 - "GET /api/v1/users/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54791 - "GET /api/v1/users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54792 - "OPTIONS /api/v1/inventory/ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54791 - "GET /api/v1/inventory/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54792 - "OPTIONS /api/v1/inventory HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54792 - "GET /api/v1/inventory HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54791 - "OPTIONS /api/v1/orders/ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54792 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54791 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54793 - "OPTIONS /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54793 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54792 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54791 - "GET /api/v1/inventory/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54793 - "GET /api/v1/inventory HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54792 - "GET /api/v1/users/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54791 - "GET /api/v1/users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54797 - "OPTIONS /api/v1/users/ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54797 - "GET /api/v1/users/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54798 - "OPTIONS /api/v1/users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54798 - "GET /api/v1/users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54810 - "GET /api/v1/users/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54810 - "GET /api/v1/users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54810 - "OPTIONS /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54811 - "OPTIONS /api/v1/waves/ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54811 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54812 - "OPTIONS /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54812 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54810 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54811 - "GET /api/v1/users/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54812 - "GET /api/v1/users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54810 - "GET /api/v1/inventory/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54811 - "GET /api/v1/inventory HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54812 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54810 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54811 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54812 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54811 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:54812 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:54810 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
+Traceback (most recent call last):
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/uvicorn/__main__.py", line 4, in <module>
+    uvicorn.main()
+  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/click/core.py", line 1161, in __call__
+    return self.main(*args, **kwargs)
+  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/click/core.py", line 1082, in main
+    rv = self.invoke(ctx)
+  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/click/core.py", line 1443, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/click/core.py", line 788, in invoke
+    return __callback(*args, **kwargs)
+  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/uvicorn/main.py", line 423, in main
+    run(
+  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/uvicorn/main.py", line 593, in run
+    server.run()
+  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/uvicorn/server.py", line 67, in run
+    return asyncio_run(self.serve(sockets=sockets), loop_factory=self.config.get_loop_factory())
+  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/uvicorn/_compat.py", line 60, in asyncio_run
+    return loop.run_until_complete(main)
+  File "uvloop/loop.pyx", line 1518, in uvloop.loop.Loop.run_until_complete
+  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/uvicorn/server.py", line 71, in serve
+    await self._serve(sockets)
+  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/uvicorn/server.py", line 78, in _serve
+    config.load()
+  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/uvicorn/config.py", line 439, in load
+    self.loaded_app = import_from_string(self.app)
+  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/uvicorn/importer.py", line 19, in import_from_string
+    module = importlib.import_module(module_str)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1030, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1007, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 986, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 680, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 850, in exec_module
+  File "<frozen importlib._bootstrap>", line 228, in _call_with_frames_removed
+  File "/Users/dubievka/Documents/vcode/WMS/backend/app/main.py", line 6, in <module>
+    from app.core.database import async_session_maker
+ImportError: cannot import name 'async_session_maker' from 'app.core.database' (/Users/dubievka/Documents/vcode/WMS/backend/app/core/database.py)

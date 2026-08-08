@@ -99,5 +99,18 @@ export const orderService = {
       progress: w.progress || 0,
       zone: 'All'
     }));
+  },
+
+  createWave: async (orderIds: string[]): Promise<Wave> => {
+    const response = await apiClient.post('/waves/', { order_ids: orderIds });
+    const w = response.data;
+    return {
+      id: w.id,
+      waveNumber: w.wave_number,
+      status: w.status,
+      ordersCount: w.total_orders_count,
+      progress: w.progress || 0,
+      zone: 'All'
+    };
   }
 };

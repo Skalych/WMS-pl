@@ -3,8 +3,7 @@
 > vite --host 0.0.0.0
 
 
-  VITE v5.4.21  ready in 74 ms
+  VITE v5.4.21  ready in 73 ms
 
   ➜  Local:   http://localhost:3000/
   ➜  Network: http://192.168.18.17:3000/
-7:51:06 PM [vite] hmr update /src/App.tsx

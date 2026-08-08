@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import String, Enum, DateTime, ForeignKey, Integer, func, UUID
+from sqlalchemy import String, Enum, DateTime, ForeignKey, Integer, func, UUID, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.models.enums import UserRole, WorkerStatus
@@ -15,6 +15,7 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(100), nullable=False)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), nullable=False, default=UserRole.PICKER)
     status: Mapped[WorkerStatus] = mapped_column(Enum(WorkerStatus), nullable=False, default=WorkerStatus.OFFLINE)
+    efficiency: Mapped[float] = mapped_column(Float, nullable=False, default=1.0, server_default="1.0")
     current_location_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("locations.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

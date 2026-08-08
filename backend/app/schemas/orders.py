@@ -30,6 +30,7 @@ class OrderResponse(BaseModel):
     customer_name: str
     shipping_address: str
     item_count: int = 0
+    wave_number: Optional[str] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

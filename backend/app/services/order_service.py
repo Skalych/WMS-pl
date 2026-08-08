@@ -8,11 +8,12 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 from app.models.orders import Order, OrderItem
+from app.models.waves import WaveOrder, Wave
 from app.models.enums import OrderStatus, OrderPriority
 
 
 async def get_orders(db: AsyncSession, status: Optional[OrderStatus] = None):
-    query = select(Order).options(joinedload(Order.items))
+    query = select(Order).options(joinedload(Order.items), joinedload(Order.wave_orders).joinedload(WaveOrder.wave))
     if status:
         query = query.where(Order.status == status)
     result = await db.execute(query.order_by(Order.created_at.desc()))
@@ -21,7 +22,7 @@ async def get_orders(db: AsyncSession, status: Optional[OrderStatus] = None):
 
 async def get_order_by_id(db: AsyncSession, order_id: uuid.UUID):
     result = await db.execute(
-        select(Order).options(joinedload(Order.items)).where(Order.id == order_id)
+        select(Order).options(joinedload(Order.items), joinedload(Order.wave_orders).joinedload(WaveOrder.wave)).where(Order.id == order_id)
     )
     return result.unique().scalar_one_or_none()
 
