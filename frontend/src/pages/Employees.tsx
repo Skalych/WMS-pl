@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { userService } from '../api/services';
 import { 
   Users, 
   Activity, 
@@ -26,120 +27,7 @@ export interface Employee {
   totalPicked: number;
 }
 
-const MOCK_EMPLOYEES: Employee[] = [
-  {
-    id: 'emp-1',
-    name: 'Ivan Petrenko',
-    role: 'PICKER',
-    status: 'PICKING',
-    dotClass: 'dot-online',
-    badgeClass: 'badge-success',
-    wave: 'WAVE-041',
-    currentProgress: 81,
-    totalProgress: 98,
-    location: 'A-12',
-    shiftTime: '05:52',
-    totalPicked: 247
-  },
-  {
-    id: 'emp-2',
-    name: 'Maria Kovalchuk',
-    role: 'PICKER',
-    status: 'PICKING',
-    dotClass: 'dot-online',
-    badgeClass: 'badge-success',
-    wave: 'WAVE-041',
-    currentProgress: 45,
-    totalProgress: 70,
-    location: 'A-08',
-    shiftTime: '05:38',
-    totalPicked: 198
-  },
-  {
-    id: 'emp-3',
-    name: 'Oleg Demchenko',
-    role: 'INBOUND_OPERATOR',
-    status: 'PUTAWAY',
-    dotClass: 'dot-busy',
-    badgeClass: 'badge-warning',
-    wave: '—',
-    currentProgress: 10,
-    totalProgress: 29,
-    location: 'C-00',
-    shiftTime: '03:15',
-    totalPicked: 89
-  },
-  {
-    id: 'emp-4',
-    name: 'Anna Shevchenko',
-    role: 'PACKER_DISPATCHER',
-    status: 'SORTING',
-    dotClass: 'dot-busy',
-    badgeClass: 'badge-accent',
-    wave: 'WAVE-040',
-    currentProgress: 22,
-    totalProgress: 22,
-    location: 'PUT-WALL-01',
-    shiftTime: '06:10',
-    totalPicked: 312
-  },
-  {
-    id: 'emp-5',
-    name: 'Dmytro Bondarenko',
-    role: 'INBOUND_OPERATOR',
-    status: 'RECEIVING',
-    dotClass: 'dot-online',
-    badgeClass: 'badge-success',
-    wave: '—',
-    currentProgress: 7,
-    totalProgress: 15,
-    location: 'DOCK-02',
-    shiftTime: '02:45',
-    totalPicked: 56
-  },
-  {
-    id: 'emp-6',
-    name: 'Viktor Tkachenko',
-    role: 'PACKER_DISPATCHER',
-    status: 'DISPATCHING',
-    dotClass: 'dot-busy',
-    badgeClass: 'badge-warning',
-    wave: '—',
-    currentProgress: 18,
-    totalProgress: 20,
-    location: 'RAMP-03',
-    shiftTime: '05:20',
-    totalPicked: 278
-  },
-  {
-    id: 'emp-7',
-    name: 'Olena Kravchuk',
-    role: 'PICKER',
-    status: 'BREAK',
-    dotClass: 'dot-offline',
-    badgeClass: 'badge-muted',
-    wave: '—',
-    currentProgress: null,
-    totalProgress: null,
-    location: '—',
-    shiftTime: '04:30',
-    totalPicked: 167
-  },
-  {
-    id: 'emp-8',
-    name: 'Serhiy Moroz',
-    role: 'PICKER',
-    status: 'IDLE',
-    dotClass: 'dot-offline',
-    badgeClass: 'badge-muted',
-    wave: '—',
-    currentProgress: null,
-    totalProgress: null,
-    location: 'B-01',
-    shiftTime: '01:15',
-    totalPicked: 12
-  }
-];
+// Дані тепер підвантажуються з бекенду
 
 type FilterType = 'All' | 'Active' | 'On Break';
 type SortKey = 'status' | 'name' | 'progress' | 'totalPicked';
@@ -147,14 +35,48 @@ type SortKey = 'status' | 'name' | 'progress' | 'totalPicked';
 export default function Employees() {
   const [filter, setFilter] = useState<FilterType>('All');
   const [sortBy, setSortBy] = useState<SortKey>('status');
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const data = await userService.getEmployees();
+        // Прив'язуємо UI стилі для даних з бекенду
+        const mappedData = data.map((emp: any) => {
+          let dotClass = 'dot-offline';
+          let badgeClass = 'badge-muted';
+          if (['PICKING', 'RECEIVING'].includes(emp.status)) { dotClass = 'dot-online'; badgeClass = 'badge-success'; }
+          else if (['PUTAWAY', 'SORTING', 'DISPATCHING'].includes(emp.status)) { dotClass = 'dot-busy'; badgeClass = 'badge-warning'; }
+          
+          return {
+            ...emp,
+            name: emp.fullName, // Адаптація під існуючий UI компонент
+            dotClass,
+            badgeClass,
+            wave: emp.currentWaveNumber || '—',
+            currentProgress: emp.pickingProgress > 0 ? emp.pickingProgress : null,
+            totalProgress: emp.pickingProgress > 0 ? 100 : null,
+            location: emp.currentLocation
+          };
+        });
+        setEmployees(mappedData);
+      } catch (error) {
+        console.error('Failed to fetch employees:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchEmployees();
+  }, []);
 
   // Filter employees
-  const filteredEmployees = MOCK_EMPLOYEES.filter(emp => {
+  const filteredEmployees = employees.filter(emp => {
     if (filter === 'Active') {
       return ['PICKING', 'PUTAWAY', 'SORTING', 'RECEIVING', 'DISPATCHING'].includes(emp.status);
     }
     if (filter === 'On Break') {
-      return ['BREAK', 'IDLE'].includes(emp.status);
+      return ['BREAK', 'IDLE', 'OFFLINE'].includes(emp.status);
     }
     return true;
   });
@@ -242,7 +164,9 @@ export default function Employees() {
             <span className="card-title">Online</span>
             <Users size={18} style={{ color: '#22c55e' }} />
           </div>
-          <div className="card-value" style={{ color: '#22c55e' }}>8</div>
+          <div className="card-value" style={{ color: '#22c55e' }}>
+            {isLoading ? '...' : employees.filter(e => e.status !== 'OFFLINE' && e.status !== 'IDLE').length}
+          </div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <span className="dot dot-online" /> Active warehouse staff
           </div>
@@ -254,7 +178,9 @@ export default function Employees() {
             <span className="card-title">Active Tasks</span>
             <Activity size={18} style={{ color: '#e359ac' }} />
           </div>
-          <div className="card-value" style={{ color: '#e359ac' }}>6</div>
+          <div className="card-value" style={{ color: '#e359ac' }}>
+            {isLoading ? '...' : employees.filter(e => ['PICKING', 'PUTAWAY', 'SORTING', 'RECEIVING', 'DISPATCHING'].includes(e.status)).length}
+          </div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <span className="dot dot-busy" /> Picking, putaway, sorting
           </div>
@@ -266,7 +192,9 @@ export default function Employees() {
             <span className="card-title">On Break</span>
             <Coffee size={18} style={{ color: '#f59e0b' }} />
           </div>
-          <div className="card-value" style={{ color: '#f59e0b' }}>1</div>
+          <div className="card-value" style={{ color: '#f59e0b' }}>
+            {isLoading ? '...' : employees.filter(e => e.status === 'BREAK').length}
+          </div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <span className="dot dot-busy" /> Scheduled rest period
           </div>
@@ -278,7 +206,9 @@ export default function Employees() {
             <span className="card-title">Offline</span>
             <UserX size={18} style={{ color: 'var(--text-muted)' }} />
           </div>
-          <div className="card-value" style={{ color: 'var(--text-muted)' }}>2</div>
+          <div className="card-value" style={{ color: 'var(--text-muted)' }}>
+            {isLoading ? '...' : employees.filter(e => e.status === 'OFFLINE' || e.status === 'IDLE').length}
+          </div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
             <span className="dot dot-offline" /> Off-shift / Idle workers
           </div>
@@ -337,7 +267,15 @@ export default function Employees() {
               </tr>
             </thead>
             <tbody>
-              {sortedEmployees.map((emp) => {
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Loading employees...</td>
+                </tr>
+              ) : sortedEmployees.length === 0 ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No employees found.</td>
+                </tr>
+              ) : sortedEmployees.map((emp) => {
                 const hasProgress = emp.currentProgress !== null && emp.totalProgress !== null;
                 const pct = hasProgress 
                   ? Math.round((emp.currentProgress! / emp.totalProgress!) * 100) 

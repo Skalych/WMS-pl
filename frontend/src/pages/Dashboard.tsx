@@ -1,18 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { dashboardService, orderService } from '../api/services';
+import { DashboardStats, Wave } from '../types';
 
 export default function Dashboard() {
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [activeWaves, setActiveWaves] = useState<Wave[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [statsData, wavesData] = await Promise.all([
+          dashboardService.getStats(),
+          orderService.getWaves()
+        ]);
+        setStats(statsData);
+        setActiveWaves(wavesData.slice(0, 3)); // Беремо тільки перші 3 активні хвилі для дашборду
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   const chartData = [
     { time: '14:00', height: '45%' },
     { time: '15:00', height: '62%' },
     { time: '16:00', height: '78%' },
     { time: '17:00', height: '55%' },
     { time: '18:00', height: '88%' },
-  ];
-
-  const wavesData = [
-    { id: 'WAVE-2026-041', zone: 'Zone A-B', progress: '85%', badgeText: 'IN_PROGRESS', badgeClass: 'badge-accent' },
-    { id: 'WAVE-2026-042', zone: 'Zone C-D', progress: '45%', badgeText: 'IN_PROGRESS', badgeClass: 'badge-accent' },
-    { id: 'WAVE-2026-043', zone: 'Zone A', progress: '12%', badgeText: 'RELEASED', badgeClass: 'badge-info' },
   ];
 
   const shiftData = [
@@ -52,19 +70,19 @@ export default function Dashboard() {
       <div className="stats-grid">
         <div className="stat-card">
           <span className="stat-label">Active Orders</span>
-          <span className="stat-value text-accent">124</span>
+          <span className="stat-value text-accent">{isLoading ? '...' : stats?.activeOrders || 0}</span>
         </div>
         <div className="stat-card">
           <span className="stat-label">Employees Online</span>
-          <span className="stat-value">8 / 10</span>
+          <span className="stat-value">{isLoading ? '...' : stats?.employeesOnline || 0}</span>
         </div>
         <div className="stat-card">
           <span className="stat-label">Inventory Accuracy</span>
-          <span className="stat-value">99.1%</span>
+          <span className="stat-value">{isLoading ? '...' : `${stats?.inventoryAccuracy || 0}%`}</span>
         </div>
         <div className="stat-card">
           <span className="stat-label">Order Velocity (24h)</span>
-          <span className="stat-value">2.30 orders/min</span>
+          <span className="stat-value">{isLoading ? '...' : `${stats?.orderVelocity || 0} orders/min`}</span>
         </div>
       </div>
 
@@ -136,26 +154,32 @@ export default function Dashboard() {
           <div className="data-panel-header">
             <h2 className="data-panel-title">Active Waves</h2>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            {wavesData.map((wave) => (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1.25rem' }}>
+            {isLoading ? (
+              <div className="text-muted text-mono text-center">Loading waves...</div>
+            ) : activeWaves.length === 0 ? (
+              <div className="text-muted text-mono text-center">No active waves</div>
+            ) : activeWaves.map((wave) => (
               <div key={wave.id} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <span className="text-mono" style={{ fontWeight: 700, fontSize: '0.9rem' }}>
-                      {wave.id}
+                      {wave.waveNumber}
                     </span>
                     <span className="text-muted" style={{ fontSize: '0.8rem', marginLeft: '8px' }}>
-                      {wave.zone}
+                      Zone {wave.zone}
                     </span>
                   </div>
-                  <span className={wave.badgeClass}>{wave.badgeText}</span>
+                  <span className={`badge ${wave.status === 'IN_PROGRESS' ? 'badge-accent' : 'badge-info'}`}>
+                    {wave.status}
+                  </span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div className="progress-bar">
-                    <div className="progress-bar-fill" style={{ width: wave.progress }} />
+                  <div className="progress-bar" style={{ flexGrow: 1 }}>
+                    <div className="progress-bar-fill" style={{ width: `${wave.progress}%` }} />
                   </div>
                   <span className="text-mono text-muted" style={{ fontSize: '0.8rem', minWidth: '32px' }}>
-                    {wave.progress}
+                    {wave.progress}%
                   </span>
                 </div>
               </div>

@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Download, FileText, Layers, CheckCircle2, Clock, Activity, Box } from 'lucide-react';
+import { orderService } from '../api/services';
+import { Order, Wave } from '../types';
 
 interface OrderItem {
   id: string;
@@ -11,74 +13,40 @@ interface OrderItem {
   created: string;
 }
 
-const mockOrders: OrderItem[] = [
-  {
-    id: 'ORD-2026-1547',
-    customer: 'Oleksandr Ivanov',
-    items: 12,
-    status: 'SHIPPED',
-    priority: 'MEDIUM',
-    wave: 'WAVE-039',
-    created: '05 Aug 2026',
-  },
-  {
-    id: 'ORD-2026-1548',
-    customer: 'Natalia Koroleva',
-    items: 8,
-    status: 'PACKED',
-    priority: 'HIGH',
-    wave: 'WAVE-040',
-    created: '05 Aug 2026',
-  },
-  {
-    id: 'ORD-2026-1549',
-    customer: 'Petro Sydorenko',
-    items: 23,
-    status: 'SORTED',
-    priority: 'MEDIUM',
-    wave: 'WAVE-041',
-    created: '06 Aug 2026',
-  },
-  {
-    id: 'ORD-2026-1550',
-    customer: 'Iryna Bondar',
-    items: 5,
-    status: 'IN_WAVE',
-    priority: 'LOW',
-    wave: 'WAVE-042',
-    created: '06 Aug 2026',
-  },
-  {
-    id: 'ORD-2026-1551',
-    customer: 'Vasyl Marchenko',
-    items: 31,
-    status: 'PENDING',
-    priority: 'URGENT',
-    wave: '—',
-    created: '06 Aug 2026',
-  },
-  {
-    id: 'ORD-2026-1552',
-    customer: 'Tetiana Lysenko',
-    items: 17,
-    status: 'PENDING',
-    priority: 'HIGH',
-    wave: '—',
-    created: '06 Aug 2026',
-  },
-];
+// Дані тепер підвантажуються з бекенду
 
 export default function Orders() {
   const [activeFilter, setActiveFilter] = useState<'All' | 'Pending' | 'In Wave' | 'Shipped'>('All');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [waves, setWaves] = useState<Wave[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredOrders = mockOrders.filter((order) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [ordersData, wavesData] = await Promise.all([
+          orderService.getOrders(),
+          orderService.getWaves()
+        ]);
+        setOrders(ordersData);
+        setWaves(wavesData);
+      } catch (error) {
+        console.error('Failed to fetch orders data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const filteredOrders = orders.filter((order) => {
     if (activeFilter === 'Pending') return order.status === 'PENDING';
     if (activeFilter === 'In Wave') return order.status === 'IN_WAVE' || order.status === 'PACKED' || order.status === 'SORTED';
     if (activeFilter === 'Shipped') return order.status === 'SHIPPED';
     return true;
   });
 
-  const getPriorityBadgeClass = (priority: OrderItem['priority']) => {
+  const getPriorityBadgeClass = (priority: Order['priority']) => {
     switch (priority) {
       case 'URGENT':
         return 'badge badge-danger';
@@ -91,7 +59,7 @@ export default function Orders() {
     }
   };
 
-  const getStatusBadgeClass = (status: OrderItem['status']) => {
+  const getStatusBadgeClass = (status: Order['status']) => {
     switch (status) {
       case 'SHIPPED':
         return 'badge badge-success';
@@ -155,10 +123,12 @@ export default function Orders() {
         <div style={{ marginBottom: '1.75rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>
-              Order Progress: <strong style={{ color: '#e359ac' }}>45%</strong>
+              Order Progress: <strong style={{ color: '#e359ac' }}>
+                {waves.length > 0 ? Math.round(waves.reduce((sum, w) => sum + w.progress, 0) / waves.length) : 0}%
+              </strong>
             </span>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
-              1350 / 3000 items picked
+              Calculating...
             </span>
           </div>
           <div
@@ -173,7 +143,7 @@ export default function Orders() {
           >
             <div
               style={{
-                width: '45%',
+                width: `${waves.length > 0 ? Math.round(waves.reduce((sum, w) => sum + w.progress, 0) / waves.length) : 0}%`,
                 height: '100%',
                 backgroundColor: '#e359ac',
                 borderRadius: '8px',
@@ -204,102 +174,52 @@ export default function Orders() {
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
-            {/* Wave 1 */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.85rem 1.1rem',
-                background: 'rgba(255, 255, 255, 0.03)',
-                borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.05)',
-                gap: '1rem',
-                flexWrap: 'wrap',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', minWidth: '180px' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>
-                  WAVE-041
-                </span>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Zone A-B</span>
-              </div>
-              <div style={{ flex: 1, minWidth: '160px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{ flex: 1, height: '8px', backgroundColor: 'rgba(255, 255, 255, 0.06)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ width: '85%', height: '100%', backgroundColor: '#10b981', borderRadius: '4px', boxShadow: '0 0 10px rgba(16, 185, 129, 0.4)' }} />
+            {isLoading ? (
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Loading waves...</div>
+            ) : waves.length === 0 ? (
+              <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No waves found</div>
+            ) : waves.map((wave) => (
+              <div
+                key={wave.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '0.85rem 1.1rem',
+                  background: wave.status === 'IN_PROGRESS' ? 'rgba(227, 89, 172, 0.04)' : 'rgba(255, 255, 255, 0.03)',
+                  borderRadius: '12px',
+                  border: `1px solid ${wave.status === 'IN_PROGRESS' ? 'rgba(227, 89, 172, 0.15)' : 'rgba(255, 255, 255, 0.05)'}`,
+                  gap: '1rem',
+                  flexWrap: 'wrap',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', minWidth: '180px' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                    {wave.waveNumber}
+                  </span>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Zone {wave.zone}</span>
                 </div>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 600, minWidth: '35px', textAlign: 'right' }}>
-                  85%
-                </span>
-              </div>
-              <span className="badge badge-success" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <CheckCircle2 size={12} /> Complete
-              </span>
-            </div>
-
-            {/* Wave 2 */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.85rem 1.1rem',
-                background: 'rgba(227, 89, 172, 0.04)',
-                borderRadius: '12px',
-                border: '1px solid rgba(227, 89, 172, 0.15)',
-                gap: '1rem',
-                flexWrap: 'wrap',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', minWidth: '180px' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>
-                  WAVE-042
-                </span>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Zone C-D</span>
-              </div>
-              <div style={{ flex: 1, minWidth: '160px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{ flex: 1, height: '8px', backgroundColor: 'rgba(255, 255, 255, 0.06)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ width: '45%', height: '100%', backgroundColor: '#e359ac', borderRadius: '4px', boxShadow: '0 0 10px rgba(227, 89, 172, 0.4)' }} />
+                <div style={{ flex: 1, minWidth: '160px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div style={{ flex: 1, height: '8px', backgroundColor: 'rgba(255, 255, 255, 0.06)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ 
+                      width: `${wave.progress}%`, 
+                      height: '100%', 
+                      backgroundColor: wave.status === 'COMPLETED' ? '#10b981' : '#e359ac', 
+                      borderRadius: '4px', 
+                      boxShadow: wave.status === 'COMPLETED' ? '0 0 10px rgba(16, 185, 129, 0.4)' : '0 0 10px rgba(227, 89, 172, 0.4)' 
+                    }} />
+                  </div>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 600, minWidth: '35px', textAlign: 'right', color: wave.status === 'COMPLETED' ? '#10b981' : '#e359ac' }}>
+                    {wave.progress}%
+                  </span>
                 </div>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 600, minWidth: '35px', textAlign: 'right', color: '#e359ac' }}>
-                  45%
+                <span className={`badge ${wave.status === 'COMPLETED' ? 'badge-success' : wave.status === 'IN_PROGRESS' ? 'badge-accent' : 'badge-muted'}`} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  {wave.status === 'COMPLETED' && <CheckCircle2 size={12} />}
+                  {wave.status === 'DRAFT' && <Clock size={12} />}
+                  {wave.status}
                 </span>
               </div>
-              <span className="badge badge-accent">Processing</span>
-            </div>
-
-            {/* Wave 3 */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '0.85rem 1.1rem',
-                background: 'rgba(255, 255, 255, 0.02)',
-                borderRadius: '12px',
-                border: '1px solid rgba(255, 255, 255, 0.04)',
-                gap: '1rem',
-                flexWrap: 'wrap',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', minWidth: '180px' }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-muted)' }}>
-                  WAVE-043
-                </span>
-                <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Zone E</span>
-              </div>
-              <div style={{ flex: 1, minWidth: '160px', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <div style={{ flex: 1, height: '8px', backgroundColor: 'rgba(255, 255, 255, 0.06)', borderRadius: '4px', overflow: 'hidden' }}>
-                  <div style={{ width: '0%', height: '100%', backgroundColor: 'var(--text-muted)', borderRadius: '4px' }} />
-                </div>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 600, minWidth: '35px', textAlign: 'right', color: 'var(--text-muted)' }}>
-                  0%
-                </span>
-              </div>
-              <span className="badge badge-muted" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                <Clock size={12} /> Pending
-              </span>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -348,30 +268,41 @@ export default function Orders() {
               </tr>
             </thead>
             <tbody>
-              {filteredOrders.length > 0 ? (
-                filteredOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--text-main)' }}>
-                      {order.id}
-                    </td>
-                    <td style={{ fontWeight: 500 }}>{order.customer}</td>
-                    <td style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{order.items} items</td>
-                    <td>
-                      <span className={getStatusBadgeClass(order.status)}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={getPriorityBadgeClass(order.priority)}>
-                        {order.priority}
-                      </span>
-                    </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', color: order.wave !== '—' ? '#e359ac' : 'var(--text-muted)' }}>
-                      {order.wave}
-                    </td>
-                    <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{order.created}</td>
-                  </tr>
-                ))
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                    Loading orders...
+                  </td>
+                </tr>
+              ) : filteredOrders.length > 0 ? (
+                filteredOrders.map((order) => {
+                  const relatedWave = waves.find(w => w.id === order.id); // В реальному API тут буде зв'язок через order.wave_id
+                  return (
+                    <tr key={order.id}>
+                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--text-main)' }}>
+                        {order.orderNumber}
+                      </td>
+                      <td style={{ fontWeight: 500 }}>{order.customerName}</td>
+                      <td style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>{order.itemCount} items</td>
+                      <td>
+                        <span className={getStatusBadgeClass(order.status)}>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={getPriorityBadgeClass(order.priority)}>
+                          {order.priority}
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'var(--font-mono)', color: '#e359ac' }}>
+                        WAVE-MOCK
+                      </td>
+                      <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </td>
+                    </tr>
+                  )
+                })
               ) : (
                 <tr>
                   <td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>

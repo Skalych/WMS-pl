@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { inventoryService } from '../api/services';
+import { InventoryItem } from '../types';
 import { 
   Search, 
   Filter, 
@@ -7,31 +9,27 @@ import {
   Package 
 } from 'lucide-react';
 
-interface InventoryItem {
-  id: string;
-  sku: string;
-  name: string;
-  category: string;
-  location: string;
-  quantity: number;
-  reserved: number;
-  status: 'In Stock' | 'Low Stock' | 'Out of Stock';
-}
-
-const initialItems: InventoryItem[] = [
-  { id: '1', sku: '#10023', name: 'T-shirt (Blue) — Medium', category: 'Apparel', location: 'A-12-03-1', quantity: 200, reserved: 24, status: 'In Stock' },
-  { id: '2', sku: '#10024', name: 'Hoodie (Yellow) — Large', category: 'Apparel', location: 'A-12-05-2', quantity: 100, reserved: 88, status: 'Low Stock' },
-  { id: '3', sku: '#10025', name: 'Jacket (Red) — XL', category: 'Outerwear', location: 'B-04-01-1', quantity: 20, reserved: 5, status: 'In Stock' },
-  { id: '4', sku: '#10026', name: 'Sneakers (White) — 42', category: 'Footwear', location: 'C-02-08-3', quantity: 0, reserved: 0, status: 'Out of Stock' },
-  { id: '5', sku: '#10027', name: 'Cap (Black) — One Size', category: 'Accessories', location: 'A-01-01-1', quantity: 450, reserved: 12, status: 'In Stock' },
-  { id: '6', sku: '#10028', name: 'Jeans (Dark Blue) — 32', category: 'Apparel', location: 'A-12-07-1', quantity: 38, reserved: 30, status: 'Low Stock' },
-  { id: '7', sku: '#10029', name: 'Scarf (Grey) — Long', category: 'Accessories', location: 'D-01-02-4', quantity: 180, reserved: 0, status: 'In Stock' },
-  { id: '8', sku: '#10030', name: 'Boots (Brown) — 44', category: 'Footwear', location: 'C-03-01-2', quantity: 65, reserved: 10, status: 'In Stock' },
-];
+// Дані тепер підвантажуються з бекенду
 
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchInventory = async () => {
+      try {
+        const data = await inventoryService.getInventory();
+        setInventoryItems(data);
+      } catch (error) {
+        console.error('Failed to fetch inventory:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchInventory();
+  }, []);
 
   const toggleSelectItem = (id: string) => {
     setSelectedItems((prev) =>
@@ -40,12 +38,17 @@ export default function Inventory() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedItems.length === initialItems.length) {
+    if (selectedItems.length === inventoryItems.length && inventoryItems.length > 0) {
       setSelectedItems([]);
     } else {
-      setSelectedItems(initialItems.map((item) => item.id));
+      setSelectedItems(inventoryItems.map((item) => item.id));
     }
   };
+
+  const filteredItems = inventoryItems.filter(item => 
+    item.sku.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    item.productName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -81,7 +84,7 @@ export default function Inventory() {
       <div className="dashboard-grid">
         <div className="card">
           <div className="card-title">Total SKUs</div>
-          <div className="card-value" style={{ color: 'var(--text-main)' }}>1,247</div>
+          <div className="card-value" style={{ color: 'var(--text-main)' }}>{isLoading ? '...' : inventoryItems.length}</div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.4rem' }}>
             Active catalog items
           </p>
@@ -89,7 +92,9 @@ export default function Inventory() {
 
         <div className="card">
           <div className="card-title">In Stock</div>
-          <div className="card-value" style={{ color: 'var(--success)' }}>1,180</div>
+          <div className="card-value" style={{ color: 'var(--success)' }}>
+            {isLoading ? '...' : inventoryItems.filter(i => i.status === 'in_stock').length}
+          </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.4rem' }}>
             Optimal stock levels
           </p>
@@ -97,7 +102,9 @@ export default function Inventory() {
 
         <div className="card">
           <div className="card-title">Low Stock</div>
-          <div className="card-value" style={{ color: 'var(--warning)' }}>52</div>
+          <div className="card-value" style={{ color: 'var(--warning)' }}>
+            {isLoading ? '...' : inventoryItems.filter(i => i.status === 'low_stock').length}
+          </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.4rem' }}>
             Reorder threshold reached
           </p>
@@ -105,7 +112,9 @@ export default function Inventory() {
 
         <div className="card">
           <div className="card-title">Out of Stock</div>
-          <div className="card-value" style={{ color: 'var(--danger)' }}>15</div>
+          <div className="card-value" style={{ color: 'var(--danger)' }}>
+            {isLoading ? '...' : inventoryItems.filter(i => i.status === 'out_of_stock').length}
+          </div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.4rem' }}>
             Requires immediate restock
           </p>
@@ -139,7 +148,7 @@ export default function Inventory() {
                   <input
                     type="checkbox"
                     className="wms-checkbox"
-                    checked={selectedItems.length === initialItems.length}
+                    checked={selectedItems.length === inventoryItems.length && inventoryItems.length > 0}
                     onChange={toggleSelectAll}
                   />
                 </th>
@@ -153,7 +162,15 @@ export default function Inventory() {
               </tr>
             </thead>
             <tbody>
-              {initialItems.map((item) => (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Loading inventory...</td>
+                </tr>
+              ) : filteredItems.length === 0 ? (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No inventory items found.</td>
+                </tr>
+              ) : filteredItems.map((item) => (
                 <tr key={item.id}>
                   <td>
                     <input
@@ -166,13 +183,13 @@ export default function Inventory() {
                   <td style={{ fontFamily: 'var(--font-mono)', color: '#e359ac', fontWeight: 600 }}>
                     {item.sku}
                   </td>
-                  <td style={{ fontWeight: 600 }}>{item.name}</td>
+                  <td style={{ fontWeight: 600 }}>{item.productName}</td>
                   <td>{item.category}</td>
                   <td style={{ fontFamily: 'var(--font-mono)' }}>{item.location}</td>
                   <td>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span style={{ fontWeight: 600 }}>{item.quantity}</span>
-                      {item.status === 'Low Stock' && (
+                      {item.status === 'low_stock' && (
                         <div
                           title="Low Stock Warning"
                           style={{
@@ -196,15 +213,15 @@ export default function Inventory() {
                       )}
                     </div>
                   </td>
-                  <td>{item.reserved}</td>
+                  <td>{item.reservedQuantity}</td>
                   <td>
-                    {item.status === 'In Stock' && (
+                    {item.status === 'in_stock' && (
                       <span className="badge badge-success">In Stock</span>
                     )}
-                    {item.status === 'Low Stock' && (
+                    {item.status === 'low_stock' && (
                       <span className="badge badge-warning">Low Stock</span>
                     )}
-                    {item.status === 'Out of Stock' && (
+                    {item.status === 'out_of_stock' && (
                       <span className="badge badge-danger">Out of Stock</span>
                     )}
                   </td>
@@ -219,7 +236,7 @@ export default function Inventory() {
           className="data-panel-footer"
           style={{
             display: 'flex',
-            justify: 'space-between',
+            justifyContent: 'space-between',
             alignItems: 'center',
             marginTop: '1rem',
             paddingTop: '1rem',
@@ -229,7 +246,7 @@ export default function Inventory() {
           }}
         >
           <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Showing 1-8 of 1,247
+            Showing {filteredItems.length} of {inventoryItems.length}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>

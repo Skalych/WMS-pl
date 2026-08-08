@@ -1,5 +1,7 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSettings } from '../context/SettingsContext';
+import { useNavigate } from 'react-router-dom';
 
 export interface SidebarProps {
   activeTab: string;
@@ -67,8 +69,15 @@ const SettingsIcon: React.FC = () => (
   </svg>
 );
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onOpenSettings }) => {
-  const { t } = useSettings();
+export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: SidebarProps) {
+  const { t } = useTranslation();
+  const { language } = useSettings();
+  const navigate = useNavigate();
+
+  const handleTabClick = (tabId: string) => {
+    onTabChange(tabId);
+    navigate(`/${tabId === 'dashboard' ? '' : tabId}`);
+  };
 
   const isTabActive = (itemId: string): boolean => {
     if (activeTab === itemId) return true;
@@ -83,19 +92,19 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onOpenSetting
 
   const navigationSections = [
     {
-      label: t('sidebar', 'operations'),
+      label: t('sidebar.operations'),
       items: [
-        { id: 'dashboard', label: t('sidebar', 'dashboard'), Icon: DashboardIcon },
-        { id: 'employees', label: t('sidebar', 'employees'), Icon: EmployeesIcon },
-        { id: 'inventory', label: t('sidebar', 'inventory'), Icon: InventoryIcon },
-        { id: 'orders-waves', label: t('sidebar', 'ordersWaves'), Icon: OrdersWavesIcon },
+        { id: 'dashboard', label: t('sidebar.dashboard'), Icon: DashboardIcon },
+        { id: 'employees', label: t('sidebar.employees'), Icon: EmployeesIcon },
+        { id: 'inventory', label: t('sidebar.inventory'), Icon: InventoryIcon },
+        { id: 'orders-waves', label: t('sidebar.ordersWaves'), Icon: OrdersWavesIcon },
       ],
     },
     {
-      label: t('sidebar', 'reports'),
+      label: t('sidebar.reports'),
       items: [
-        { id: 'shift-reports', label: t('sidebar', 'shiftReports'), Icon: ShiftReportsIcon },
-        { id: 'analytics', label: t('sidebar', 'analytics'), Icon: AnalyticsIcon },
+        { id: 'shift-reports', label: t('sidebar.shiftReports'), Icon: ShiftReportsIcon },
+        { id: 'analytics', label: t('sidebar.analytics'), Icon: AnalyticsIcon },
       ],
     },
   ];
@@ -178,13 +187,13 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onOpenSetting
                   <li
                     key={item.id}
                     className={`sidebar-nav-item nav-item ${active ? 'active' : ''}`}
-                    onClick={() => onTabChange(item.id)}
+                    onClick={() => handleTabClick(item.id)}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        onTabChange(item.id);
+                        handleTabClick(item.id);
                       }
                     }}
                   >
@@ -209,7 +218,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onOpenSetting
           style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '10px 16px', cursor: 'pointer', color: 'var(--text-muted)' }}
         >
           <SettingsIcon />
-          <span style={{ fontSize: '0.85rem' }}>{t('sidebar', 'settings')}</span>
+          <span style={{ fontSize: '0.85rem' }}>{t('sidebar.settings')}</span>
         </div>
 
         <div
@@ -243,11 +252,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, onOpenSetting
               display: 'inline-block',
             }}
           />
-          <span style={{ color: '#10b981', fontWeight: 500 }}>{t('sidebar', 'connected')}</span>
+          <span style={{ color: '#10b981', fontWeight: 500 }}>{t('sidebar.connected')}</span>
         </div>
       </div>
     </aside>
   );
 };
 
-export default Sidebar;

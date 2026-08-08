@@ -1,0 +1,52 @@
+INFO:     Started server process [15394]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:54767 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54767 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54766 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54781 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54781 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54780 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54792 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54792 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54791 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54792 - "GET /api/v1/users/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54791 - "GET /api/v1/users HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54792 - "OPTIONS /api/v1/inventory/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54791 - "GET /api/v1/inventory/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54792 - "OPTIONS /api/v1/inventory HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54792 - "GET /api/v1/inventory HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54791 - "OPTIONS /api/v1/orders/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54792 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54791 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54793 - "OPTIONS /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54793 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54792 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54791 - "GET /api/v1/inventory/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54793 - "GET /api/v1/inventory HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54792 - "GET /api/v1/users/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54791 - "GET /api/v1/users HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54797 - "OPTIONS /api/v1/users/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54797 - "GET /api/v1/users/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54798 - "OPTIONS /api/v1/users HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54798 - "GET /api/v1/users HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54810 - "GET /api/v1/users/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54810 - "GET /api/v1/users HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54810 - "OPTIONS /api/v1/dashboard/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54811 - "OPTIONS /api/v1/waves/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54811 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54812 - "OPTIONS /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54812 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54810 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54811 - "GET /api/v1/users/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54812 - "GET /api/v1/users HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54810 - "GET /api/v1/inventory/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54811 - "GET /api/v1/inventory HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54812 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54810 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54811 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54812 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54811 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54812 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54810 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
