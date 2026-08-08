@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
 import Inventory from './pages/Inventory';
 import Orders from './pages/Orders';
+import Admin from './pages/Admin';
 import Login from './pages/Login';
 import SettingsModal from './components/SettingsModal';
 import { SettingsProvider } from './context/SettingsContext';
@@ -61,6 +62,7 @@ export default function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/employees" element={<Employees />} />
                 <Route path="/inventory" element={<Inventory />} />
+                <Route path="/admin" element={<Admin />} />
                 <Route path="/orders-waves" element={<Orders />} />
                 <Route path="/analytics" element={<Dashboard />} />
                 <Route path="/shift-reports" element={<Orders />} />

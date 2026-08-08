@@ -39,34 +39,35 @@ async def create_wave(db: AsyncSession, order_ids: List[uuid.UUID], created_by_u
     wave = Wave(
         id=uuid.uuid4(),
         wave_number=wave_number,
-        status=WaveStatus.DRAFT,
+        status=WaveStatus.IN_PROGRESS,
         total_orders_count=len(order_ids),
         created_by_user_id=created_by_user_id,
     )
     db.add(wave)
     await db.flush()
 
-    # Create a single MicroTask for the whole wave for simulation purposes
-    task = MicroTask(
-        id=uuid.uuid4(),
-        wave_id=wave.id,
-        task_number=f"TASK-{wave_number}-01",
-        type=TaskType.BATCH_PICK,
-        status=TaskStatus.PENDING,
-    )
-    db.add(task)
-    await db.flush()
-
     storage_loc = await db.scalar(select(Location).where(Location.type == LocationType.STORAGE).limit(1))
     staging_loc = await db.scalar(select(Location).where(Location.type == LocationType.STAGING_SORTING).limit(1))
 
-    for order_id in order_ids:
+    for idx, order_id in enumerate(order_ids):
         wo = WaveOrder(id=uuid.uuid4(), wave_id=wave.id, order_id=order_id)
         db.add(wo)
         order = await db.scalar(select(Order).options(joinedload(Order.items)).where(Order.id == order_id))
+        
         if order:
             order.status = OrderStatus.IN_WAVE
-            # Create MicroTaskItems for each OrderItem
+            
+            # Create a MicroTask for EACH order (1 order = 1 Злецення)
+            task = MicroTask(
+                id=uuid.uuid4(),
+                wave_id=wave.id,
+                task_number=f"TASK-{wave_number}-{idx+1:03d}",
+                type=TaskType.BATCH_PICK,
+                status=TaskStatus.IN_PROGRESS,
+            )
+            db.add(task)
+            
+            # Create MicroTaskItems for each OrderItem in this specific order
             for item in order.items:
                 mti = MicroTaskItem(
                     id=uuid.uuid4(),
@@ -76,7 +77,7 @@ async def create_wave(db: AsyncSession, order_ids: List[uuid.UUID], created_by_u
                     target_location_id=staging_loc.id if staging_loc else uuid.uuid4(),
                     quantity_to_pick=item.requested_quantity,
                     quantity_picked=0,
-                    status=TaskStatus.PENDING,
+                    status=TaskStatus.IN_PROGRESS,
                 )
                 db.add(mti)
 

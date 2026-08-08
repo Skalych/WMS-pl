@@ -13,6 +13,20 @@ class OrderCreate(BaseModel):
     shipping_address: str
     priority: OrderPriority = OrderPriority.MEDIUM
     items: List[OrderItemCreate]
+    macro_order_id: Optional[UUID] = None
+
+class MacroOrderCreate(BaseModel):
+    size: str = Field(..., description="small, medium, or large")
+
+class MacroOrderResponse(BaseModel):
+    id: UUID
+    reference_number: str
+    status: OrderStatus
+    created_at: datetime
+    orders_count: int = 0
+    progress: int = 0
+
+    model_config = {"from_attributes": True}
 
 class OrderItemResponse(BaseModel):
     id: UUID
@@ -31,6 +45,7 @@ class OrderResponse(BaseModel):
     shipping_address: str
     item_count: int = 0
     wave_number: Optional[str] = None
+    macro_order_id: Optional[UUID] = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

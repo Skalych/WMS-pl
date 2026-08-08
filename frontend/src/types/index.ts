@@ -96,3 +96,12 @@ export interface DashboardStats {
   ordersShippedToday: number;
   inboundReceived: number;
 }
+
+export interface MacroOrder {
+  id: string;
+  referenceNumber: string;
+  status: OrderStatus;
+  ordersCount: number;
+  progress: number;
+  createdAt: string;
+}

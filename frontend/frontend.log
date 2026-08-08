@@ -3,7 +3,14 @@
 > vite --host 0.0.0.0
 
 
-  VITE v5.4.21  ready in 73 ms
+  VITE v5.4.21  ready in 96 ms
 
   ➜  Local:   http://localhost:3000/
   ➜  Network: http://192.168.18.17:3000/
+9:31:16 PM [vite] hmr update /src/pages/Employees.tsx, /src/pages/Dashboard.tsx, /src/pages/Orders.tsx, /src/pages/Login.tsx, /src/pages/Inventory.tsx
+9:31:23 PM [vite] hmr update /src/pages/Login.tsx
+9:31:50 PM [vite] hmr update /src/components/Sidebar.tsx
+9:31:58 PM [vite] hmr update /src/App.tsx
+9:32:02 PM [vite] hmr update /src/App.tsx
+9:32:25 PM [vite] hmr update /src/pages/Orders.tsx
+9:32:37 PM [vite] hmr update /src/pages/Orders.tsx

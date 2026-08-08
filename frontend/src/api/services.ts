@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { 
   UserRole, WorkerStatus, Employee, DashboardStats, 
-  Order, Wave, InventoryItem 
+  Order, Wave, InventoryItem, MacroOrder
 } from '../types';
 
 // Auth Services
@@ -85,8 +85,34 @@ export const orderService = {
       itemCount: o.item_count || 0,
       status: o.status,
       priority: o.priority,
+      macroOrderId: o.macro_order_id,
       createdAt: o.created_at
     }));
+  },
+  
+  getMacroOrders: async (): Promise<MacroOrder[]> => {
+    const response = await apiClient.get('/orders/macro');
+    return response.data.map((m: any) => ({
+      id: m.id,
+      referenceNumber: m.reference_number,
+      status: m.status,
+      ordersCount: m.orders_count,
+      progress: m.progress,
+      createdAt: m.created_at
+    }));
+  },
+
+  createMacroOrder: async (size: 'small' | 'medium' | 'large'): Promise<MacroOrder> => {
+    const response = await apiClient.post('/orders/macro', { size });
+    const m = response.data;
+    return {
+      id: m.id,
+      referenceNumber: m.reference_number,
+      status: m.status,
+      ordersCount: m.orders_count,
+      progress: m.progress,
+      createdAt: m.created_at
+    };
   },
   
   getWaves: async (): Promise<Wave[]> => {

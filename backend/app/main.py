@@ -3,14 +3,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.core.database import async_session_maker
+from app.core.database import AsyncSessionLocal
 from app.routers import auth, users, inventory, orders, waves, inbound, dashboard
 from app.services.simulation_service import warehouse_simulation
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Start the simulation task
-    sim_task = asyncio.create_task(warehouse_simulation(async_session_maker))
+    sim_task = asyncio.create_task(warehouse_simulation(AsyncSessionLocal))
     yield
     # Stop the simulation task
     sim_task.cancel()

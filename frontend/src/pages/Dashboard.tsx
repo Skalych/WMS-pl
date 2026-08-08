@@ -7,23 +7,27 @@ export default function Dashboard() {
   const [activeWaves, setActiveWaves] = useState<Wave[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchData = async (isPolling = false) => {
+    try {
+      if (!isPolling) setIsLoading(true);
+      const [statsData, wavesData] = await Promise.all([
+        dashboardService.getStats(),
+        orderService.getWaves()
+      ]);
+      setStats(statsData);
+      setActiveWaves(wavesData.filter(w => w.status !== 'COMPLETED' && w.status !== 'CANCELLED').slice(0, 3));
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      if (!isPolling) setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [statsData, wavesData] = await Promise.all([
-          dashboardService.getStats(),
-          orderService.getWaves()
-        ]);
-        setStats(statsData);
-        setActiveWaves(wavesData.slice(0, 3)); // Беремо тільки перші 3 активні хвилі для дашборду
-      } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     fetchData();
-    const interval = setInterval(fetchData, 5000);
+    const interval = setInterval(() => {
+      fetchData(true);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 

@@ -2,12 +2,45 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.schemas.orders import OrderCreate, OrderResponse, OrderStatusUpdate
+from app.schemas.orders import OrderCreate, OrderResponse, OrderStatusUpdate, MacroOrderCreate, MacroOrderResponse
 from app.services import order_service
 from app.models.enums import OrderStatus
 from typing import Optional
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
+
+
+@router.get("/macro", response_model=list[MacroOrderResponse])
+async def list_macro_orders(db: AsyncSession = Depends(get_db)):
+    macro_orders = await order_service.get_macro_orders(db)
+    result = []
+    for m in macro_orders:
+        progress = 0
+        if getattr(m, "orders", None) and len(m.orders) > 0:
+            picked_or_completed = sum(1 for o in m.orders if o.status in [OrderStatus.SHIPPED, OrderStatus.PACKED, OrderStatus.SORTED])
+            progress = int((picked_or_completed / len(m.orders)) * 100)
+        
+        result.append(MacroOrderResponse(
+            id=m.id,
+            reference_number=m.reference_number,
+            status=m.status,
+            created_at=m.created_at,
+            orders_count=len(m.orders) if getattr(m, "orders", None) else 0,
+            progress=progress
+        ))
+    return result
+
+@router.post("/macro", response_model=MacroOrderResponse, status_code=201)
+async def create_macro_order(data: MacroOrderCreate, db: AsyncSession = Depends(get_db)):
+    macro_order = await order_service.create_macro_order(db, data.size)
+    return MacroOrderResponse(
+        id=macro_order.id,
+        reference_number=macro_order.reference_number,
+        status=macro_order.status,
+        created_at=macro_order.created_at,
+        orders_count=len(macro_order.orders) if getattr(macro_order, "orders", None) else 0,
+        progress=0
+    )
 
 
 @router.get("", response_model=list[OrderResponse])
@@ -35,7 +68,7 @@ async def list_orders(
 @router.post("", response_model=OrderResponse, status_code=201)
 async def create_order(data: OrderCreate, db: AsyncSession = Depends(get_db)):
     order = await order_service.create_order(
-        db, data.customer_name, data.shipping_address, data.priority, data.items
+        db, data.customer_name, data.shipping_address, data.priority, data.items, data.macro_order_id
     )
     return OrderResponse(
         id=order.id,

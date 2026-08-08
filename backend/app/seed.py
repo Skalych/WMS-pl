@@ -18,7 +18,7 @@ from app.models.topology import Zone, Location
 from app.models.catalog import Category, Product
 from app.models.inventory import InventoryBalance
 from app.models.inbound import InboundShipment, InboundItem
-from app.models.orders import Order, OrderItem
+from app.models.orders import Order, OrderItem, MacroOrder
 from app.models.waves import Wave, WaveOrder, MicroTask, MicroTaskItem
 from app.models.sorting import SortingStation, SortingBin
 
@@ -181,6 +181,15 @@ async def seed():
             users[email] = u
         await db.flush()
 
+        # ── Macro Order ────────────────────────────────────────
+        macro_order = MacroOrder(
+            id=uuid.uuid4(),
+            reference_number="MACRO-2026-SEED1",
+            status=OrderStatus.PENDING,
+        )
+        db.add(macro_order)
+        await db.flush()
+
         # ── Orders ─────────────────────────────────────────────
         orders_data = [
             ("Олександр Коваленко", "вул. Хрещатик 1, Київ", OrderPriority.HIGH, OrderStatus.IN_WAVE, [("SKU-APP-001", 3), ("SKU-FTW-001", 1)]),
@@ -199,6 +208,7 @@ async def seed():
                 shipping_address=addr,
                 priority=prio,
                 status=status,
+                macro_order_id=macro_order.id,
             )
             db.add(o)
             orders[o.order_number] = o
