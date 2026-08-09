@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 from sqlalchemy.orm import joinedload
 from app.models.users import User
 from app.models.waves import Wave, MicroTask, MicroTaskItem, WaveOrder
-from app.models.enums import WorkerStatus, WaveStatus, TaskStatus, OrderStatus
+from app.models.enums import WorkerStatus, WaveStatus, TaskStatus, OrderStatus, UserRole
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +22,12 @@ def set_simulation_state(active: bool):
 BASE_ITEMS_PER_TICK = 2
 
 async def perform_simulation_tick(session: AsyncSession):
-    # 1. Fetch online workers that are PICKING or IDLE (to be assigned)
+    # 1. Fetch online workers that are PICKING or IDLE (to be assigned) AND are PICKER role
     workers = await session.execute(
-        select(User).where(User.status.in_([WorkerStatus.PICKING, WorkerStatus.IDLE]))
+        select(User).where(
+            User.role == UserRole.PICKER,
+            User.status.in_([WorkerStatus.PICKING, WorkerStatus.IDLE])
+        )
     )
     available_workers = workers.scalars().all()
 

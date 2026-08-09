@@ -76,8 +76,18 @@ async def bulk_update_status(db: AsyncSession, user_ids: list[uuid.UUID], status
     result = await db.execute(query)
     users = result.scalars().all()
     for user in users:
-        user.status = status
-        if status == WorkerStatus.IDLE:
+        # If requested to set to IDLE (starting shift), map it based on user role
+        if status == WorkerStatus.IDLE and user.status == WorkerStatus.OFFLINE:
+            if user.role == UserRole.INBOUND_OPERATOR:
+                user.status = WorkerStatus.RECEIVING
+            elif user.role == UserRole.PACKER_DISPATCHER:
+                user.status = WorkerStatus.SORTING
+            else:
+                user.status = WorkerStatus.IDLE
+        else:
+            user.status = status
+
+        if user.status in [WorkerStatus.IDLE, WorkerStatus.RECEIVING, WorkerStatus.SORTING]:
             user.picking_progress = 0
             user.total_picked = 0
             # Note: shift time is generated via DB updated_at or simulated, 
