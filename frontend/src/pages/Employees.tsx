@@ -468,15 +468,6 @@ export default function Employees() {
                             style={{ width: `${pct}%` }} 
                           />
                         </div>
-                        <button 
-                          className="btn btn-ghost mt-4 w-full"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setProfileModalEmployee(emp);
-                          }}
-                        >
-                          View Full Profile
-                        </button>
                       </div>
                     ) : (
                       <span style={{ color: 'rgba(255,255,255,0.2)', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>Idle</span>
@@ -510,6 +501,17 @@ export default function Employees() {
                       <span className={`detail-value ${emp.totalPicked === 0 ? 'empty' : ''}`} style={{ color: emp.totalPicked > 0 ? '#e359ac' : undefined }}>
                         {emp.totalPicked}
                       </span>
+                    </div>
+                    <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                      <button 
+                        className="btn btn-ghost"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setProfileModalEmployee(emp);
+                        }}
+                      >
+                        View Full Profile
+                      </button>
                     </div>
                   </div>
                 )}
