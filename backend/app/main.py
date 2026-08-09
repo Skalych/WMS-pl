@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
-from app.routers import auth, users, inventory, orders, waves, inbound, dashboard
+from app.routers import auth, users, inventory, orders, waves, inbound, dashboard, terminal
 from app.services.simulation_service import warehouse_simulation
 
 @asynccontextmanager
@@ -43,6 +43,7 @@ app.include_router(orders.router, prefix=api_prefix)
 app.include_router(waves.router, prefix=api_prefix)
 app.include_router(inbound.router, prefix=api_prefix)
 app.include_router(dashboard.router, prefix=api_prefix)
+app.include_router(terminal.router, prefix=api_prefix)
 
 
 @app.get("/")

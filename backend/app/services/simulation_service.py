@@ -10,6 +10,13 @@ from app.models.enums import WorkerStatus, WaveStatus, TaskStatus, OrderStatus
 
 logger = logging.getLogger(__name__)
 
+# Global Simulation State
+SIMULATION_ACTIVE = True
+
+def set_simulation_state(active: bool):
+    global SIMULATION_ACTIVE
+    SIMULATION_ACTIVE = active
+
 # Base pick rate: realistic speed (e.g., scanning, driving, placing on pallet)
 # 2 items per 5-second tick
 BASE_ITEMS_PER_TICK = 2
@@ -128,8 +135,9 @@ async def warehouse_simulation(session_maker: async_sessionmaker[AsyncSession]):
     while True:
         try:
             await asyncio.sleep(5)
-            async with session_maker() as session:
-                await perform_simulation_tick(session)
+            if SIMULATION_ACTIVE:
+                async with session_maker() as session:
+                    await perform_simulation_tick(session)
         except asyncio.CancelledError:
             logger.info("Warehouse Simulation stopped.")
             break

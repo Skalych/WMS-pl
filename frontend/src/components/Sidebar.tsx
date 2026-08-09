@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../context/SettingsContext';
 import { useNavigate } from 'react-router-dom';
+import { dashboardService } from '../api/services';
 
 export interface SidebarProps {
   activeTab: string;
@@ -88,10 +89,23 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
   const { t } = useTranslation();
   const { language } = useSettings();
   const navigate = useNavigate();
+  const [isSimulationActive, setIsSimulationActive] = useState(true);
 
   const handleTabClick = (tabId: string) => {
     onTabChange(tabId);
     navigate(`/${tabId === 'dashboard' ? '' : tabId}`);
+  };
+
+  const handleToggleSimulation = async () => {
+    const newState = !isSimulationActive;
+    setIsSimulationActive(newState);
+    try {
+      await dashboardService.toggleSimulation(newState);
+    } catch (e) {
+      console.error("Failed to toggle simulation", e);
+      // Revert on failure
+      setIsSimulationActive(!newState);
+    }
   };
 
   const isTabActive = (itemId: string): boolean => {
@@ -228,6 +242,31 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
       {/* Bottom Section */}
       <div className="sidebar-bottom" style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         
+        {/* Simulation Toggle */}
+        <div style={{ padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: isSimulationActive ? '#e359ac' : '#64748b', boxShadow: isSimulationActive ? '0 0 8px #e359ac' : 'none' }} />
+            Autopilot
+          </span>
+          <button 
+            onClick={handleToggleSimulation}
+            style={{
+              background: isSimulationActive ? 'rgba(227, 89, 172, 0.15)' : 'rgba(255,255,255,0.05)',
+              border: `1px solid ${isSimulationActive ? 'rgba(227, 89, 172, 0.3)' : 'rgba(255,255,255,0.1)'}`,
+              color: isSimulationActive ? '#e359ac' : '#94a3b8',
+              padding: '4px 10px',
+              borderRadius: '12px',
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              width: '45px'
+            }}
+          >
+            {isSimulationActive ? 'ON' : 'OFF'}
+          </button>
+        </div>
+
         <div 
           className="sidebar-nav-item" 
           onClick={onOpenSettings}

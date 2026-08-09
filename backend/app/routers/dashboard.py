@@ -3,8 +3,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.schemas.dashboard import DashboardStatsResponse
 from app.services import user_service, order_service, inventory_service, wave_service, inbound_service
+from app.services import simulation_service
+from pydantic import BaseModel
+
+class SimulationToggleRequest(BaseModel):
+    active: bool
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
+
+@router.post("/simulation/toggle")
+async def toggle_simulation(req: SimulationToggleRequest):
+    simulation_service.set_simulation_state(req.active)
+    return {"status": "success", "simulation_active": req.active}
 
 
 @router.get("/stats", response_model=DashboardStatsResponse)

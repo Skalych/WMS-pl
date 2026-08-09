@@ -27,6 +27,10 @@ export const dashboardService = {
   getStats: async (): Promise<DashboardStats> => {
     const response = await apiClient.get('/dashboard/stats');
     return response.data;
+  },
+  toggleSimulation: async (active: boolean): Promise<{status: string, simulation_active: boolean}> => {
+    const response = await apiClient.post('/dashboard/simulation/toggle', { active });
+    return response.data;
   }
 };
 

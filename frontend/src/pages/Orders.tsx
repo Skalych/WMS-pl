@@ -292,6 +292,13 @@ export default function Orders() {
           </div>
         </div>
 
+        {activeFilter === 'Pending' && selectedOrders.length === 0 && (
+          <div style={{ padding: '0.75rem 1rem', marginBottom: '1rem', background: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: '8px', color: '#38bdf8', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Box size={16} />
+            <span>Select one or more PENDING orders below to generate a new Wave. Make sure <strong>Autopilot is OFF</strong> if you want to scan them manually via Terminal!</span>
+          </div>
+        )}
+
         {/* Table */}
         <div style={{ overflowX: 'auto' }}>
           <table className="wms-table">
