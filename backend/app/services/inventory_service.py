@@ -17,7 +17,8 @@ async def get_inventory_items(
     limit: int = 50, 
     search: Optional[str] = None,
     category: Optional[str] = None,
-    status: Optional[str] = None
+    status: Optional[str] = None,
+    sort_by: Optional[str] = None
 ):
     query = (
         select(InventoryBalance)
@@ -49,10 +50,18 @@ async def get_inventory_items(
     # Get total count first
     count_query = select(func.count()).select_from(query.subquery())
     total_count = await db.scalar(count_query)
-    
+    # Handle sorting
+    order_clause = [InventoryBalance.updated_at.desc(), InventoryBalance.id.asc()]
+    if sort_by == 'qty_desc':
+        order_clause = [InventoryBalance.quantity.desc(), InventoryBalance.id.asc()]
+    elif sort_by == 'qty_asc':
+        order_clause = [InventoryBalance.quantity.asc(), InventoryBalance.id.asc()]
+    elif sort_by == 'sku_asc':
+        order_clause = [Product.sku.asc(), InventoryBalance.id.asc()]
+
     # Get paginated items
     result = await db.execute(
-        query.order_by(InventoryBalance.updated_at.desc(), InventoryBalance.id.asc())
+        query.order_by(*order_clause)
         .offset(skip).limit(limit)
     )
     items = result.unique().scalars().all()

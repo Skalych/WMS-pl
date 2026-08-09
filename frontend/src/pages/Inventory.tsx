@@ -20,12 +20,14 @@ export default function Inventory() {
   const itemsPerPage = 50;
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('newest');
 
   useEffect(() => {
     const fetchInventory = async () => {
       setIsLoading(true);
       try {
-        const data = await inventoryService.getInventory(currentPage, itemsPerPage, searchTerm, statusFilter);
+        const data = await inventoryService.getInventory(currentPage, itemsPerPage, searchTerm, statusFilter, categoryFilter, sortBy);
         setInventoryItems(data.items);
         setTotalItems(data.total);
       } catch (error) {
@@ -39,7 +41,7 @@ export default function Inventory() {
       fetchInventory();
     }, 300);
     return () => clearTimeout(timer);
-  }, [currentPage, searchTerm, statusFilter]);
+  }, [currentPage, searchTerm, statusFilter, categoryFilter, sortBy]);
 
   // Handle local filtering if we want to visually filter before the next fetch returns
   // but since we are server-side searching, we just display what's returned.
@@ -155,12 +157,29 @@ export default function Inventory() {
             Stock Levels
           </h3>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button className="dropdown-btn">
-              Sorting ▾
-            </button>
-            <button className="dropdown-btn">
-              Category: All ▾
-            </button>
+            <select 
+              className="dropdown-btn" 
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="newest">Sort: Newest</option>
+              <option value="qty_desc">Qty: High to Low</option>
+              <option value="qty_asc">Qty: Low to High</option>
+              <option value="sku_asc">SKU: A-Z</option>
+            </select>
+            
+            <select 
+              className="dropdown-btn" 
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+            >
+              <option value="all">Category: All</option>
+              <option value="Apparel">Apparel</option>
+              <option value="Footwear">Footwear</option>
+              <option value="Accessories">Accessories</option>
+              <option value="Outerwear">Outerwear</option>
+              <option value="Sportswear">Sportswear</option>
+            </select>
           </div>
         </div>
 

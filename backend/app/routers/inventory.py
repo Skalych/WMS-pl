@@ -14,11 +14,12 @@ async def get_inventory(
     search: Optional[str] = None,
     category: Optional[str] = None,
     status: Optional[str] = None,
+    sort_by: Optional[str] = None,
     db: AsyncSession = Depends(get_db)
 ):
     skip = (page - 1) * size
     items, total = await inventory_service.get_inventory_items(
-        db, skip=skip, limit=size, search=search, category=category, status=status
+        db, skip=skip, limit=size, search=search, category=category, status=status, sort_by=sort_by
     )
     
     response_items = [
