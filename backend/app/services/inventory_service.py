@@ -51,7 +51,10 @@ async def get_inventory_items(
     total_count = await db.scalar(count_query)
     
     # Get paginated items
-    result = await db.execute(query.order_by(InventoryBalance.updated_at.desc()).offset(skip).limit(limit))
+    result = await db.execute(
+        query.order_by(InventoryBalance.updated_at.desc(), InventoryBalance.id.asc())
+        .offset(skip).limit(limit)
+    )
     items = result.unique().scalars().all()
     
     return items, total_count
