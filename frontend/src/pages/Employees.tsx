@@ -39,6 +39,29 @@ export interface Employee {
 type FilterType = 'All' | 'Active' | 'On Break';
 type SortKey = 'status' | 'name' | 'progress' | 'totalPicked';
 
+const mapEmployeeData = (emp: any) => {
+  let dotClass = 'dot-offline';
+  let badgeClass = 'badge-muted';
+  if (['PICKING', 'RECEIVING'].includes(emp.status)) { dotClass = 'dot-online'; badgeClass = 'badge-success'; }
+  else if (['PUTAWAY', 'SORTING', 'DISPATCHING'].includes(emp.status)) { dotClass = 'dot-busy'; badgeClass = 'badge-warning'; }
+  else if (emp.status === 'BREAK') { dotClass = 'dot-busy'; badgeClass = 'badge-warning'; }
+  else if (emp.status === 'IDLE') { dotClass = 'dot-online'; badgeClass = 'badge-active'; }
+  
+  return {
+    ...emp,
+    name: emp.fullName,
+    dotClass,
+    badgeClass,
+    wave: emp.currentWaveNumber || '—',
+    currentProgress: emp.pickingProgress > 0 ? emp.pickingProgress : null,
+    totalProgress: emp.pickingProgress > 0 ? 100 : null,
+    location: emp.currentLocation || 'Base',
+    efficiency: emp.efficiency || 1.0,
+    currentCartItems: emp.current_cart_items || 0,
+    cartCapacityItems: emp.cart_capacity_items || 15
+  };
+};
+
 export default function Employees() {
   const [filter, setFilter] = useState<FilterType>('All');
   const [sortBy, setSortBy] = useState<SortKey>('status');
@@ -60,26 +83,7 @@ export default function Employees() {
         // Filter out ADMIN_MANAGER since they are not floor workers
         const floorWorkers = data.filter((emp: any) => emp.role !== 'ADMIN_MANAGER');
         
-        const mappedData = floorWorkers.map((emp: any) => {
-          let dotClass = 'dot-offline';
-          let badgeClass = 'badge-muted';
-          if (['PICKING', 'RECEIVING'].includes(emp.status)) { dotClass = 'dot-online'; badgeClass = 'badge-success'; }
-          else if (['PUTAWAY', 'SORTING', 'DISPATCHING'].includes(emp.status)) { dotClass = 'dot-busy'; badgeClass = 'badge-warning'; }
-          
-          return {
-            ...emp,
-            name: emp.fullName,
-            dotClass,
-            badgeClass,
-            wave: emp.currentWaveNumber || '—',
-            currentProgress: emp.pickingProgress > 0 ? emp.pickingProgress : null,
-            totalProgress: emp.pickingProgress > 0 ? 100 : null,
-            location: emp.currentLocation || 'Base',
-            efficiency: emp.efficiency || 1.0,
-            currentCartItems: emp.current_cart_items || 0,
-            cartCapacityItems: emp.cart_capacity_items || 15
-          };
-        });
+        const mappedData = floorWorkers.map(mapEmployeeData);
         setEmployees(mappedData);
       } catch (error) {
         console.error('Failed to fetch employees:', error);
@@ -132,7 +136,7 @@ export default function Employees() {
       setEmployees(prev => prev.map(e => {
         if (ids.includes(e.id)) {
           const newStatus = action === 'start' ? 'IDLE' : 'OFFLINE';
-          return { ...e, status: newStatus as WorkerStatus, dotClass: action === 'start' ? 'dot-offline' : 'dot-offline', badgeClass: 'badge-muted' };
+          return mapEmployeeData({ ...e, status: newStatus });
         }
         return e;
       }));
@@ -201,7 +205,9 @@ export default function Employees() {
     const statusOrder: Record<string, number> = {
       PICKING: 1, RECEIVING: 2, SORTING: 3, PUTAWAY: 4, DISPATCHING: 5, BREAK: 6, IDLE: 7
     };
-    return (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99);
+    const diff = (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99);
+    if (diff !== 0) return diff;
+    return a.name.localeCompare(b.name);
   });
 
   const statuses: WorkerStatus[] = ['PICKING', 'PUTAWAY', 'SORTING', 'RECEIVING', 'DISPATCHING', 'BREAK', 'IDLE', 'OFFLINE'] as WorkerStatus[];
@@ -532,23 +538,7 @@ export default function Employees() {
               try {
                 const data = await userService.getEmployees();
                 const floorWorkers = data.filter((emp: any) => emp.role !== 'ADMIN_MANAGER');
-                const mappedData = floorWorkers.map((emp: any) => ({
-                  id: emp.id,
-                  name: emp.fullName,
-                  role: emp.role,
-                  status: emp.status,
-                  dotClass: emp.status === 'OFFLINE' ? 'dot-offline' : emp.status === 'BREAK' ? 'dot-busy' : 'dot-online',
-                  badgeClass: emp.status === 'OFFLINE' ? 'badge-muted' : emp.status === 'BREAK' ? 'badge-warning' : 'badge-active',
-                  wave: emp.currentWaveNumber || '-',
-                  currentProgress: emp.pickingProgress,
-                  totalProgress: 100,
-                  location: emp.currentLocation || '-',
-                  shiftTime: emp.shiftTime || '00:00',
-                  totalPicked: emp.totalPicked || 0,
-                  efficiency: emp.efficiency || 1.0,
-                  currentCartItems: emp.currentCartItems || 0,
-                  cartCapacityItems: emp.cartCapacityItems || 15
-                }));
+                const mappedData = floorWorkers.map(mapEmployeeData);
                 setEmployees(mappedData);
               } catch (err) {
                 console.error(err);
