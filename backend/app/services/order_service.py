@@ -6,23 +6,23 @@ from typing import Optional
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload
 from app.models.orders import Order, OrderItem, MacroOrder
 from app.models.waves import WaveOrder, Wave
 from app.models.enums import OrderStatus, OrderPriority
 
 
-async def get_orders(db: AsyncSession, status: Optional[OrderStatus] = None):
-    query = select(Order).options(joinedload(Order.items), joinedload(Order.wave_orders).joinedload(WaveOrder.wave))
+async def get_orders(db: AsyncSession, status: Optional[OrderStatus] = None, limit: int = 100):
+    query = select(Order).options(selectinload(Order.items), selectinload(Order.wave_orders).selectinload(WaveOrder.wave))
     if status:
         query = query.where(Order.status == status)
-    result = await db.execute(query.order_by(Order.created_at.desc()))
+    result = await db.execute(query.order_by(Order.created_at.desc()).limit(limit))
     return result.unique().scalars().all()
 
 
 async def get_order_by_id(db: AsyncSession, order_id: uuid.UUID):
     result = await db.execute(
-        select(Order).options(joinedload(Order.items), joinedload(Order.wave_orders).joinedload(WaveOrder.wave)).where(Order.id == order_id)
+        select(Order).options(selectinload(Order.items), selectinload(Order.wave_orders).selectinload(WaveOrder.wave)).where(Order.id == order_id)
     )
     return result.unique().scalar_one_or_none()
 
@@ -151,10 +151,11 @@ async def create_macro_order(db: AsyncSession, size: str):
     macro_order.orders_count_hint = num_orders
     return macro_order
 
-async def get_macro_orders(db: AsyncSession):
+async def get_macro_orders(db: AsyncSession, limit: int = 50):
     result = await db.execute(
         select(MacroOrder)
-        .options(joinedload(MacroOrder.orders))
+        .options(selectinload(MacroOrder.orders))
         .order_by(MacroOrder.created_at.desc())
+        .limit(limit)
     )
     return result.unique().scalars().all()

@@ -2,7 +2,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.schemas.users import UserResponse, UserStatusUpdate
+from app.schemas.users import UserResponse, UserStatusUpdate, BulkShiftUpdate
 from app.services import user_service
 from app.models.enums import UserRole, WorkerStatus
 from typing import Optional
@@ -37,3 +37,19 @@ async def update_status(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+@router.post("/shift/start", response_model=list[UserResponse])
+async def start_shift(
+    data: BulkShiftUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    return await user_service.bulk_update_status(db, data.user_ids, WorkerStatus.IDLE)
+
+
+@router.post("/shift/end", response_model=list[UserResponse])
+async def end_shift(
+    data: BulkShiftUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    return await user_service.bulk_update_status(db, data.user_ids, WorkerStatus.OFFLINE)

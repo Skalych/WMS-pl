@@ -308,7 +308,7 @@ body {
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .data-panel-header {
@@ -672,7 +672,7 @@ body {
   backdrop-filter: blur(10px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
-  overflow: hidden;
+  overflow: visible;
   transition: all var(--transition-base);
 }
 
@@ -698,6 +698,8 @@ body {
   grid-template-columns: repeat(4, 1fr);
   gap: var(--spacing-lg);
   animation: slideDown 0.2s ease-out forwards;
+  border-bottom-left-radius: var(--radius-xl);
+  border-bottom-right-radius: var(--radius-xl);
 }
 
 @keyframes slideDown {

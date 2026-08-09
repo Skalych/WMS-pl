@@ -1,20 +1,23 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.schemas.inventory import InventoryItemResponse, InventoryStatsResponse
+from app.schemas.inventory import InventoryItemResponse, InventoryStatsResponse, PaginatedInventoryResponse
 from app.services import inventory_service
 from typing import Optional
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
 
-
-@router.get("", response_model=list[InventoryItemResponse])
+@router.get("", response_model=PaginatedInventoryResponse)
 async def list_inventory(
     search: Optional[str] = Query(None),
+    page: int = Query(1, ge=1),
+    size: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_db),
 ):
-    items = await inventory_service.get_inventory_items(db, search=search)
-    return [
+    skip = (page - 1) * size
+    items, total = await inventory_service.get_inventory_items(db, skip=skip, limit=size, search=search)
+    
+    response_items = [
         InventoryItemResponse(
             id=item.id,
             sku=item.product.sku,
@@ -27,6 +30,13 @@ async def list_inventory(
         )
         for item in items
     ]
+    
+    return PaginatedInventoryResponse(
+        items=response_items,
+        total=total,
+        page=page,
+        size=size
+    )
 
 
 @router.get("/stats", response_model=InventoryStatsResponse)

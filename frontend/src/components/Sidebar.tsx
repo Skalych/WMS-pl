@@ -62,6 +62,14 @@ const AnalyticsIcon: React.FC = () => (
   </svg>
 );
 
+const MapIcon: React.FC = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+    <line x1="8" y1="2" x2="8" y2="18" />
+    <line x1="16" y1="6" x2="16" y2="22" />
+  </svg>
+);
+
 const AdminIcon: React.FC = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="4 17 10 11 4 5" />
@@ -103,6 +111,7 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
       items: [
         { id: 'dashboard', label: t('sidebar.dashboard'), Icon: DashboardIcon },
         { id: 'admin', label: 'Sim Tools', Icon: AdminIcon },
+        { id: 'map', label: 'Warehouse Map', Icon: MapIcon },
         { id: 'employees', label: t('sidebar.employees'), Icon: EmployeesIcon },
         { id: 'inventory', label: t('sidebar.inventory'), Icon: InventoryIcon },
         { id: 'orders-waves', label: t('sidebar.ordersWaves'), Icon: OrdersWavesIcon },

@@ -33,7 +33,7 @@ export const dashboardService = {
 // Users / Employees Services
 export const userService = {
   getEmployees: async (role?: UserRole, status?: WorkerStatus): Promise<Employee[]> => {
-    let url = '/users/';
+    let url = '/users';
     const params = new URLSearchParams();
     if (role) params.append('role', role);
     if (status) params.append('status', status);
@@ -47,7 +47,7 @@ export const userService = {
       fullName: u.full_name,
       role: u.role,
       status: u.status,
-      currentLocation: u.current_location_id || 'N/A',
+      currentLocation: u.current_location_code || 'N/A',
       currentTaskNumber: null,
       currentWaveNumber: null,
       pickingProgress: 0,
@@ -60,30 +60,45 @@ export const userService = {
   updateEmployee: async (id: string, updates: { status?: WorkerStatus, efficiency?: number }) => {
     const response = await apiClient.patch(`/users/${id}/status`, updates);
     return response.data;
+  },
+
+  startShift: async (userIds: string[]) => {
+    const response = await apiClient.post(`/users/shift/start`, { user_ids: userIds });
+    return response.data;
+  },
+
+  endShift: async (userIds: string[]) => {
+    const response = await apiClient.post(`/users/shift/end`, { user_ids: userIds });
+    return response.data;
   }
 };
 
 // Inventory Services
 export const inventoryService = {
-  getInventory: async (): Promise<InventoryItem[]> => {
-    const response = await apiClient.get('/inventory/');
-    return response.data.map((item: any) => ({
-      id: item.id,
-      sku: item.sku,
-      productName: item.product_name,
-      category: item.category || 'Unknown',
-      location: item.location,
-      quantity: item.quantity,
-      reservedQuantity: item.reserved_quantity,
-      status: item.status
-    }));
+  getInventory: async (page: number = 1, limit: number = 50, search?: string): Promise<{items: InventoryItem[], total: number}> => {
+    let url = `/inventory?page=${page}&size=${limit}`;
+    if (search) url += `&search=${search}`;
+    const response = await apiClient.get(url);
+    return {
+      total: response.data.total,
+      items: response.data.items.map((item: any) => ({
+        id: item.id,
+        sku: item.sku,
+        productName: item.product_name,
+        category: item.category || 'Unknown',
+        location: item.location,
+        quantity: item.quantity,
+        reservedQuantity: item.reserved_quantity,
+        status: item.status
+      }))
+    };
   }
 };
 
 // Orders & Waves Services
 export const orderService = {
   getOrders: async (): Promise<Order[]> => {
-    const response = await apiClient.get('/orders/');
+    const response = await apiClient.get('/orders');
     return response.data.map((o: any) => ({
       id: o.id,
       orderNumber: o.order_number,
@@ -122,7 +137,7 @@ export const orderService = {
   },
   
   getWaves: async (): Promise<Wave[]> => {
-    const response = await apiClient.get('/waves/');
+    const response = await apiClient.get('/waves');
     return response.data.map((w: any) => ({
       id: w.id,
       waveNumber: w.wave_number,
@@ -134,7 +149,7 @@ export const orderService = {
   },
 
   createWave: async (orderIds: string[]): Promise<Wave> => {
-    const response = await apiClient.post('/waves/', { order_ids: orderIds });
+    const response = await apiClient.post('/waves', { order_ids: orderIds });
     const w = response.data;
     return {
       id: w.id,

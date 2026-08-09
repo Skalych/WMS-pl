@@ -15,21 +15,35 @@ export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [totalItems, setTotalItems] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchInventory = async () => {
+      setIsLoading(true);
       try {
-        const data = await inventoryService.getInventory();
-        setInventoryItems(data);
+        const data = await inventoryService.getInventory(currentPage, itemsPerPage, searchTerm);
+        setInventoryItems(data.items);
+        setTotalItems(data.total);
       } catch (error) {
         console.error('Failed to fetch inventory:', error);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchInventory();
-  }, []);
+    // Fetch with a slight debounce if typing in search
+    const timer = setTimeout(() => {
+      fetchInventory();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [currentPage, searchTerm]);
+
+  // Handle local filtering if we want to visually filter before the next fetch returns
+  // but since we are server-side searching, we just display what's returned.
+  const filteredItems = inventoryItems;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
 
   const toggleSelectItem = (id: string) => {
     setSelectedItems((prev) =>
@@ -38,17 +52,12 @@ export default function Inventory() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedItems.length === inventoryItems.length && inventoryItems.length > 0) {
+    if (selectedItems.length === filteredItems.length && filteredItems.length > 0) {
       setSelectedItems([]);
     } else {
-      setSelectedItems(inventoryItems.map((item) => item.id));
+      setSelectedItems(filteredItems.map((item) => item.id));
     }
   };
-
-  const filteredItems = inventoryItems.filter(item => 
-    item.sku.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    item.productName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -84,7 +93,7 @@ export default function Inventory() {
       <div className="dashboard-grid">
         <div className="card">
           <div className="card-title">Total SKUs</div>
-          <div className="card-value" style={{ color: 'var(--text-main)' }}>{isLoading ? '...' : inventoryItems.length}</div>
+          <div className="card-value" style={{ color: 'var(--text-main)' }}>{isLoading ? '...' : totalItems}</div>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.4rem' }}>
             Active catalog items
           </p>
@@ -122,18 +131,23 @@ export default function Inventory() {
       </div>
 
       {/* 3. Main Data Table in .data-panel */}
-      <div className="data-panel">
+      <div className="data-panel" style={{ 
+        padding: '24px',
+        background: 'linear-gradient(135deg, rgba(15, 15, 22, 0.9) 0%, rgba(30, 20, 45, 0.4) 100%)',
+        border: '1px solid rgba(227, 89, 172, 0.15)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+      }}>
         {/* Panel Header */}
-        <div className="data-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <Package size={18} style={{ color: '#e359ac' }} />
+        <div className="data-panel-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'var(--text-main)', letterSpacing: '-0.3px' }}>
+            <Package size={20} style={{ color: '#e359ac', filter: 'drop-shadow(0 0 8px rgba(227,89,172,0.6))' }} />
             Stock Levels
           </h3>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button className="btn-ghost">
+            <button className="btn-ghost" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
               Sorting ▾
             </button>
-            <button className="btn-ghost">
+            <button className="btn-ghost" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
               Category: All ▾
             </button>
           </div>
@@ -141,10 +155,10 @@ export default function Inventory() {
 
         {/* Table */}
         <div style={{ overflowX: 'auto' }}>
-          <table className="wms-table">
+          <table className="wms-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
             <thead>
-              <tr>
-                <th style={{ width: '40px' }}>
+              <tr style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <th style={{ width: '40px', padding: '0 1rem' }}>
                   <input
                     type="checkbox"
                     className="wms-checkbox"
@@ -152,13 +166,13 @@ export default function Inventory() {
                     onChange={toggleSelectAll}
                   />
                 </th>
-                <th>SKU</th>
-                <th>Product Name</th>
-                <th>Category</th>
-                <th>Location</th>
-                <th>Quantity</th>
-                <th>Reserved</th>
-                <th>Status</th>
+                <th style={{ padding: '0 1rem', textAlign: 'left', fontWeight: 600 }}>SKU</th>
+                <th style={{ padding: '0 1rem', textAlign: 'left', fontWeight: 600 }}>Product Name</th>
+                <th style={{ padding: '0 1rem', textAlign: 'left', fontWeight: 600 }}>Category</th>
+                <th style={{ padding: '0 1rem', textAlign: 'left', fontWeight: 600 }}>Location</th>
+                <th style={{ padding: '0 1rem', textAlign: 'left', fontWeight: 600 }}>Quantity</th>
+                <th style={{ padding: '0 1rem', textAlign: 'left', fontWeight: 600 }}>Reserved</th>
+                <th style={{ padding: '0 1rem', textAlign: 'left', fontWeight: 600 }}>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -171,8 +185,8 @@ export default function Inventory() {
                   <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No inventory items found.</td>
                 </tr>
               ) : filteredItems.map((item) => (
-                <tr key={item.id}>
-                  <td>
+                <tr key={item.id} style={{ backgroundColor: 'rgba(255, 255, 255, 0.02)', transition: 'background-color 0.2s', border: '1px solid transparent' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(227, 89, 172, 0.05)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.02)'}>
+                  <td style={{ padding: '1rem', borderTopLeftRadius: '8px', borderBottomLeftRadius: '8px' }}>
                     <input
                       type="checkbox"
                       className="wms-checkbox"
@@ -180,15 +194,19 @@ export default function Inventory() {
                       onChange={() => toggleSelectItem(item.id)}
                     />
                   </td>
-                  <td style={{ fontFamily: 'var(--font-mono)', color: '#e359ac', fontWeight: 600 }}>
+                  <td style={{ padding: '1rem', fontFamily: 'var(--font-mono)', color: '#38bdf8', fontWeight: 600, letterSpacing: '0.5px' }}>
                     {item.sku}
                   </td>
-                  <td style={{ fontWeight: 600 }}>{item.productName}</td>
-                  <td>{item.category}</td>
-                  <td style={{ fontFamily: 'var(--font-mono)' }}>{item.location}</td>
-                  <td>
+                  <td style={{ padding: '1rem', fontWeight: 700, color: 'var(--text-main)' }}>{item.productName}</td>
+                  <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>{item.category}</td>
+                  <td style={{ padding: '1rem', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: '#e359ac', letterSpacing: '1px' }}>
+                    <div style={{ display: 'inline-flex', padding: '0.2rem 0.5rem', background: 'rgba(227,89,172,0.1)', borderRadius: '4px', border: '1px solid rgba(227,89,172,0.2)' }}>
+                      {item.location}
+                    </div>
+                  </td>
+                  <td style={{ padding: '1rem' }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontWeight: 600 }}>{item.quantity}</span>
+                      <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-main)' }}>{item.quantity}</span>
                       {item.status === 'low_stock' && (
                         <div
                           title="Low Stock Warning"
@@ -206,23 +224,24 @@ export default function Inventory() {
                               width: `${Math.min(100, (item.quantity / 120) * 100)}%`,
                               height: '100%',
                               backgroundColor: 'var(--warning)',
-                              borderRadius: '2px'
+                              borderRadius: '2px',
+                              boxShadow: '0 0 5px var(--warning)'
                             }}
                           />
                         </div>
                       )}
                     </div>
                   </td>
-                  <td>{item.reservedQuantity}</td>
-                  <td>
+                  <td style={{ padding: '1rem', color: 'var(--text-muted)', fontWeight: 500 }}>{item.reservedQuantity}</td>
+                  <td style={{ padding: '1rem', borderTopRightRadius: '8px', borderBottomRightRadius: '8px' }}>
                     {item.status === 'in_stock' && (
-                      <span className="badge badge-success">In Stock</span>
+                      <span className="badge badge-success" style={{ filter: 'drop-shadow(0 0 5px rgba(34,197,94,0.3))' }}>In Stock</span>
                     )}
                     {item.status === 'low_stock' && (
-                      <span className="badge badge-warning">Low Stock</span>
+                      <span className="badge badge-warning" style={{ filter: 'drop-shadow(0 0 5px rgba(245,158,11,0.3))' }}>Low Stock</span>
                     )}
                     {item.status === 'out_of_stock' && (
-                      <span className="badge badge-danger">Out of Stock</span>
+                      <span className="badge badge-danger" style={{ filter: 'drop-shadow(0 0 5px rgba(239,68,68,0.3))' }}>Out of Stock</span>
                     )}
                   </td>
                 </tr>
@@ -246,11 +265,16 @@ export default function Inventory() {
           }}
         >
           <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Showing {filteredItems.length} of {inventoryItems.length}
+            Showing {filteredItems.length} of {totalItems} (Page {currentPage} of {totalPages})
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <button className="btn-ghost" style={{ padding: '0.4rem 0.7rem' }}>
+            <button 
+              className="btn-ghost" 
+              style={{ padding: '0.4rem 0.7rem' }}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+            >
               <ChevronLeft size={16} />
             </button>
             <button 
@@ -263,19 +287,14 @@ export default function Inventory() {
                 boxShadow: '0 0 10px rgba(227, 89, 172, 0.4)' 
               }}
             >
-              1
+              {currentPage}
             </button>
-            <button className="btn-ghost" style={{ padding: '0.4rem 0.75rem' }}>
-              2
-            </button>
-            <button className="btn-ghost" style={{ padding: '0.4rem 0.75rem' }}>
-              3
-            </button>
-            <span style={{ color: 'var(--text-muted)', padding: '0 0.3rem', fontSize: '0.9rem' }}>...</span>
-            <button className="btn-ghost" style={{ padding: '0.4rem 0.75rem' }}>
-              156
-            </button>
-            <button className="btn-ghost" style={{ padding: '0.4rem 0.7rem' }}>
+            <button 
+              className="btn-ghost" 
+              style={{ padding: '0.4rem 0.7rem' }}
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+            >
               <ChevronRight size={16} />
             </button>
           </div>

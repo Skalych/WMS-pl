@@ -46,6 +46,7 @@ export default function Employees() {
   const [editingEfficiencyId, setEditingEfficiencyId] = useState<string | null>(null);
   const [editingEfficiencyValue, setEditingEfficiencyValue] = useState<string>('');
   const [openStatusDropdownId, setOpenStatusDropdownId] = useState<string | null>(null);
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -77,6 +78,8 @@ export default function Employees() {
       }
     };
     fetchEmployees();
+    const interval = setInterval(fetchEmployees, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleUpdateWorker = async (id: string, updates: any) => {
@@ -105,6 +108,46 @@ export default function Employees() {
       handleUpdateWorker(id, { efficiency: val });
     }
     setEditingEfficiencyId(null);
+  };
+
+  const handleBulkShift = async (action: 'start' | 'end') => {
+    if (selectedEmployeeIds.size === 0) return;
+    try {
+      const ids = Array.from(selectedEmployeeIds);
+      if (action === 'start') {
+        await userService.startShift(ids);
+      } else {
+        await userService.endShift(ids);
+      }
+      setEmployees(prev => prev.map(e => {
+        if (ids.includes(e.id)) {
+          const newStatus = action === 'start' ? 'IDLE' : 'OFFLINE';
+          return { ...e, status: newStatus as WorkerStatus, dotClass: action === 'start' ? 'dot-offline' : 'dot-offline', badgeClass: 'badge-muted' };
+        }
+        return e;
+      }));
+      setSelectedEmployeeIds(new Set());
+    } catch (err) {
+      console.error('Bulk shift error', err);
+    }
+  };
+
+  const toggleSelectEmployee = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedEmployeeIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedEmployeeIds.size === sortedEmployees.length && sortedEmployees.length > 0) {
+      setSelectedEmployeeIds(new Set());
+    } else {
+      setSelectedEmployeeIds(new Set(sortedEmployees.map(e => e.id)));
+    }
   };
 
   // Close dropdowns when clicking outside (simple hack, real impl would use ref)
@@ -287,13 +330,38 @@ export default function Employees() {
         </div>
 
         {/* Header Labels (Optional, purely visual for grid alignment) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1.5fr', padding: '0 24px 12px 24px', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '40px 2fr 1fr 1fr 1fr 1.5fr', padding: '0 24px 12px 24px', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+          <div>
+            <input 
+              type="checkbox" 
+              className="wms-checkbox"
+              checked={selectedEmployeeIds.size === sortedEmployees.length && sortedEmployees.length > 0}
+              onChange={toggleSelectAll}
+            />
+          </div>
           <div>Employee</div>
           <div>Role</div>
           <div>Status</div>
           <div>Efficiency</div>
           <div>Activity</div>
         </div>
+
+        {/* Bulk Action Bar */}
+        {selectedEmployeeIds.size > 0 && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '12px 24px', background: 'rgba(227, 89, 172, 0.05)', borderBottom: '1px solid var(--border-subtle)' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>
+              {selectedEmployeeIds.size} selected
+            </span>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button className="btn btn-primary" style={{ padding: '4px 12px', fontSize: '0.75rem' }} onClick={() => handleBulkShift('start')}>
+                Start Shift
+              </button>
+              <button className="btn btn-ghost" style={{ padding: '4px 12px', fontSize: '0.75rem' }} onClick={() => handleBulkShift('end')}>
+                End Shift
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Cards List */}
         <div className="employee-list" style={{ marginTop: '16px' }}>
@@ -305,14 +373,26 @@ export default function Employees() {
             const hasProgress = emp.currentProgress !== null && emp.totalProgress !== null;
             const pct = hasProgress ? Math.round((emp.currentProgress! / emp.totalProgress!) * 100) : 0;
             const isExpanded = expandedCardId === emp.id;
+            const isDropdownOpen = openStatusDropdownId === emp.id;
 
             return (
-              <div key={emp.id} className="employee-card">
+              <div key={emp.id} className="employee-card" style={{ position: 'relative', zIndex: isDropdownOpen ? 50 : 1 }}>
                 {/* Main Row */}
                 <div 
                   className="employee-card-main" 
+                  style={{ gridTemplateColumns: '40px 2fr 1fr 1fr 1fr 1.5fr' }}
                   onClick={() => setExpandedCardId(isExpanded ? null : emp.id)}
                 >
+                  {/* Checkbox */}
+                  <div onClick={(e) => toggleSelectEmployee(emp.id, e)} style={{ display: 'flex', alignItems: 'center' }}>
+                    <input 
+                      type="checkbox" 
+                      className="wms-checkbox"
+                      checked={selectedEmployeeIds.has(emp.id)}
+                      readOnly
+                    />
+                  </div>
+
                   {/* Name & Dot */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <span className={`dot ${emp.dotClass}`} />

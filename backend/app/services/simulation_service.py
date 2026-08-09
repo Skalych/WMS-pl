@@ -14,20 +14,12 @@ logger = logging.getLogger(__name__)
 BASE_ITEMS_PER_TICK = 10
 
 async def perform_simulation_tick(session: AsyncSession):
-    # 1. Fetch online workers that are PICKING
+    # 1. Fetch online workers that are PICKING or IDLE (to be assigned)
     workers = await session.execute(
-        select(User).where(User.status == WorkerStatus.PICKING)
+        select(User).where(User.status.in_([WorkerStatus.PICKING, WorkerStatus.IDLE]))
     )
-    picking_workers = workers.scalars().all()
-    
-    if not picking_workers:
-        return # No one is picking
-        
-    # Calculate total picking capacity for this tick
-    total_capacity = sum(int(BASE_ITEMS_PER_TICK * w.efficiency) for w in picking_workers)
-    if total_capacity <= 0:
-        return
-        
+    available_workers = workers.scalars().all()
+
     # 2. Fetch waves that are IN_PROGRESS, ordered by oldest first
     waves_result = await session.execute(
         select(Wave)
@@ -40,6 +32,36 @@ async def perform_simulation_tick(session: AsyncSession):
     )
     waves = waves_result.unique().scalars().all()
     
+    # If no waves are in progress, set all active pickers back to IDLE
+    if not waves:
+        changed = False
+        for worker in available_workers:
+            if worker.status == WorkerStatus.PICKING:
+                worker.status = WorkerStatus.IDLE
+                changed = True
+        if changed:
+            await session.commit()
+        return
+
+    # If there are waves, assign IDLE pickers to PICKING
+    picking_workers = []
+    for worker in available_workers:
+        # Assuming only pickers are involved in this simulation step
+        # If there's work, move IDLE to PICKING
+        if worker.status == WorkerStatus.IDLE:
+            worker.status = WorkerStatus.PICKING
+        
+        if worker.status == WorkerStatus.PICKING:
+            picking_workers.append(worker)
+            
+    if not picking_workers:
+        return # No pickers available
+        
+    # Calculate total picking capacity for this tick
+    total_capacity = sum(int(BASE_ITEMS_PER_TICK * w.efficiency) for w in picking_workers)
+    if total_capacity <= 0:
+        return
+
     capacity_left = total_capacity
     
     for wave in waves:
@@ -72,6 +94,14 @@ async def perform_simulation_tick(session: AsyncSession):
                     capacity_left = 0
                     task_all_items_completed = False
                     all_tasks_completed = False
+                    
+                # Update a random picker's location to this item's location
+                import random
+                if picking_workers:
+                    worker = random.choice(picking_workers)
+                    worker.current_location_id = item.source_location_id
+                    
+                if capacity_left <= 0:
                     break # Out of capacity
             
             if task_all_items_completed:

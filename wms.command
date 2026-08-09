@@ -96,12 +96,19 @@ function start_system() {
     echo -e "${CYAN}==============================================================================${NC}"
     echo -e "Логи пишуться у файли: ${BOLD}backend/backend.log${NC} та ${BOLD}frontend/frontend.log${NC}"
     echo ""
-    echo -e "${MAGENTA}Натисніть CTRL+C щоб зупинити всі сервіси і вийти.${NC}"
+    echo -e "${MAGENTA}Натисніть CTRL+C щоб зупинити всі сервіси і повернутись до меню.${NC}"
     
     open http://localhost:3000
     
-    trap "stop_all; exit 0" INT
-    while true; do sleep 1; done
+    stop_requested=0
+    trap "stop_requested=1" INT
+    while [ $stop_requested -eq 0 ]; do
+        sleep 1
+    done
+    
+    stop_all
+    # Повертаємо стандартну поведінку CTRL+C для меню
+    trap - INT
 }
 
 while true; do

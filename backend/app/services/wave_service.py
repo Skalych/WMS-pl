@@ -6,18 +6,22 @@ from typing import List
 
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import selectinload, joinedload
 from app.models.waves import Wave, WaveOrder, MicroTask, MicroTaskItem
 from app.models.orders import Order
 from app.models.topology import Location
 from app.models.enums import WaveStatus, OrderStatus, LocationType, TaskType, TaskStatus
 
 
-async def get_waves(db: AsyncSession):
+async def get_waves(db: AsyncSession, limit: int = 50):
     result = await db.execute(
         select(Wave)
-        .options(joinedload(Wave.wave_orders), joinedload(Wave.micro_tasks).joinedload(MicroTask.items))
+        .options(
+            selectinload(Wave.micro_tasks).selectinload(MicroTask.items),
+            selectinload(Wave.wave_orders).selectinload(WaveOrder.order)
+        )
         .order_by(Wave.created_at.desc())
+        .limit(limit)
     )
     return result.unique().scalars().all()
 

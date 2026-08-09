@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 
 class InventoryItemResponse(BaseModel):
@@ -11,6 +11,14 @@ class InventoryItemResponse(BaseModel):
     quantity: int
     reserved_quantity: int
     status: str  # 'in_stock', 'low_stock', 'out_of_stock'
+
+    model_config = {"from_attributes": True}
+
+class PaginatedInventoryResponse(BaseModel):
+    items: List[InventoryItemResponse]
+    total: int
+    page: int
+    size: int
 
     model_config = {"from_attributes": True}
 

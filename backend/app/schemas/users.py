@@ -25,6 +25,7 @@ class UserResponse(BaseModel):
     status: WorkerStatus
     efficiency: float
     current_location_id: Optional[UUID] = None
+    current_location_code: Optional[str] = None
 
     model_config = {"from_attributes": True}
 
@@ -32,3 +33,6 @@ class UserStatusUpdate(BaseModel):
     status: Optional[WorkerStatus] = None
     efficiency: Optional[float] = None
     current_location_id: Optional[UUID] = None
+
+class BulkShiftUpdate(BaseModel):
+    user_ids: list[UUID]
