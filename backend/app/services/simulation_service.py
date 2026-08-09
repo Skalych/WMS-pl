@@ -10,8 +10,9 @@ from app.models.enums import WorkerStatus, WaveStatus, TaskStatus, OrderStatus
 
 logger = logging.getLogger(__name__)
 
-# Base pick rate: 2 items per second = 10 items per 5-second tick
-BASE_ITEMS_PER_TICK = 10
+# Base pick rate: realistic speed (e.g., scanning, driving, placing on pallet)
+# 2 items per 5-second tick
+BASE_ITEMS_PER_TICK = 2
 
 async def perform_simulation_tick(session: AsyncSession):
     # 1. Fetch online workers that are PICKING or IDLE (to be assigned)

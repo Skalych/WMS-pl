@@ -14,6 +14,7 @@ class WorkerStatus(str, enum.Enum):
     PICKING = "PICKING"
     SORTING = "SORTING"
     DISPATCHING = "DISPATCHING"
+    DROPOFF = "DROPOFF"
     BREAK = "BREAK"
 
 class LocationType(str, enum.Enum):
@@ -67,6 +68,7 @@ class TaskStatus(str, enum.Enum):
     ASSIGNED = "ASSIGNED"
     IN_PROGRESS = "IN_PROGRESS"
     COMPLETED = "COMPLETED"
+    EXCEPTION = "EXCEPTION"
     CANCELLED = "CANCELLED"
 
 class TaskType(str, enum.Enum):

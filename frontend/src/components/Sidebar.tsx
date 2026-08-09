@@ -111,7 +111,6 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
       items: [
         { id: 'dashboard', label: t('sidebar.dashboard'), Icon: DashboardIcon },
         { id: 'admin', label: 'Sim Tools', Icon: AdminIcon },
-        { id: 'map', label: 'Warehouse Map', Icon: MapIcon },
         { id: 'employees', label: t('sidebar.employees'), Icon: EmployeesIcon },
         { id: 'inventory', label: t('sidebar.inventory'), Icon: InventoryIcon },
         { id: 'orders-waves', label: t('sidebar.ordersWaves'), Icon: OrdersWavesIcon },

@@ -30,6 +30,8 @@ export interface Employee {
   shiftTime: string;
   totalPicked: number;
   efficiency: number;
+  currentCartItems: number;
+  cartCapacityItems: number;
 }
 
 type FilterType = 'All' | 'Active' | 'On Break';
@@ -52,7 +54,10 @@ export default function Employees() {
     const fetchEmployees = async () => {
       try {
         const data = await userService.getEmployees();
-        const mappedData = data.map((emp: any) => {
+        // Filter out ADMIN_MANAGER since they are not floor workers
+        const floorWorkers = data.filter((emp: any) => emp.role !== 'ADMIN_MANAGER');
+        
+        const mappedData = floorWorkers.map((emp: any) => {
           let dotClass = 'dot-offline';
           let badgeClass = 'badge-muted';
           if (['PICKING', 'RECEIVING'].includes(emp.status)) { dotClass = 'dot-online'; badgeClass = 'badge-success'; }
@@ -66,8 +71,10 @@ export default function Employees() {
             wave: emp.currentWaveNumber || '—',
             currentProgress: emp.pickingProgress > 0 ? emp.pickingProgress : null,
             totalProgress: emp.pickingProgress > 0 ? 100 : null,
-            location: emp.currentLocation,
-            efficiency: emp.efficiency || 1.0
+            location: emp.currentLocation || 'Base',
+            efficiency: emp.efficiency || 1.0,
+            currentCartItems: emp.current_cart_items || 0,
+            cartCapacityItems: emp.cart_capacity_items || 15
           };
         });
         setEmployees(mappedData);
@@ -330,7 +337,7 @@ export default function Employees() {
         </div>
 
         {/* Header Labels (Optional, purely visual for grid alignment) */}
-        <div style={{ display: 'grid', gridTemplateColumns: '40px 2fr 1fr 1fr 1fr 1.5fr', padding: '0 24px 12px 24px', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '40px 2fr 1fr 1.5fr 1fr 1fr 1.5fr', padding: '0 24px 12px 24px', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
           <div>
             <input 
               type="checkbox" 
@@ -342,7 +349,8 @@ export default function Employees() {
           <div>Employee</div>
           <div>Role</div>
           <div>Status</div>
-          <div>Efficiency</div>
+          <div>Location</div>
+          <div>Cart</div>
           <div>Activity</div>
         </div>
 
@@ -380,7 +388,7 @@ export default function Employees() {
                 {/* Main Row */}
                 <div 
                   className="employee-card-main" 
-                  style={{ gridTemplateColumns: '40px 2fr 1fr 1fr 1fr 1.5fr' }}
+                  style={{ gridTemplateColumns: '40px 2fr 1fr 1.5fr 1fr 1fr 1.5fr' }}
                   onClick={() => setExpandedCardId(isExpanded ? null : emp.id)}
                 >
                   {/* Checkbox */}
@@ -432,37 +440,15 @@ export default function Employees() {
                     )}
                   </div>
 
-                  {/* Efficiency Inline Editor */}
-                  <div onClick={(e) => e.stopPropagation()}>
-                    {editingEfficiencyId === emp.id ? (
-                      <div className="efficiency-editor" style={{ background: 'rgba(227, 89, 172, 0.1)', borderColor: 'var(--accent-primary)' }}>
-                        <Zap size={14} />
-                        <input
-                          type="number"
-                          step="0.1"
-                          autoFocus
-                          className="efficiency-input"
-                          value={editingEfficiencyValue}
-                          onChange={(e) => setEditingEfficiencyValue(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleEfficiencySubmit(emp.id);
-                            if (e.key === 'Escape') setEditingEfficiencyId(null);
-                          }}
-                          onBlur={() => handleEfficiencySubmit(emp.id)}
-                        />
-                      </div>
-                    ) : (
-                      <div 
-                        className="efficiency-editor"
-                        onClick={() => {
-                          setEditingEfficiencyValue(emp.efficiency.toString());
-                          setEditingEfficiencyId(emp.id);
-                        }}
-                      >
-                        <Zap size={14} />
-                        {emp.efficiency.toFixed(1)}x
-                      </div>
-                    )}
+                  {/* Location Inline */}
+                  <div style={{ fontSize: '0.85rem', fontFamily: 'var(--font-mono)', color: 'var(--text-main)' }}>
+                    {emp.location}
+                  </div>
+
+                  {/* Cart Inline */}
+                  <div style={{ fontSize: '0.85rem', color: emp.currentCartItems >= emp.cartCapacityItems ? '#ef4444' : 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontWeight: 600 }}>{emp.currentCartItems}</span>
+                    <span style={{ color: 'var(--text-muted)' }}>/ {emp.cartCapacityItems}</span>
                   </div>
 
                   {/* Activity/Progress */}
@@ -490,9 +476,9 @@ export default function Employees() {
                 {isExpanded && (
                   <div className="employee-card-details">
                     <div className="detail-item">
-                      <span className="detail-label">Location</span>
-                      <span className={`detail-value ${emp.location === 'N/A' || emp.location === '—' ? 'empty' : ''}`}>
-                        {emp.location}
+                      <span className="detail-label">Efficiency</span>
+                      <span className="detail-value">
+                        {emp.efficiency.toFixed(1)}x
                       </span>
                     </div>
                     <div className="detail-item">

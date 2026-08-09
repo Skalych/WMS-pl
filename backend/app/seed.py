@@ -47,10 +47,11 @@ async def seed():
         # ── Locations ──────────────────────────────────────────
         locations = {}
         # Storage locations in Zone A
-        for aisle in range(1, 4):
-            for rack in range(1, 4):
-                for shelf in range(1, 3):
-                    code = f"A-{aisle:02d}-{rack:02d}-{shelf}"
+        # 50 Aisles, 60 Sections (Racks), 5 Shelves
+        for aisle in range(1, 51):
+            for rack in range(1, 61):
+                for shelf in range(1, 6):
+                    code = f"{aisle:02d}-{rack:02d}-{shelf}"
                     loc = Location(
                         id=uuid.uuid4(), zone_id=zones["ZONE-A"].id,
                         code=code, aisle=aisle, rack=rack, shelf=shelf, position=1,
@@ -58,18 +59,6 @@ async def seed():
                     )
                     db.add(loc)
                     locations[code] = loc
-
-        # Storage locations in Zone B
-        for aisle in range(6, 8):
-            for rack in range(1, 3):
-                code = f"B-{aisle:02d}-{rack:02d}-1"
-                loc = Location(
-                    id=uuid.uuid4(), zone_id=zones["ZONE-B"].id,
-                    code=code, aisle=aisle, rack=rack, shelf=1, position=1,
-                    type=LocationType.STORAGE, max_weight_kg=300.0, max_volume_m3=2.0,
-                )
-                db.add(loc)
-                locations[code] = loc
 
         # Receiving docks
         for i in range(1, 4):
@@ -133,27 +122,34 @@ async def seed():
         ]
         products = {}
         for sku, barcode, name, cat_name, weight in products_data:
+            volume = weight * 1500 # Just a rough estimate for seed data
             p = Product(
                 id=uuid.uuid4(), sku=sku, barcode=barcode, name=name,
                 category_id=cats[cat_name].id, unit="PCS", weight_kg=weight,
+                volume_cm3=volume
             )
             db.add(p)
             products[sku] = p
         await db.flush()
 
         # ── Inventory Balances ─────────────────────────────────
-        loc_codes = [c for c in locations if c.startswith("A-") or c.startswith("B-")]
-        for i, (sku, product) in enumerate(products.items()):
-            loc_code = loc_codes[i % len(loc_codes)]
-            qty = [150, 85, 42, 200, 8, 320, 5, 0, 67, 110, 95, 180, 3, 45, 12][i % 15]
-            reserved = min(qty // 4, 20) if qty > 10 else 0
+        import random
+        loc_codes = [c for c in locations if c[0].isdigit()]
+        
+        # Populate EVERY location with a random product
+        for i, loc_code in enumerate(loc_codes):
+            product_sku = random.choice(list(products.keys()))
+            product = products[product_sku]
+            
+            qty = random.randint(10, 200)
+            reserved = min(qty // 4, 20)
             ib = InventoryBalance(
                 id=uuid.uuid4(),
                 product_id=product.id,
                 location_id=locations[loc_code].id,
                 quantity=qty,
                 reserved_quantity=reserved,
-                lot_number=f"LOT-2026-{i+1:03d}",
+                lot_number=f"LOT-2026-{i+1:05d}",
             )
             db.add(ib)
         await db.flush()
@@ -247,7 +243,7 @@ async def seed():
         task_item = MicroTaskItem(
             id=uuid.uuid4(), micro_task_id=task.id,
             product_id=products["SKU-APP-001"].id,
-            source_location_id=locations["A-01-01-1"].id,
+            source_location_id=locations["01-01-1"].id,
             target_location_id=locations["PUT-WALL-01"].id,
             quantity_to_pick=3, quantity_picked=2,
             status=TaskStatus.IN_PROGRESS,

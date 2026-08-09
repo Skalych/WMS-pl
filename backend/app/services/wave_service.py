@@ -8,8 +8,10 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
 from app.models.waves import Wave, WaveOrder, MicroTask, MicroTaskItem
-from app.models.orders import Order
+from app.models.orders import Order, OrderItem
+from app.models.catalog import Product
 from app.models.topology import Location
+from app.models.inventory import InventoryBalance
 from app.models.enums import WaveStatus, OrderStatus, LocationType, TaskType, TaskStatus
 
 
@@ -53,37 +55,95 @@ async def create_wave(db: AsyncSession, order_ids: List[uuid.UUID], created_by_u
     storage_loc = await db.scalar(select(Location).where(Location.type == LocationType.STORAGE).limit(1))
     staging_loc = await db.scalar(select(Location).where(Location.type == LocationType.STAGING_SORTING).limit(1))
 
-    for idx, order_id in enumerate(order_ids):
-        wo = WaveOrder(id=uuid.uuid4(), wave_id=wave.id, order_id=order_id)
+    # 1. Fetch all requested orders and their items, with Product loaded for volume
+    orders_result = await db.execute(
+        select(Order)
+        .options(joinedload(Order.items).joinedload(OrderItem.product))
+        .where(Order.id.in_(order_ids))
+    )
+    orders = orders_result.unique().scalars().all()
+    
+    product_ids = [item.product_id for order in orders for item in order.items]
+    inventory_result = await db.execute(
+        select(InventoryBalance)
+        .where(InventoryBalance.product_id.in_(product_ids))
+    )
+    inventory = inventory_result.scalars().all()
+    
+    product_locations = {}
+    for inv in inventory:
+        if inv.quantity > 0:
+            product_locations[inv.product_id] = inv.location_id
+    
+    # 2. Add them to wave and flatten items
+    all_items = []
+    for order in orders:
+        wo = WaveOrder(id=uuid.uuid4(), wave_id=wave.id, order_id=order.id)
         db.add(wo)
-        order = await db.scalar(select(Order).options(joinedload(Order.items)).where(Order.id == order_id))
-        
-        if order:
-            order.status = OrderStatus.IN_WAVE
+        order.status = OrderStatus.IN_WAVE
+        for item in order.items:
+            all_items.append((item, item.product))
             
-            # Create a MicroTask for EACH order (1 order = 1 Злецення)
-            task = MicroTask(
+    # 3. Create MicroTasks chunked by volume
+    MAX_VOLUME_PER_TASK = 100_000.0  # cm3
+    current_task = None
+    current_task_volume = 0.0
+    task_idx = 1
+    
+    def create_new_task():
+        nonlocal current_task, current_task_volume, task_idx
+        current_task = MicroTask(
+            id=uuid.uuid4(),
+            wave_id=wave.id,
+            task_number=f"TASK-{wave_number}-{task_idx:03d}",
+            type=TaskType.BATCH_PICK,
+            status=TaskStatus.IN_PROGRESS,
+        )
+        db.add(current_task)
+        task_idx += 1
+        current_task_volume = 0.0
+        
+    create_new_task()
+    
+    for item, product in all_items:
+        qty_left = item.requested_quantity
+        item_volume = float(product.volume_cm3) if product.volume_cm3 else 100.0
+        
+        while qty_left > 0:
+            space_left = MAX_VOLUME_PER_TASK - current_task_volume
+            
+            if item_volume <= 0:
+                qty_to_put = qty_left
+            else:
+                qty_to_put = int(space_left // item_volume)
+                
+            # If space is too small even for 1 item, but task is empty, just force 1 item
+            if qty_to_put == 0 and current_task_volume == 0:
+                qty_to_put = 1
+                
+            # If space is too small for 1 item and task is not empty, create a new task
+            if qty_to_put <= 0:
+                create_new_task()
+                continue
+                
+            qty_to_put = min(qty_to_put, qty_left)
+            
+            loc_id = product_locations.get(product.id, storage_loc.id if storage_loc else uuid.uuid4())
+            
+            mti = MicroTaskItem(
                 id=uuid.uuid4(),
-                wave_id=wave.id,
-                task_number=f"TASK-{wave_number}-{idx+1:03d}",
-                type=TaskType.BATCH_PICK,
+                micro_task_id=current_task.id,
+                product_id=product.id,
+                source_location_id=loc_id,
+                target_location_id=staging_loc.id if staging_loc else uuid.uuid4(),
+                quantity_to_pick=qty_to_put,
+                quantity_picked=0,
                 status=TaskStatus.IN_PROGRESS,
             )
-            db.add(task)
+            db.add(mti)
             
-            # Create MicroTaskItems for each OrderItem in this specific order
-            for item in order.items:
-                mti = MicroTaskItem(
-                    id=uuid.uuid4(),
-                    micro_task_id=task.id,
-                    product_id=item.product_id,
-                    source_location_id=storage_loc.id if storage_loc else uuid.uuid4(),
-                    target_location_id=staging_loc.id if staging_loc else uuid.uuid4(),
-                    quantity_to_pick=item.requested_quantity,
-                    quantity_picked=0,
-                    status=TaskStatus.IN_PROGRESS,
-                )
-                db.add(mti)
+            current_task_volume += (qty_to_put * item_volume)
+            qty_left -= qty_to_put
 
     await db.commit()
     await db.refresh(wave)

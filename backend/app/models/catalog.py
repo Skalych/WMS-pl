@@ -26,6 +26,7 @@ class Product(Base):
     category_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("categories.id", ondelete="SET NULL"), nullable=True)
     unit: Mapped[str] = mapped_column(String(20), default="PCS")
     weight_kg: Mapped[float] = mapped_column(Numeric(10, 3), default=0.0)
+    volume_cm3: Mapped[float] = mapped_column(Numeric(10, 2), default=100.0, server_default="100.0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     category: Mapped[Optional["Category"]] = relationship("Category", back_populates="products")
