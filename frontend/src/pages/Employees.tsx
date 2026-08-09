@@ -502,15 +502,16 @@ export default function Employees() {
                         {emp.totalPicked}
                       </span>
                     </div>
-                    <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                    <div style={{ gridColumn: 'span 4', marginTop: '12px', display: 'flex', justifyContent: 'center' }}>
                       <button 
                         className="btn btn-ghost"
+                        style={{ width: '100%', padding: '12px', border: '1px dashed rgba(227,89,172,0.4)', color: '#e359ac', letterSpacing: '1px', fontSize: '0.8rem' }}
                         onClick={(e) => {
                           e.stopPropagation();
                           setProfileModalEmployee(emp);
                         }}
                       >
-                        View Full Profile
+                        VIEW FULL PROFILE
                       </button>
                     </div>
                   </div>
