@@ -155,6 +155,11 @@ async def start_break(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
     shift = await get_current_shift(db, user_id)
     if not shift:
         return None
+        
+    user = await get_user(db, user_id)
+    if user and user.status == WorkerStatus.BREAK:
+        return shift
+        
     db.add(ShiftEvent(id=uuid.uuid4(), shift_id=shift.id, event_type=ShiftEventType.BREAK_START))
     await update_user_status(db, user_id, status=WorkerStatus.BREAK)
     await db.commit()
@@ -164,6 +169,11 @@ async def end_break(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
     shift = await get_current_shift(db, user_id)
     if not shift:
         return None
+        
+    user = await get_user(db, user_id)
+    if user and user.status != WorkerStatus.BREAK:
+        return shift
+        
     db.add(ShiftEvent(id=uuid.uuid4(), shift_id=shift.id, event_type=ShiftEventType.BREAK_END))
     await update_user_status(db, user_id, status=WorkerStatus.IDLE)
     await db.commit()
