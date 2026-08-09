@@ -108,7 +108,7 @@ async def count_total_users(db: AsyncSession) -> int:
     return result.scalar_one()
 
 async def get_current_shift(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
-    query = select(Shift).where(
+    query = select(Shift).options(joinedload(Shift.events)).where(
         Shift.user_id == user_id,
         Shift.end_time == None
     ).order_by(Shift.start_time.desc())
@@ -116,7 +116,7 @@ async def get_current_shift(db: AsyncSession, user_id: uuid.UUID) -> Optional[Sh
     return result.scalars().first()
 
 async def get_past_shifts(db: AsyncSession, user_id: uuid.UUID) -> list[Shift]:
-    query = select(Shift).where(
+    query = select(Shift).options(joinedload(Shift.events)).where(
         Shift.user_id == user_id,
         Shift.end_time != None
     ).order_by(Shift.start_time.desc())
@@ -177,26 +177,34 @@ async def start_break(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
     if not shift:
         return None
         
-    user = await get_user(db, user_id)
+    user = await get_user_by_id(db, user_id)
     if user and user.status == WorkerStatus.BREAK:
         return shift
         
     db.add(ShiftEvent(id=uuid.uuid4(), shift_id=shift.id, event_type=ShiftEventType.BREAK_START))
     await update_user_status(db, user_id, status=WorkerStatus.BREAK)
     await db.commit()
-    return shift
+    return await get_current_shift(db, user_id)
 
 async def end_break(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
     shift = await get_current_shift(db, user_id)
     if not shift:
         return None
         
-    user = await get_user(db, user_id)
+    user = await get_user_by_id(db, user_id)
     if user and user.status != WorkerStatus.BREAK:
         return shift
         
     db.add(ShiftEvent(id=uuid.uuid4(), shift_id=shift.id, event_type=ShiftEventType.BREAK_END))
-    await update_user_status(db, user_id, status=WorkerStatus.IDLE)
+    
+    target_status = WorkerStatus.IDLE
+    if user:
+        if user.role == UserRole.INBOUND_OPERATOR:
+            target_status = WorkerStatus.RECEIVING
+        elif user.role == UserRole.PACKER_DISPATCHER:
+            target_status = WorkerStatus.SORTING
+            
+    await update_user_status(db, user_id, status=target_status)
     await db.commit()
-    return shift
+    return await get_current_shift(db, user_id)
 
