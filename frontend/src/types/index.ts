@@ -120,10 +120,11 @@ export interface Wave {
 export interface DashboardStats {
   activeOrders: number;
   employeesOnline: number;
+  totalEmployees: number;
   inventoryAccuracy: number;
-  orderVelocity: number;
   ordersShippedToday: number;
-  inboundReceived: number;
+  inboundPending: number;
+  activeWaves: number;
 }
 
 export interface MacroOrder {

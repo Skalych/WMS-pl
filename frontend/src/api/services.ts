@@ -26,7 +26,16 @@ export const authService = {
 export const dashboardService = {
   getStats: async (): Promise<DashboardStats> => {
     const response = await apiClient.get('/dashboard/stats');
-    return response.data;
+    const d = response.data;
+    return {
+      activeOrders: d.active_orders || 0,
+      employeesOnline: d.employees_online || 0,
+      totalEmployees: d.total_employees || 0,
+      inventoryAccuracy: d.inventory_accuracy || 0,
+      ordersShippedToday: d.orders_shipped_today || 0,
+      inboundPending: d.inbound_pending || 0,
+      activeWaves: d.active_waves || 0
+    };
   },
   toggleSimulation: async (active: boolean): Promise<{status: string, simulation_active: boolean}> => {
     const response = await apiClient.post('/dashboard/simulation/toggle', { active });
