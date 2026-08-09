@@ -143,7 +143,7 @@ export default function Orders() {
             <Plus size={18} />
             {isCreatingWave ? 'Creating...' : `Create Wave ${selectedOrders.length > 0 ? `(${selectedOrders.length})` : ''}`}
           </button>
-          <button className="btn-ghost">
+          <button className="btn btn-ghost">
             <Download size={18} />
             Export
           </button>

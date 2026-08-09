@@ -82,8 +82,8 @@ export default function Inventory() {
               style={{ paddingLeft: '2.3rem', width: '260px' }}
             />
           </div>
-          <button className="btn-ghost">
-            <Filter size={16} />
+          <button className="dropdown-btn">
+            <Filter size={18} />
             Filter
           </button>
         </div>
@@ -144,10 +144,10 @@ export default function Inventory() {
             Stock Levels
           </h3>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button className="btn-ghost" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
+            <button className="dropdown-btn">
               Sorting ▾
             </button>
-            <button className="btn-ghost" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
+            <button className="dropdown-btn">
               Category: All ▾
             </button>
           </div>
@@ -270,15 +270,14 @@ export default function Inventory() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <button 
-              className="btn-ghost" 
-              style={{ padding: '0.4rem 0.7rem' }}
+              className="icon-btn" 
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
             >
               <ChevronLeft size={16} />
             </button>
             <button 
-              className="btn-ghost active" 
+              className="icon-btn" 
               style={{ 
                 padding: '0.4rem 0.75rem', 
                 backgroundColor: '#e359ac', 
@@ -290,8 +289,7 @@ export default function Inventory() {
               {currentPage}
             </button>
             <button 
-              className="btn-ghost" 
-              style={{ padding: '0.4rem 0.7rem' }}
+              className="icon-btn" 
               onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
             >

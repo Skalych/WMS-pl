@@ -504,6 +504,86 @@ body {
 }
 
 /* ==========================================================================
+   Filter & Sorting Controls (Redesign)
+   ========================================================================== */
+.filter-group {
+  display: inline-flex;
+  background: rgba(15, 15, 22, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 4px;
+  gap: 4px;
+  backdrop-filter: blur(8px);
+}
+
+.filter-btn {
+  appearance: none;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.filter-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.filter-btn.active {
+  background: rgba(227, 89, 172, 0.15);
+  color: var(--accent-primary);
+  box-shadow: 0 0 12px rgba(227, 89, 172, 0.2);
+}
+
+.dropdown-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dropdown-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--accent-primary);
+}
+
+/* ==========================================================================
    Form Inputs & Select Fields
    ========================================================================== */
 .input-field {

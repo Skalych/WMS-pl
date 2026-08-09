@@ -244,13 +244,12 @@ export default function Employees() {
             <span>LIVE</span>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="filter-group">
             {(['All', 'Active', 'On Break'] as FilterType[]).map((f) => (
               <button
                 key={f}
-                className={`btn-ghost ${filter === f ? 'active' : ''}`}
+                className={`filter-btn ${filter === f ? 'active' : ''}`}
                 onClick={() => setFilter(f)}
-                style={filter === f ? { borderColor: '#e359ac', color: '#e359ac', backgroundColor: 'rgba(227, 89, 172, 0.12)' } : {}}
               >
                 {f}
               </button>
