@@ -2,7 +2,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.schemas.users import UserResponse, UserStatusUpdate, BulkShiftUpdate
+from app.schemas.users import UserResponse, UserStatusUpdate, BulkShiftUpdate, ShiftResponse
 from app.services import user_service
 from app.models.enums import UserRole, WorkerStatus
 from typing import Optional
@@ -53,3 +53,28 @@ async def end_shift(
     db: AsyncSession = Depends(get_db),
 ):
     return await user_service.bulk_update_status(db, data.user_ids, WorkerStatus.OFFLINE)
+
+@router.get("/{user_id}/shift/current", response_model=ShiftResponse)
+async def get_current_shift(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    shift = await user_service.get_current_shift_with_events(db, user_id)
+    if not shift:
+        raise HTTPException(status_code=404, detail="No active shift found")
+    return shift
+
+@router.get("/{user_id}/shifts", response_model=list[ShiftResponse])
+async def get_past_shifts(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    return await user_service.get_past_shifts(db, user_id)
+
+@router.post("/{user_id}/break/start", response_model=ShiftResponse)
+async def start_break(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    shift = await user_service.start_break(db, user_id)
+    if not shift:
+        raise HTTPException(status_code=404, detail="No active shift found")
+    return shift
+
+@router.post("/{user_id}/break/end", response_model=ShiftResponse)
+async def end_break(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    shift = await user_service.end_break(db, user_id)
+    if not shift:
+        raise HTTPException(status_code=404, detail="No active shift found")
+    return shift

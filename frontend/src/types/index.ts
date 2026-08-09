@@ -58,6 +58,34 @@ export interface Employee {
   efficiency: number;
 }
 
+export enum ShiftEventType {
+  LOGIN = 'LOGIN',
+  LOGOUT = 'LOGOUT',
+  BREAK_START = 'BREAK_START',
+  BREAK_END = 'BREAK_END',
+  IDLE_START = 'IDLE_START',
+  IDLE_END = 'IDLE_END',
+}
+
+export interface ShiftEvent {
+  id: string;
+  event_type: ShiftEventType;
+  timestamp: string;
+}
+
+export interface Shift {
+  id: string;
+  user_id: string;
+  start_time: string;
+  end_time: string | null;
+  total_tasks_completed: number;
+  total_items_picked: number;
+  total_volume_cm3: number;
+  total_orders_completed: number;
+  error_count: number;
+  events?: ShiftEvent[];
+}
+
 export interface InventoryItem {
   id: string;
   sku: string;

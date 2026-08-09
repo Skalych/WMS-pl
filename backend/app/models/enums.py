@@ -17,6 +17,14 @@ class WorkerStatus(str, enum.Enum):
     DROPOFF = "DROPOFF"
     BREAK = "BREAK"
 
+class ShiftEventType(str, enum.Enum):
+    LOGIN = "LOGIN"
+    LOGOUT = "LOGOUT"
+    BREAK_START = "BREAK_START"
+    BREAK_END = "BREAK_END"
+    IDLE_START = "IDLE_START"
+    IDLE_END = "IDLE_END"
+
 class LocationType(str, enum.Enum):
     RECEIVING = "RECEIVING"
     STORAGE = "STORAGE"

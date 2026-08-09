@@ -4,7 +4,7 @@ from typing import Optional, List
 from sqlalchemy import String, Enum, DateTime, ForeignKey, Integer, func, UUID, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
-from app.models.enums import UserRole, WorkerStatus
+from app.models.enums import UserRole, WorkerStatus, ShiftEventType
 
 class User(Base):
     __tablename__ = "users"
@@ -34,6 +34,19 @@ class Shift(Base):
     end_time: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     total_tasks_completed: Mapped[int] = mapped_column(Integer, default=0)
     total_items_picked: Mapped[int] = mapped_column(Integer, default=0)
+    total_volume_cm3: Mapped[float] = mapped_column(Float, default=0.0)
+    total_orders_completed: Mapped[int] = mapped_column(Integer, default=0)
     error_count: Mapped[int] = mapped_column(Integer, default=0)
 
     user: Mapped["User"] = relationship("User", back_populates="shifts")
+    events: Mapped[List["ShiftEvent"]] = relationship("ShiftEvent", back_populates="shift", cascade="all, delete-orphan")
+
+class ShiftEvent(Base):
+    __tablename__ = "shift_events"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    shift_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("shifts.id", ondelete="CASCADE"), nullable=False)
+    event_type: Mapped[ShiftEventType] = mapped_column(Enum(ShiftEventType), nullable=False)
+    timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    shift: Mapped["Shift"] = relationship("Shift", back_populates="events")

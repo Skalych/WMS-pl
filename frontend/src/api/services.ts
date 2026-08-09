@@ -61,8 +61,28 @@ export const userService = {
     }));
   },
   
-  updateEmployee: async (id: string, updates: { status?: WorkerStatus, efficiency?: number }) => {
-    const response = await apiClient.patch(`/users/${id}/status`, updates);
+  getCurrentShift: async (userId: string): Promise<any> => {
+    const response = await apiClient.get(`/users/${userId}/shift/current`);
+    return response.data;
+  },
+  
+  getPastShifts: async (userId: string): Promise<any[]> => {
+    const response = await apiClient.get(`/users/${userId}/shifts`);
+    return response.data;
+  },
+
+  startBreak: async (userId: string): Promise<any> => {
+    const response = await apiClient.post(`/users/${userId}/break/start`);
+    return response.data;
+  },
+
+  endBreak: async (userId: string): Promise<any> => {
+    const response = await apiClient.post(`/users/${userId}/break/end`);
+    return response.data;
+  },
+
+  updateStatus: async (userId: string, status: WorkerStatus, efficiency?: number, locationId?: string) => {
+    const response = await apiClient.patch(`/users/${userId}/status`, { status, efficiency, location_id: locationId });
     return response.data;
   },
 

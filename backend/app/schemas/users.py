@@ -1,7 +1,8 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from uuid import UUID
-from app.models.enums import UserRole, WorkerStatus
+from datetime import datetime
+from app.models.enums import UserRole, WorkerStatus, ShiftEventType
 
 class UserCreate(BaseModel):
     email: str = Field(..., max_length=255)
@@ -36,3 +37,23 @@ class UserStatusUpdate(BaseModel):
 
 class BulkShiftUpdate(BaseModel):
     user_ids: list[UUID]
+
+class ShiftEventResponse(BaseModel):
+    id: UUID
+    event_type: ShiftEventType
+    timestamp: datetime
+    model_config = {"from_attributes": True}
+
+class ShiftResponse(BaseModel):
+    id: UUID
+    user_id: UUID
+    start_time: datetime
+    end_time: Optional[datetime]
+    total_tasks_completed: int
+    total_items_picked: int
+    total_volume_cm3: float
+    total_orders_completed: int
+    error_count: int
+    events: Optional[list[ShiftEventResponse]] = None
+
+    model_config = {"from_attributes": True}

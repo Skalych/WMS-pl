@@ -6,8 +6,8 @@ from typing import Optional
 from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.users import User
-from app.models.enums import UserRole, WorkerStatus
+from app.models.users import User, Shift, ShiftEvent
+from app.models.enums import UserRole, WorkerStatus, ShiftEventType
 from app.core.security import hash_password, verify_password
 
 
@@ -96,3 +96,76 @@ async def count_online_users(db: AsyncSession) -> int:
 async def count_total_users(db: AsyncSession) -> int:
     result = await db.execute(select(func.count()).select_from(User))
     return result.scalar_one()
+
+async def get_current_shift(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
+    query = select(Shift).where(
+        Shift.user_id == user_id,
+        Shift.end_time == None
+    ).order_by(Shift.start_time.desc())
+    result = await db.execute(query)
+    return result.scalars().first()
+
+async def get_past_shifts(db: AsyncSession, user_id: uuid.UUID) -> list[Shift]:
+    query = select(Shift).where(
+        Shift.user_id == user_id,
+        Shift.end_time != None
+    ).order_by(Shift.start_time.desc())
+    result = await db.execute(query)
+    return result.scalars().all()
+
+async def get_current_shift_with_events(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
+    query = select(Shift).options(joinedload(Shift.events)).where(
+        Shift.user_id == user_id,
+        Shift.end_time == None
+    ).order_by(Shift.start_time.desc())
+    result = await db.execute(query)
+    return result.scalars().first()
+
+async def start_shift(db: AsyncSession, user_id: uuid.UUID) -> Shift:
+    # Close any existing open shifts
+    existing_shift = await get_current_shift(db, user_id)
+    if existing_shift:
+        existing_shift.end_time = func.now()
+        db.add(ShiftEvent(id=uuid.uuid4(), shift_id=existing_shift.id, event_type=ShiftEventType.LOGOUT))
+    
+    # Create new shift
+    new_shift = Shift(id=uuid.uuid4(), user_id=user_id)
+    db.add(new_shift)
+    await db.flush() # to get ID
+    
+    login_event = ShiftEvent(id=uuid.uuid4(), shift_id=new_shift.id, event_type=ShiftEventType.LOGIN)
+    db.add(login_event)
+    
+    await update_user_status(db, user_id, status=WorkerStatus.IDLE)
+    await db.commit()
+    await db.refresh(new_shift)
+    return new_shift
+
+async def end_shift(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
+    shift = await get_current_shift(db, user_id)
+    if shift:
+        shift.end_time = func.now()
+        db.add(ShiftEvent(id=uuid.uuid4(), shift_id=shift.id, event_type=ShiftEventType.LOGOUT))
+        
+    await update_user_status(db, user_id, status=WorkerStatus.OFFLINE)
+    await db.commit()
+    return shift
+
+async def start_break(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
+    shift = await get_current_shift(db, user_id)
+    if not shift:
+        return None
+    db.add(ShiftEvent(id=uuid.uuid4(), shift_id=shift.id, event_type=ShiftEventType.BREAK_START))
+    await update_user_status(db, user_id, status=WorkerStatus.BREAK)
+    await db.commit()
+    return shift
+
+async def end_break(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
+    shift = await get_current_shift(db, user_id)
+    if not shift:
+        return None
+    db.add(ShiftEvent(id=uuid.uuid4(), shift_id=shift.id, event_type=ShiftEventType.BREAK_END))
+    await update_user_status(db, user_id, status=WorkerStatus.IDLE)
+    await db.commit()
+    return shift
+

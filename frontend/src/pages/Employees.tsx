@@ -12,9 +12,11 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Zap
+  Zap,
+  MoreVertical
 } from 'lucide-react';
 import { WorkerStatus } from '../types';
+import EmployeeProfileModal from '../components/EmployeeProfileModal';
 
 export interface Employee {
   id: string;
@@ -49,6 +51,7 @@ export default function Employees() {
   const [editingEfficiencyValue, setEditingEfficiencyValue] = useState<string>('');
   const [openStatusDropdownId, setOpenStatusDropdownId] = useState<string | null>(null);
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
+  const [profileModalEmployee, setProfileModalEmployee] = useState<Employee | null>(null);
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -458,13 +461,22 @@ export default function Employees() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
                           <span style={{ color: 'var(--text-muted)' }}>{emp.wave}</span>
                           <span style={{ color: 'var(--text-main)' }}>{pct}%</span>
-                        </div>
+</div>
                         <div className="progress-bar">
                           <div 
                             className={`progress-bar-fill ${emp.status !== 'PICKING' ? 'cyan' : ''}`}
                             style={{ width: `${pct}%` }} 
                           />
                         </div>
+                        <button 
+                          className="btn btn-ghost mt-4 w-full"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProfileModalEmployee(emp);
+                          }}
+                        >
+                          View Full Profile
+                        </button>
                       </div>
                     ) : (
                       <span style={{ color: 'rgba(255,255,255,0.2)', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>Idle</span>
@@ -506,6 +518,43 @@ export default function Employees() {
           })}
         </div>
       </div>
+      
+      {profileModalEmployee && (
+        <EmployeeProfileModal
+          employee={profileModalEmployee}
+          onClose={() => {
+            setProfileModalEmployee(null);
+            // Refresh employees list when modal closes
+            const fetchEmployees = async () => {
+              try {
+                const data = await userService.getEmployees();
+                const floorWorkers = data.filter((emp: any) => emp.role !== 'ADMIN_MANAGER');
+                const mappedData = floorWorkers.map((emp: any) => ({
+                  id: emp.id,
+                  name: emp.fullName,
+                  role: emp.role,
+                  status: emp.status,
+                  dotClass: emp.status === 'OFFLINE' ? 'dot-offline' : emp.status === 'BREAK' ? 'dot-busy' : 'dot-online',
+                  badgeClass: emp.status === 'OFFLINE' ? 'badge-muted' : emp.status === 'BREAK' ? 'badge-warning' : 'badge-active',
+                  wave: emp.currentWaveNumber || '-',
+                  currentProgress: emp.pickingProgress,
+                  totalProgress: 100,
+                  location: emp.currentLocation || '-',
+                  shiftTime: emp.shiftTime || '00:00',
+                  totalPicked: emp.totalPicked || 0,
+                  efficiency: emp.efficiency || 1.0,
+                  currentCartItems: emp.currentCartItems || 0,
+                  cartCapacityItems: emp.cartCapacityItems || 15
+                }));
+                setEmployees(mappedData);
+              } catch (err) {
+                console.error(err);
+              }
+            };
+            fetchEmployees();
+          }}
+        />
+      )}
     </div>
   );
 }
