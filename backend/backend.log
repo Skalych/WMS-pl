@@ -1,366 +1,592 @@
-INFO:     Started server process [24823]
+INFO:     Started server process [40115]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:56383 - "OPTIONS /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "OPTIONS /api/v1/waves/ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "OPTIONS /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56383 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56383 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "OPTIONS /api/v1/orders/ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56383 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56383 - "OPTIONS /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56383 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56383 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56383 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56383 - "OPTIONS /api/v1/waves/ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "POST /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "OPTIONS /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56383 - "POST /api/v1/waves HTTP/1.1" 201 Created
-INFO:     127.0.0.1:56384 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56383 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56383 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56383 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56383 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56383 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56383 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "OPTIONS /api/v1/inventory/ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/inventory/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "OPTIONS /api/v1/inventory HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/inventory HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "POST /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "POST /api/v1/waves HTTP/1.1" 201 Created
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "GET /api/v1/orders HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56388 - "GET /api/v1/inventory/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "GET /api/v1/inventory HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "OPTIONS /api/v1/users/ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56388 - "GET /api/v1/users/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "OPTIONS /api/v1/users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/users HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/inventory/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56388 - "GET /api/v1/inventory HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56388 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56388 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56385 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56384 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56385 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56388 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56394 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56394 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56393 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56397 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56397 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56396 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56400 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56400 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56399 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56403 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56403 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56402 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56406 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56406 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56405 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56409 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56409 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56408 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56413 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56413 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56412 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56417 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56417 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56416 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56421 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56421 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56420 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56427 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56427 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56426 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56431 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56431 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56430 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56437 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56437 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56436 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56441 - "OPTIONS /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56442 - "OPTIONS /api/v1/waves/ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56442 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56443 - "OPTIONS /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56443 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56441 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56451 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56451 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56450 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56456 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56456 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56455 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56465 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56465 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56464 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56472 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56472 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56472 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56472 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56472 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56472 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56472 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56472 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56472 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56472 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56472 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56472 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56472 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56472 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56472 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56472 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56473 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56472 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56472 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56472 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56473 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56479 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56478 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56478 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56482 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56482 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56481 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56486 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56486 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56485 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56490 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56490 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56489 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56494 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56494 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56493 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56498 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56498 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56497 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56502 - "OPTIONS /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56503 - "OPTIONS /api/v1/waves/ HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56503 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56504 - "OPTIONS /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56504 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56502 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56507 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56507 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56506 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56510 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56510 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56509 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56520 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56520 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56519 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56523 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56523 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56522 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56527 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56527 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56526 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56530 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56530 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56529 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56533 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56533 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56532 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56536 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56536 - "GET /api/v1/waves HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56535 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
-INFO:     127.0.0.1:56551 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
-INFO:     127.0.0.1:56550 - "GET /api/v1/dashboard/stats HTTP/1.1" 500 Internal Server Error
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 550, in _prepare_and_execute
-    self._rows = deque(await prepared_stmt.fetch(*parameters))
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/asyncpg/prepared_stmt.py", line 177, in fetch
-    data = await self.__bind_execute(args, 0, timeout)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/asyncpg/prepared_stmt.py", line 268, in __bind_execute
-    data, status, _ = await self.__do_execute(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/asyncpg/prepared_stmt.py", line 257, in __do_execute
-    return await executor(protocol)
-  File "asyncpg/protocol/protocol.pyx", line 205, in bind_execute
-asyncpg.exceptions.InternalServerError: cache lookup failed for type 19636
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
-    self.dialect.do_execute(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
-    cursor.execute(statement, parameters)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 585, in execute
-    self._adapt_connection.await_(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
-    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
-    value = await result
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 563, in _prepare_and_execute
-    self._handle_exception(error)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 513, in _handle_exception
-    self._adapt_connection._handle_exception(error)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 797, in _handle_exception
-    raise translated_error from error
-sqlalchemy.dialects.postgresql.asyncpg.AsyncAdapt_asyncpg_dbapi.InternalServerError: <class 'asyncpg.exceptions.InternalServerError'>: cache lookup failed for type 19636
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/uvicorn/protocols/http/httptools_impl.py", line 415, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/uvicorn/middleware/proxy_headers.py", line 60, in __call__
-    return await self.app(scope, receive, send)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/fastapi/applications.py", line 1138, in __call__
-    await super().__call__(scope, receive, send)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/starlette/applications.py", line 113, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 186, in __call__
-    raise exc
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/starlette/middleware/errors.py", line 164, in __call__
-    await self.app(scope, receive, _send)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/starlette/middleware/cors.py", line 93, in __call__
-    await self.simple_response(scope, receive, send, request_headers=headers)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/starlette/middleware/cors.py", line 144, in simple_response
-    await self.app(scope, receive, send)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/fastapi/middleware/asyncexitstack.py", line 18, in __call__
-    await self.app(scope, receive, send)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/starlette/routing.py", line 716, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/starlette/routing.py", line 736, in app
-    await route.handle(scope, receive, send)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/starlette/routing.py", line 290, in handle
-    await self.app(scope, receive, send)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 121, in app
-    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    raise exc
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
-    await app(scope, receive, sender)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 107, in app
-    response = await f(request)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 426, in app
-    raw_response = await run_endpoint_function(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/fastapi/routing.py", line 314, in run_endpoint_function
-    return await dependant.call(**values)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/app/routers/dashboard.py", line 12, in get_dashboard_stats
-    active_orders = await order_service.count_active_orders(db)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/app/services/order_service.py", line 71, in count_active_orders
-    async def count_active_orders(db: AsyncSession) -> int:
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/ext/asyncio/session.py", line 448, in execute
-    result = await greenlet_spawn(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 201, in greenlet_spawn
-    result = context.throw(*sys.exc_info())
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
-    return self._execute_internal(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/orm/session.py", line 2271, in _execute_internal
-    result: Result[Any] = compile_state_cls.orm_execute_statement(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
-    result = conn.execute(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
-    return meth(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
-    return connection._execute_clauseelement(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
-    ret = self._execute_context(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
-    return self._exec_single_context(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1988, in _exec_single_context
-    self._handle_dbapi_exception(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 2365, in _handle_dbapi_exception
-    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
-    self.dialect.do_execute(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
-    cursor.execute(statement, parameters)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 585, in execute
-    self._adapt_connection.await_(
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 132, in await_only
-    return current.parent.switch(awaitable)  # type: ignore[no-any-return,attr-defined] # noqa: E501
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 196, in greenlet_spawn
-    value = await result
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 563, in _prepare_and_execute
-    self._handle_exception(error)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 513, in _handle_exception
-    self._adapt_connection._handle_exception(error)
-  File "/Users/dubievka/Documents/vcode/WMS/backend/.venv/lib/python3.9/site-packages/sqlalchemy/dialects/postgresql/asyncpg.py", line 797, in _handle_exception
-    raise translated_error from error
-sqlalchemy.exc.InternalError: (sqlalchemy.dialects.postgresql.asyncpg.InternalServerError) <class 'asyncpg.exceptions.InternalServerError'>: cache lookup failed for type 19636
-[SQL: SELECT count(*) AS count_1 
-FROM orders 
-WHERE (orders.status NOT IN ($1::orderstatus, $2::orderstatus))]
-[parameters: ('SHIPPED', 'CANCELLED')]
-(Background on this error at: https://sqlalche.me/e/20/2j85)
-INFO:     127.0.0.1:56551 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57329 - "OPTIONS /api/v1/dashboard/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57330 - "OPTIONS /api/v1/waves/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57330 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57331 - "OPTIONS /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57331 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57329 - "GET /api/v1/dashboard/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57335 - "OPTIONS /api/v1/orders/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57336 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57337 - "OPTIONS /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57335 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57337 - "OPTIONS /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57338 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57336 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57337 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57342 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57343 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57343 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57344 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57342 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57346 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57347 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57347 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57348 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57346 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57350 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57351 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57351 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57352 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57350 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57354 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57355 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57355 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57356 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57354 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57355 - "OPTIONS /api/v1/waves/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57356 - "POST /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57354 - "OPTIONS /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57355 - "POST /api/v1/waves HTTP/1.1" 201 Created
+INFO:     127.0.0.1:57354 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57356 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57355 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57356 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57354 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57358 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57359 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57360 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57359 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57358 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57362 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57363 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57364 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57363 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57362 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57366 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57367 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57368 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57367 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57366 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57370 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57371 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57372 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57371 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57370 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57374 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57375 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57376 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57375 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57374 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57378 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57379 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57380 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57379 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57378 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57386 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57387 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57388 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57387 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57386 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57390 - "POST /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57391 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57392 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57393 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57391 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57392 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57390 - "POST /api/v1/waves HTTP/1.1" 201 Created
+INFO:     127.0.0.1:57395 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57396 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57397 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57390 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57398 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57399 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57395 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57400 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57398 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57402 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57403 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57404 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57402 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57399 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57405 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57406 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57407 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57399 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57403 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57408 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57409 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57410 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57403 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57408 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57411 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57412 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57408 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57413 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57405 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57417 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57418 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57419 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57405 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57420 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57421 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57411 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57422 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57420 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57411 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57420 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57417 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57422 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57411 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57425 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57426 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57427 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57425 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57421 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57428 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57429 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57420 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57420 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57430 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57421 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57431 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57430 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57426 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57432 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57433 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57434 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57426 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57426 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57434 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57435 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57428 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57421 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57428 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57438 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57421 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57421 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57421 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57438 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57421 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57438 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57432 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57432 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57439 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57426 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57432 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57434 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57434 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57441 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57428 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57434 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57428 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57426 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57443 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57444 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57443 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57421 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57426 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57439 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57441 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57444 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57445 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57446 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57447 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57444 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57448 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57449 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57448 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57450 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57445 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57452 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57453 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57454 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57452 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57449 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57455 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57456 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57457 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57449 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57453 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57455 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57458 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57459 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57460 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57455 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57458 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57461 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57462 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57463 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57458 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57461 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57465 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57466 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57467 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57465 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57466 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57469 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57470 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57471 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57469 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57470 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57475 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57476 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57477 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57475 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57476 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57478 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57479 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57480 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57476 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57478 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57481 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57482 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57483 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57478 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57481 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57485 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57486 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57487 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57481 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57488 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57489 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57485 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57490 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57488 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57485 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57490 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57488 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57485 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57489 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57491 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57492 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57493 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57489 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57490 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57494 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57495 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57496 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57490 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57491 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57497 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57498 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57499 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57491 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57494 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57500 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57501 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57502 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57494 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57497 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57503 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57504 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57505 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57497 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57500 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57506 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57507 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57508 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57506 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57503 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57503 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57509 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57510 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57503 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57507 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57511 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57512 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57513 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57507 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57509 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57514 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57515 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57516 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57509 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57511 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57517 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57518 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57519 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57511 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57514 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57521 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57522 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57523 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57514 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57524 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57525 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57517 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57526 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57524 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57527 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57528 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57529 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57527 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57521 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57525 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57532 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57533 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57534 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57525 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57532 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57528 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57536 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57537 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57538 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57536 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57537 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57540 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57541 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57542 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57540 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57541 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57544 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57545 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57546 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57544 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57545 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57549 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57550 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57551 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57549 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57550 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57555 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57556 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57557 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57555 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57556 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57561 - "OPTIONS /api/v1/orders/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57562 - "OPTIONS /api/v1/waves/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57563 - "OPTIONS /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57561 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57562 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57564 - "OPTIONS /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57565 - "OPTIONS /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57563 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57564 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57565 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57660 - "OPTIONS /api/v1/orders/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57661 - "OPTIONS /api/v1/waves/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "OPTIONS /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57660 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57661 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57663 - "OPTIONS /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57664 - "OPTIONS /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57663 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57664 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57665 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57666 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57667 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57664 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57665 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57668 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57669 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57670 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57665 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57668 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57671 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57672 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57673 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57668 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57674 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57675 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57676 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57674 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57671 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57677 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57678 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57679 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57671 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57675 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57687 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57688 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57675 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57689 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57677 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57690 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57691 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57692 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57677 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57687 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57695 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57696 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57697 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57687 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57690 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57698 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57699 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57700 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57690 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57695 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57701 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57702 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57703 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57695 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57698 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57704 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57705 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57706 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57704 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57701 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57705 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57707 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57708 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57709 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57705 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57707 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57710 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57711 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57712 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57707 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57712 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57713 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57714 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57715 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57712 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57716 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57717 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57718 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57716 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57715 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57717 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57721 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57722 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57723 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57721 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57722 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57725 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57726 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57727 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57725 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57726 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57729 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57730 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57731 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57729 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57730 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57734 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57735 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57736 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57734 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57735 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57740 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57741 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57742 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57740 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57741 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57746 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57747 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57748 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57746 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57747 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57752 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57753 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57754 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57752 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57753 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57757 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57758 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57759 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57757 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57758 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57760 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57761 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57762 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57758 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57762 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57764 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57765 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57766 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57762 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57764 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57768 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57769 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57770 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57764 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57768 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57771 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57772 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57773 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57768 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57771 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57771 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57774 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57775 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57771 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57774 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57778 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57779 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57780 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57778 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57779 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57782 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57783 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57784 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57782 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57783 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57789 - "OPTIONS /api/v1/orders/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57790 - "OPTIONS /api/v1/waves/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57791 - "OPTIONS /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57789 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57790 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57792 - "OPTIONS /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57793 - "OPTIONS /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57791 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57792 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57793 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57796 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57797 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57798 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57796 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57797 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57799 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57800 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57801 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57797 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57799 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57802 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57803 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57804 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57799 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57802 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57943 - "OPTIONS /api/v1/orders/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57944 - "OPTIONS /api/v1/waves/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57945 - "OPTIONS /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57943 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57944 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57945 - "OPTIONS /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57947 - "OPTIONS /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57946 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57945 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57947 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58081 - "OPTIONS /api/v1/orders/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58082 - "OPTIONS /api/v1/waves/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58083 - "OPTIONS /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58081 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58082 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58084 - "OPTIONS /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58085 - "OPTIONS /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58083 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58084 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58085 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58102 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58103 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58104 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58104 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58102 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58103 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58104 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58112 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58103 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58112 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58103 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58113 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58112 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58104 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58113 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58112 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58114 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58104 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58103 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58112 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58114 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58104 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58114 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58113 - "GET /api/v1/waves HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58112 - "GET /api/v1/orders/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58104 - "GET /api/v1/waves/ HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58114 - "GET /api/v1/orders/macro HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58113 - "GET /api/v1/orders HTTP/1.1" 200 OK
+INFO:     Shutting down

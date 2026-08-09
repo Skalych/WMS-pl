@@ -25,6 +25,7 @@ export interface Employee {
   location: string;
   shiftTime: string;
   totalPicked: number;
+  efficiency: number;
 }
 
 // Дані тепер підвантажуються з бекенду
@@ -57,7 +58,8 @@ export default function Employees() {
             wave: emp.currentWaveNumber || '—',
             currentProgress: emp.pickingProgress > 0 ? emp.pickingProgress : null,
             totalProgress: emp.pickingProgress > 0 ? 100 : null,
-            location: emp.currentLocation
+            location: emp.currentLocation,
+            efficiency: emp.efficiency || 1.0
           };
         });
         setEmployees(mappedData);
@@ -69,6 +71,26 @@ export default function Employees() {
     };
     fetchEmployees();
   }, []);
+
+  const handleUpdateWorker = async (id: string, updates: any) => {
+    try {
+      await userService.updateEmployee(id, updates);
+      setEmployees(prev => prev.map(e => {
+        if (e.id === id) {
+          const newStatus = updates.status || e.status;
+          let dotClass = 'dot-offline';
+          let badgeClass = 'badge-muted';
+          if (['PICKING', 'RECEIVING'].includes(newStatus)) { dotClass = 'dot-online'; badgeClass = 'badge-success'; }
+          else if (['PUTAWAY', 'SORTING', 'DISPATCHING'].includes(newStatus)) { dotClass = 'dot-busy'; badgeClass = 'badge-warning'; }
+          
+          return { ...e, ...updates, dotClass, badgeClass, status: newStatus };
+        }
+        return e;
+      }));
+    } catch (error) {
+      console.error('Failed to update employee', error);
+    }
+  };
 
   // Filter employees
   const filteredEmployees = employees.filter(emp => {
@@ -259,6 +281,7 @@ export default function Employees() {
                 <th>Employee</th>
                 <th>Role</th>
                 <th>Status</th>
+                <th>Efficiency</th>
                 <th>Picking Wave</th>
                 <th style={{ minWidth: '160px' }}>Progress</th>
                 <th>Location</th>
@@ -298,11 +321,35 @@ export default function Employees() {
                       </span>
                     </td>
 
-                    {/* Status Badge */}
+                    {/* Status Select */}
                     <td>
-                      <span className={`badge ${emp.badgeClass}`}>
-                        {emp.status}
-                      </span>
+                      <select 
+                        value={emp.status} 
+                        onChange={(e) => handleUpdateWorker(emp.id, { status: e.target.value })}
+                        className={`badge ${emp.badgeClass}`}
+                        style={{ cursor: 'pointer', outline: 'none', appearance: 'auto', border: 'none', backgroundColor: 'transparent' }}
+                      >
+                        <option value="IDLE">IDLE</option>
+                        <option value="PICKING">PICKING</option>
+                        <option value="PUTAWAY">PUTAWAY</option>
+                        <option value="SORTING">SORTING</option>
+                        <option value="RECEIVING">RECEIVING</option>
+                        <option value="DISPATCHING">DISPATCHING</option>
+                        <option value="BREAK">BREAK</option>
+                        <option value="OFFLINE">OFFLINE</option>
+                      </select>
+                    </td>
+
+                    {/* Efficiency Input */}
+                    <td>
+                      <input 
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={emp.efficiency}
+                        onChange={(e) => handleUpdateWorker(emp.id, { efficiency: parseFloat(e.target.value) })}
+                        style={{ width: '60px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '2px 4px', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}
+                      />
                     </td>
 
                     {/* Picking Wave */}

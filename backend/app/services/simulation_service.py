@@ -5,8 +5,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
 from sqlalchemy.orm import joinedload
 from app.models.users import User
-from app.models.waves import Wave, MicroTask, MicroTaskItem
-from app.models.enums import WorkerStatus, WaveStatus, TaskStatus
+from app.models.waves import Wave, MicroTask, MicroTaskItem, WaveOrder
+from app.models.enums import WorkerStatus, WaveStatus, TaskStatus, OrderStatus
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,8 @@ async def perform_simulation_tick(session: AsyncSession):
     waves_result = await session.execute(
         select(Wave)
         .options(
-            joinedload(Wave.micro_tasks).joinedload(MicroTask.items)
+            joinedload(Wave.micro_tasks).joinedload(MicroTask.items),
+            joinedload(Wave.wave_orders).joinedload(WaveOrder.order)
         )
         .where(Wave.status == WaveStatus.IN_PROGRESS)
         .order_by(Wave.created_at.asc())
@@ -84,6 +85,10 @@ async def perform_simulation_tick(session: AsyncSession):
                 
         if all_tasks_completed and wave.micro_tasks:
             wave.status = WaveStatus.PICKED
+            # Update associated orders so macro progress updates
+            for wo in wave.wave_orders:
+                if wo.order:
+                    wo.order.status = OrderStatus.PACKED
 
     await session.commit()
 

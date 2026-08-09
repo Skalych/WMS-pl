@@ -38,7 +38,7 @@ async def create_macro_order(data: MacroOrderCreate, db: AsyncSession = Depends(
         reference_number=macro_order.reference_number,
         status=macro_order.status,
         created_at=macro_order.created_at,
-        orders_count=len(macro_order.orders) if getattr(macro_order, "orders", None) else 0,
+        orders_count=getattr(macro_order, "orders_count_hint", 0),
         progress=0
     )
 

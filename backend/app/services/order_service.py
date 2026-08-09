@@ -88,7 +88,7 @@ async def count_shipped_today(db: AsyncSession) -> int:
     return result.scalar_one()
 
 import random
-from app.models.topology import Product
+from app.models.catalog import Product
 
 async def create_macro_order(db: AsyncSession, size: str):
     # Determine scale
@@ -148,6 +148,7 @@ async def create_macro_order(db: AsyncSession, size: str):
 
     await db.commit()
     await db.refresh(macro_order)
+    macro_order.orders_count_hint = num_orders
     return macro_order
 
 async def get_macro_orders(db: AsyncSession):

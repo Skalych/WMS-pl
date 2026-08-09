@@ -23,10 +23,12 @@ class UserResponse(BaseModel):
     full_name: str
     role: UserRole
     status: WorkerStatus
+    efficiency: float
     current_location_id: Optional[UUID] = None
 
     model_config = {"from_attributes": True}
 
 class UserStatusUpdate(BaseModel):
-    status: WorkerStatus
+    status: Optional[WorkerStatus] = None
+    efficiency: Optional[float] = None
     current_location_id: Optional[UUID] = None

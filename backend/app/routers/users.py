@@ -33,7 +33,7 @@ async def update_status(
     data: UserStatusUpdate,
     db: AsyncSession = Depends(get_db),
 ):
-    user = await user_service.update_user_status(db, user_id, data.status, data.current_location_id)
+    user = await user_service.update_user_status(db, user_id, status=data.status, location_id=data.current_location_id, efficiency=data.efficiency)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user

@@ -45,12 +45,16 @@ async def create_user(db: AsyncSession, email: str, password: str, full_name: st
     return user
 
 
-async def update_user_status(db: AsyncSession, user_id: uuid.UUID, status: WorkerStatus, location_id: Optional[uuid.UUID] = None):
+async def update_user_status(db: AsyncSession, user_id: uuid.UUID, status: Optional[WorkerStatus] = None, location_id: Optional[uuid.UUID] = None, efficiency: Optional[float] = None):
     user = await get_user_by_id(db, user_id)
     if not user:
         return None
-    user.status = status
-    user.current_location_id = location_id
+    if status is not None:
+        user.status = status
+    if efficiency is not None:
+        user.efficiency = efficiency
+    if location_id is not None:
+        user.current_location_id = location_id
     await db.commit()
     await db.refresh(user)
     return user

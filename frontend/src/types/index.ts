@@ -55,6 +55,7 @@ export interface Employee {
   pickingProgress: number; // 0-100
   shiftTime: string;
   totalPicked: number;
+  efficiency: number;
 }
 
 export interface InventoryItem {

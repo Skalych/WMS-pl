@@ -52,8 +52,14 @@ export const userService = {
       currentWaveNumber: null,
       pickingProgress: 0,
       shiftTime: '00:00',
-      totalPicked: u.items_picked || 0
+      totalPicked: u.items_picked || 0,
+      efficiency: u.efficiency || 1.0
     }));
+  },
+  
+  updateEmployee: async (id: string, updates: { status?: WorkerStatus, efficiency?: number }) => {
+    const response = await apiClient.patch(`/users/${id}/status`, updates);
+    return response.data;
   }
 };
 
