@@ -11,7 +11,14 @@ from app.models.topology import Location
 LOW_STOCK_THRESHOLD = 10
 
 
-async def get_inventory_items(db: AsyncSession, skip: int = 0, limit: int = 50, search: Optional[str] = None):
+async def get_inventory_items(
+    db: AsyncSession, 
+    skip: int = 0, 
+    limit: int = 50, 
+    search: Optional[str] = None,
+    category: Optional[str] = None,
+    status: Optional[str] = None
+):
     query = (
         select(InventoryBalance)
         .options(
@@ -19,10 +26,25 @@ async def get_inventory_items(db: AsyncSession, skip: int = 0, limit: int = 50, 
             joinedload(InventoryBalance.location),
         )
     )
-    if search:
-        query = query.join(InventoryBalance.product).where(
-            Product.sku.ilike(f"%{search}%") | Product.name.ilike(f"%{search}%")
-        )
+    
+    # Needs join for search or category filtering
+    if search or category:
+        query = query.join(InventoryBalance.product)
+        if category:
+            query = query.join(Product.category).where(Category.name == category)
+        if search:
+            query = query.where(
+                Product.sku.ilike(f"%{search}%") | Product.name.ilike(f"%{search}%")
+            )
+            
+    if status:
+        available_expr = InventoryBalance.quantity - InventoryBalance.reserved_quantity
+        if status == 'out_of_stock':
+            query = query.where(available_expr <= 0)
+        elif status == 'low_stock':
+            query = query.where((available_expr > 0) & (available_expr <= LOW_STOCK_THRESHOLD))
+        elif status == 'in_stock':
+            query = query.where(available_expr > LOW_STOCK_THRESHOLD)
         
     # Get total count first
     count_query = select(func.count()).select_from(query.subquery())

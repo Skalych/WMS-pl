@@ -19,12 +19,13 @@ export default function Inventory() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
   const [isLoading, setIsLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     const fetchInventory = async () => {
       setIsLoading(true);
       try {
-        const data = await inventoryService.getInventory(currentPage, itemsPerPage, searchTerm);
+        const data = await inventoryService.getInventory(currentPage, itemsPerPage, searchTerm, statusFilter);
         setInventoryItems(data.items);
         setTotalItems(data.total);
       } catch (error) {
@@ -38,7 +39,7 @@ export default function Inventory() {
       fetchInventory();
     }, 300);
     return () => clearTimeout(timer);
-  }, [currentPage, searchTerm]);
+  }, [currentPage, searchTerm, statusFilter]);
 
   // Handle local filtering if we want to visually filter before the next fetch returns
   // but since we are server-side searching, we just display what's returned.
@@ -82,10 +83,20 @@ export default function Inventory() {
               style={{ paddingLeft: '2.3rem', width: '260px' }}
             />
           </div>
-          <button className="dropdown-btn">
-            <Filter size={18} />
-            Filter
-          </button>
+          <div style={{ position: 'relative' }}>
+            <Filter size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-main)', pointerEvents: 'none' }} />
+            <select 
+              className="dropdown-btn" 
+              style={{ paddingLeft: '34px', appearance: 'none' }}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="all">Filter: All Statuses</option>
+              <option value="in_stock">In Stock</option>
+              <option value="low_stock">Low Stock</option>
+              <option value="out_of_stock">Out of Stock</option>
+            </select>
+          </div>
         </div>
       </header>
 

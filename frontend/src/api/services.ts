@@ -99,9 +99,10 @@ export const userService = {
 
 // Inventory Services
 export const inventoryService = {
-  getInventory: async (page: number = 1, limit: number = 50, search?: string): Promise<{items: InventoryItem[], total: number}> => {
+  getInventory: async (page: number = 1, limit: number = 50, search?: string, status?: string): Promise<{items: InventoryItem[], total: number}> => {
     let url = `/inventory?page=${page}&size=${limit}`;
     if (search) url += `&search=${search}`;
+    if (status && status !== 'all') url += `&status=${status}`;
     const response = await apiClient.get(url);
     return {
       total: response.data.total,

@@ -7,15 +7,19 @@ from typing import Optional
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
 
-@router.get("", response_model=PaginatedInventoryResponse)
-async def list_inventory(
-    search: Optional[str] = Query(None),
+@router.get("/", response_model=PaginatedInventoryResponse)
+async def get_inventory(
     page: int = Query(1, ge=1),
-    size: int = Query(50, ge=1, le=200),
-    db: AsyncSession = Depends(get_db),
+    size: int = Query(50, ge=1, le=100),
+    search: Optional[str] = None,
+    category: Optional[str] = None,
+    status: Optional[str] = None,
+    db: AsyncSession = Depends(get_db)
 ):
     skip = (page - 1) * size
-    items, total = await inventory_service.get_inventory_items(db, skip=skip, limit=size, search=search)
+    items, total = await inventory_service.get_inventory_items(
+        db, skip=skip, limit=size, search=search, category=category, status=status
+    )
     
     response_items = [
         InventoryItemResponse(
