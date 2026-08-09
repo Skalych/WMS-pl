@@ -61,147 +61,147 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
   if (!employee) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[#0f0f16] border border-[rgba(255,255,255,0.08)] rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="modal-overlay">
+      <div className="modal-content">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-[rgba(255,255,255,0.06)]">
-          <div className="flex items-center gap-4">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold ${
-              employee.status === 'OFFLINE' ? 'bg-gray-800 text-gray-400' :
-              employee.status === 'BREAK' ? 'bg-amber-500/20 text-amber-500' :
-              'bg-[#e359ac]/20 text-[#e359ac]'
-            }`}>
+        <div className="modal-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{
+              width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', fontWeight: 'bold',
+              ...(employee.status === 'OFFLINE' ? { backgroundColor: '#1f2937', color: '#9ca3af' } :
+                  employee.status === 'BREAK' ? { backgroundColor: 'rgba(245,158,11,0.2)', color: '#f59e0b' } :
+                  { backgroundColor: 'rgba(227,89,172,0.2)', color: '#e359ac' })
+            }}>
               {employee.fullName.charAt(0)}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">{employee.fullName}</h2>
-              <div className="flex items-center gap-2 mt-1 text-sm text-gray-400">
-                <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-xs">
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-main)', margin: 0 }}>{employee.fullName}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
+                <span style={{ padding: '2px 8px', borderRadius: '4px', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.75rem' }}>
                   {employee.role}
                 </span>
                 <span>•</span>
-                <span className={`flex items-center gap-1.5 ${
-                  employee.status === 'BREAK' ? 'text-amber-400' :
-                  employee.status === 'OFFLINE' ? 'text-gray-500' :
-                  'text-green-400'
-                }`}>
-                  <span className={`w-2 h-2 rounded-full ${
-                    employee.status === 'BREAK' ? 'bg-amber-400' :
-                    employee.status === 'OFFLINE' ? 'bg-gray-500' :
-                    'bg-green-400'
-                  }`}></span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px',
+                  color: employee.status === 'BREAK' ? 'var(--color-warning)' :
+                         employee.status === 'OFFLINE' ? 'var(--text-muted)' :
+                         'var(--color-success)'
+                }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%',
+                    backgroundColor: employee.status === 'BREAK' ? 'var(--color-warning)' :
+                                     employee.status === 'OFFLINE' ? 'var(--text-muted)' :
+                                     'var(--color-success)'
+                  }}></span>
                   {employee.status}
                 </span>
               </div>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors text-gray-400 hover:text-white">
+          <button onClick={onClose} className="close-button">
             <X size={24} />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-[rgba(255,255,255,0.06)] px-6">
-          <button
-            className={`py-4 px-6 font-medium text-sm border-b-2 transition-colors ${
-              activeTab === 'current' ? 'border-[#e359ac] text-[#e359ac]' : 'border-transparent text-gray-400 hover:text-gray-200'
-            }`}
+        <div className="modal-tabs px-6" style={{ paddingLeft: '24px', paddingRight: '24px' }}>
+          <div
+            className={`modal-tab ${activeTab === 'current' ? 'active' : ''}`}
             onClick={() => setActiveTab('current')}
           >
             Current Shift
-          </button>
-          <button
-            className={`py-4 px-6 font-medium text-sm border-b-2 transition-colors ${
-              activeTab === 'history' ? 'border-[#e359ac] text-[#e359ac]' : 'border-transparent text-gray-400 hover:text-gray-200'
-            }`}
+          </div>
+          <div
+            className={`modal-tab ${activeTab === 'history' ? 'active' : ''}`}
             onClick={() => setActiveTab('history')}
           >
             Shift History
-          </button>
+          </div>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+        <div className="modal-body custom-scrollbar">
           {loading ? (
-            <div className="flex justify-center items-center py-20 text-gray-400">
-              <Activity className="animate-pulse" size={32} />
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '80px 0', color: 'var(--text-muted)' }}>
+              <Activity className="animate-pulse" size={32} style={{ animation: 'pulse 2s infinite' }} />
             </div>
           ) : activeTab === 'current' ? (
-            <div className="space-y-6">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               {currentShift ? (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="stats-grid" style={{ marginBottom: 0 }}>
                     <div className="stat-card">
                       <div className="stat-label">Shift Duration</div>
                       <div className="stat-value mt-2">{formatDuration(currentShift.start_time, null)}</div>
-                      <div className="text-xs text-gray-500 mt-2">Started: {new Date(currentShift.start_time).toLocaleTimeString()}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>Started: {new Date(currentShift.start_time).toLocaleTimeString()}</div>
                     </div>
                     <div className="stat-card">
                       <div className="stat-label">Total Volume (m³)</div>
                       <div className="stat-value accent mt-2">{(currentShift.total_volume_cm3 / 1000000).toFixed(4)}</div>
-                      <div className="text-xs text-gray-500 mt-2">{currentShift.total_items_picked} items picked</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>{currentShift.total_items_picked} items picked</div>
                     </div>
                     <div className="stat-card">
                       <div className="stat-label">Orders Completed</div>
-                      <div className="stat-value mt-2 text-[#38bdf8]">{currentShift.total_orders_completed}</div>
-                      <div className="text-xs text-gray-500 mt-2">{currentShift.total_tasks_completed} tasks done</div>
+                      <div className="stat-value mt-2" style={{ color: 'var(--color-info)' }}>{currentShift.total_orders_completed}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>{currentShift.total_tasks_completed} tasks done</div>
                     </div>
                   </div>
                   
-                  <div className="flex justify-end gap-3 mt-4">
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                     <button 
                       onClick={handleStartBreak}
-                      className="btn bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 flex items-center gap-2"
+                      className="btn"
+                      style={{ backgroundColor: 'rgba(245,158,11,0.2)', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
                       <Coffee size={16} /> Start Break
                     </button>
                     <button 
                       onClick={handleEndBreak}
-                      className="btn bg-green-500/20 text-green-400 hover:bg-green-500/30 flex items-center gap-2"
+                      className="btn"
+                      style={{ backgroundColor: 'rgba(34,197,94,0.2)', color: '#22c55e', display: 'flex', alignItems: 'center', gap: '8px' }}
                     >
                       <Play size={16} /> End Break / Resume
                     </button>
                   </div>
 
-                  <div className="data-panel mt-6">
+                  <div className="data-panel">
                     <div className="data-panel-header">
-                      <h3 className="data-panel-title flex items-center gap-2">
-                        <Clock size={16} className="text-[#e359ac]" />
+                      <h3 className="data-panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Clock size={16} style={{ color: 'var(--accent-primary)' }} />
                         Event Timeline
                       </h3>
                     </div>
-                    <div className="p-4">
+                    <div style={{ padding: '16px' }}>
                       {currentShift.events && currentShift.events.length > 0 ? (
-                        <div className="space-y-4">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                           {currentShift.events.sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).map((event, idx) => (
-                            <div key={event.id} className="flex gap-4">
-                              <div className="flex flex-col items-center">
-                                <div className={`w-3 h-3 rounded-full ${
-                                  event.event_type.includes('BREAK') ? 'bg-amber-400' :
-                                  event.event_type.includes('LOGIN') ? 'bg-green-400' :
-                                  'bg-blue-400'
-                                }`} />
+                            <div key={event.id} style={{ display: 'flex', gap: '16px' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <div style={{
+                                  width: '12px', height: '12px', borderRadius: '50%',
+                                  backgroundColor: event.event_type.includes('BREAK') ? 'var(--color-warning)' :
+                                                   event.event_type.includes('LOGIN') ? 'var(--color-success)' :
+                                                   'var(--color-info)'
+                                }} />
                                 {idx !== currentShift.events!.length - 1 && (
-                                  <div className="w-0.5 h-full bg-white/10 mt-1" />
+                                  <div style={{ width: '2px', height: '100%', backgroundColor: 'rgba(255,255,255,0.1)', marginTop: '4px' }} />
                                 )}
                               </div>
-                              <div className="pb-4">
-                                <div className="text-sm font-medium text-white">{event.event_type}</div>
-                                <div className="text-xs text-gray-500 mt-0.5">{new Date(event.timestamp).toLocaleString()}</div>
+                              <div style={{ paddingBottom: '16px' }}>
+                                <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-main)' }}>{event.event_type}</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>{new Date(event.timestamp).toLocaleString()}</div>
                               </div>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-gray-500 text-sm text-center py-4">No events recorded yet.</div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.875rem', textAlign: 'center', padding: '16px 0' }}>No events recorded yet.</div>
                       )}
                     </div>
                   </div>
                 </>
               ) : (
-                <div className="text-center py-12">
-                  <div className="text-gray-500 mb-2">No active shift found.</div>
-                  <div className="text-sm text-gray-600">Employee is currently offline or not checked in.</div>
+                <div style={{ textAlign: 'center', padding: '48px 0' }}>
+                  <div style={{ color: 'var(--text-muted)', marginBottom: '8px' }}>No active shift found.</div>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', opacity: 0.8 }}>Employee is currently offline or not checked in.</div>
                 </div>
               )}
             </div>
@@ -220,20 +220,20 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
                 <tbody>
                   {pastShifts.length > 0 ? pastShifts.map(shift => (
                     <tr key={shift.id}>
-                      <td className="text-gray-300">
+                      <td style={{ color: 'rgba(255,255,255,0.8)' }}>
                         {new Date(shift.start_time).toLocaleDateString()}
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                           {new Date(shift.start_time).toLocaleTimeString()} - {shift.end_time ? new Date(shift.end_time).toLocaleTimeString() : 'Unknown'}
                         </div>
                       </td>
-                      <td className="text-gray-300 font-mono text-sm">{formatDuration(shift.start_time, shift.end_time)}</td>
-                      <td className="text-gray-300">{shift.total_items_picked}</td>
-                      <td className="text-[#e359ac] font-mono text-sm">{(shift.total_volume_cm3 / 1000000).toFixed(4)}</td>
-                      <td className="text-[#38bdf8] font-mono text-sm">{shift.total_orders_completed}</td>
+                      <td style={{ color: 'rgba(255,255,255,0.8)', fontFamily: 'var(--font-mono)', fontSize: '0.875rem' }}>{formatDuration(shift.start_time, shift.end_time)}</td>
+                      <td style={{ color: 'rgba(255,255,255,0.8)' }}>{shift.total_items_picked}</td>
+                      <td style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)', fontSize: '0.875rem' }}>{(shift.total_volume_cm3 / 1000000).toFixed(4)}</td>
+                      <td style={{ color: 'var(--color-info)', fontFamily: 'var(--font-mono)', fontSize: '0.875rem' }}>{shift.total_orders_completed}</td>
                     </tr>
                   )) : (
                     <tr>
-                      <td colSpan={5} className="text-center text-gray-500 py-8">No past shifts found.</td>
+                      <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '32px 0' }}>No past shifts found.</td>
                     </tr>
                   )}
                 </tbody>
