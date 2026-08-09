@@ -44,7 +44,10 @@ async def start_shift(
     data: BulkShiftUpdate,
     db: AsyncSession = Depends(get_db),
 ):
-    return await user_service.bulk_update_status(db, data.user_ids, WorkerStatus.IDLE)
+    for uid in data.user_ids:
+        await user_service.start_shift(db, uid)
+    # fetch updated users
+    return [await user_service.get_user_by_id(db, uid) for uid in data.user_ids]
 
 
 @router.post("/shift/end", response_model=list[UserResponse])
@@ -52,7 +55,10 @@ async def end_shift(
     data: BulkShiftUpdate,
     db: AsyncSession = Depends(get_db),
 ):
-    return await user_service.bulk_update_status(db, data.user_ids, WorkerStatus.OFFLINE)
+    for uid in data.user_ids:
+        await user_service.end_shift(db, uid)
+    # fetch updated users
+    return [await user_service.get_user_by_id(db, uid) for uid in data.user_ids]
 
 @router.get("/{user_id}/shift/current", response_model=ShiftResponse)
 async def get_current_shift(user_id: uuid.UUID, db: AsyncSession = Depends(get_db)):

@@ -146,7 +146,18 @@ async def start_shift(db: AsyncSession, user_id: uuid.UUID) -> Shift:
     login_event = ShiftEvent(id=uuid.uuid4(), shift_id=new_shift.id, event_type=ShiftEventType.LOGIN)
     db.add(login_event)
     
-    await update_user_status(db, user_id, status=WorkerStatus.IDLE)
+    user = await get_user_by_id(db, user_id)
+    target_status = WorkerStatus.IDLE
+    if user:
+        if user.role == UserRole.INBOUND_OPERATOR:
+            target_status = WorkerStatus.RECEIVING
+        elif user.role == UserRole.PACKER_DISPATCHER:
+            target_status = WorkerStatus.SORTING
+            
+        user.picking_progress = 0
+        user.total_picked = 0
+            
+    await update_user_status(db, user_id, status=target_status)
     await db.commit()
     await db.refresh(new_shift)
     return new_shift
