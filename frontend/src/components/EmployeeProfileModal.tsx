@@ -13,9 +13,12 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
   const [currentShift, setCurrentShift] = useState<Shift | null>(null);
   const [pastShifts, setPastShifts] = useState<Shift[]>([]);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [localStatus, setLocalStatus] = useState(employee?.status || 'OFFLINE');
 
   useEffect(() => {
     if (employee) {
+      setLocalStatus(employee.status);
       fetchData();
     }
   }, [employee]);
@@ -39,14 +42,26 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
 
   const handleStartBreak = async () => {
     if (!employee) return;
-    await userService.startBreak(employee.id);
-    fetchData();
+    setActionLoading(true);
+    try {
+      await userService.startBreak(employee.id);
+      setLocalStatus('BREAK');
+      await fetchData();
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const handleEndBreak = async () => {
     if (!employee) return;
-    await userService.endBreak(employee.id);
-    fetchData();
+    setActionLoading(true);
+    try {
+      await userService.endBreak(employee.id);
+      setLocalStatus('IDLE');
+      await fetchData();
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const formatDuration = (start: string, end: string | null) => {
@@ -82,16 +97,16 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
                 </span>
                 <span>•</span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px',
-                  color: employee.status === 'BREAK' ? 'var(--color-warning)' :
-                         employee.status === 'OFFLINE' ? 'var(--text-muted)' :
+                  color: localStatus === 'BREAK' ? 'var(--color-warning)' :
+                         localStatus === 'OFFLINE' ? 'var(--text-muted)' :
                          'var(--color-success)'
                 }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%',
-                    backgroundColor: employee.status === 'BREAK' ? 'var(--color-warning)' :
-                                     employee.status === 'OFFLINE' ? 'var(--text-muted)' :
+                    backgroundColor: localStatus === 'BREAK' ? 'var(--color-warning)' :
+                                     localStatus === 'OFFLINE' ? 'var(--text-muted)' :
                                      'var(--color-success)'
                   }}></span>
-                  {employee.status}
+                  {localStatus}
                 </span>
               </div>
             </div>
@@ -148,17 +163,35 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                     <button 
                       onClick={handleStartBreak}
-                      className="btn"
-                      style={{ backgroundColor: 'rgba(245,158,11,0.2)', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      className="btn btn-primary"
+                      disabled={actionLoading || localStatus === 'BREAK'}
+                      style={{ 
+                        backgroundColor: '#f59e0b', 
+                        color: '#000', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px',
+                        border: 'none',
+                        opacity: (actionLoading || localStatus === 'BREAK') ? 0.5 : 1
+                      }}
                     >
-                      <Coffee size={16} /> Start Break
+                      <Coffee size={16} /> {actionLoading && localStatus !== 'BREAK' ? 'Wait...' : 'START BREAK'}
                     </button>
                     <button 
                       onClick={handleEndBreak}
-                      className="btn"
-                      style={{ backgroundColor: 'rgba(34,197,94,0.2)', color: '#22c55e', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      className="btn btn-primary"
+                      disabled={actionLoading || localStatus !== 'BREAK'}
+                      style={{ 
+                        backgroundColor: '#22c55e', 
+                        color: '#000', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px',
+                        border: 'none',
+                        opacity: (actionLoading || localStatus !== 'BREAK') ? 0.5 : 1
+                      }}
                     >
-                      <Play size={16} /> End Break / Resume
+                      <Play size={16} /> {actionLoading && localStatus === 'BREAK' ? 'Wait...' : 'END BREAK / RESUME'}
                     </button>
                   </div>
 
