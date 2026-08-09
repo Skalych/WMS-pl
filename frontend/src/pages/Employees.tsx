@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { userService } from '../api/services';
 import { 
   Users, 
@@ -9,14 +9,18 @@ import {
   Radio,
   Clock,
   MapPin,
-  CheckCircle2
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Zap
 } from 'lucide-react';
+import { WorkerStatus } from '../types';
 
 export interface Employee {
   id: string;
   name: string;
   role: 'PICKER' | 'INBOUND_OPERATOR' | 'PACKER_DISPATCHER';
-  status: 'PICKING' | 'PUTAWAY' | 'SORTING' | 'RECEIVING' | 'DISPATCHING' | 'BREAK' | 'IDLE';
+  status: WorkerStatus;
   dotClass: 'dot-online' | 'dot-busy' | 'dot-offline';
   badgeClass: string;
   wave: string;
@@ -28,8 +32,6 @@ export interface Employee {
   efficiency: number;
 }
 
-// Дані тепер підвантажуються з бекенду
-
 type FilterType = 'All' | 'Active' | 'On Break';
 type SortKey = 'status' | 'name' | 'progress' | 'totalPicked';
 
@@ -38,12 +40,17 @@ export default function Employees() {
   const [sortBy, setSortBy] = useState<SortKey>('status');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // UI States
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
+  const [editingEfficiencyId, setEditingEfficiencyId] = useState<string | null>(null);
+  const [editingEfficiencyValue, setEditingEfficiencyValue] = useState<string>('');
+  const [openStatusDropdownId, setOpenStatusDropdownId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
         const data = await userService.getEmployees();
-        // Прив'язуємо UI стилі для даних з бекенду
         const mappedData = data.map((emp: any) => {
           let dotClass = 'dot-offline';
           let badgeClass = 'badge-muted';
@@ -52,7 +59,7 @@ export default function Employees() {
           
           return {
             ...emp,
-            name: emp.fullName, // Адаптація під існуючий UI компонент
+            name: emp.fullName,
             dotClass,
             badgeClass,
             wave: emp.currentWaveNumber || '—',
@@ -92,6 +99,28 @@ export default function Employees() {
     }
   };
 
+  const handleEfficiencySubmit = (id: string) => {
+    const val = parseFloat(editingEfficiencyValue);
+    if (!isNaN(val) && val > 0) {
+      handleUpdateWorker(id, { efficiency: val });
+    }
+    setEditingEfficiencyId(null);
+  };
+
+  // Close dropdowns when clicking outside (simple hack, real impl would use ref)
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('.status-dropdown-container')) {
+        setOpenStatusDropdownId(null);
+      }
+      if (!(e.target as Element).closest('.efficiency-editor') && editingEfficiencyId) {
+        setEditingEfficiencyId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [editingEfficiencyId]);
+
   // Filter employees
   const filteredEmployees = employees.filter(emp => {
     if (filter === 'Active') {
@@ -116,18 +145,13 @@ export default function Employees() {
       const pctB = b.totalProgress ? (b.currentProgress! / b.totalProgress) : 0;
       return pctB - pctA;
     }
-    // Default: sort by status weight / priority
     const statusOrder: Record<string, number> = {
-      PICKING: 1,
-      RECEIVING: 2,
-      SORTING: 3,
-      PUTAWAY: 4,
-      DISPATCHING: 5,
-      BREAK: 6,
-      IDLE: 7
+      PICKING: 1, RECEIVING: 2, SORTING: 3, PUTAWAY: 4, DISPATCHING: 5, BREAK: 6, IDLE: 7
     };
     return (statusOrder[a.status] || 99) - (statusOrder[b.status] || 99);
   });
+
+  const statuses: WorkerStatus[] = ['PICKING', 'PUTAWAY', 'SORTING', 'RECEIVING', 'DISPATCHING', 'BREAK', 'IDLE', 'OFFLINE'] as WorkerStatus[];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -143,7 +167,6 @@ export default function Employees() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-          {/* LIVE Badge */}
           <div 
             className="badge" 
             style={{ 
@@ -162,7 +185,6 @@ export default function Employees() {
             <span>LIVE</span>
           </div>
 
-          {/* Filter buttons */}
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             {(['All', 'Active', 'On Break'] as FilterType[]).map((f) => (
               <button
@@ -178,15 +200,14 @@ export default function Employees() {
         </div>
       </header>
 
-      {/* 2. Stats Row (4 Small Stat Cards) */}
+      {/* 2. Stats Row */}
       <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
-        {/* Stat Card 1: Online */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div className="card stat-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="card-title">Online</span>
+            <span className="stat-label">Online</span>
             <Users size={18} style={{ color: '#22c55e' }} />
           </div>
-          <div className="card-value" style={{ color: '#22c55e' }}>
+          <div className="stat-value" style={{ color: '#22c55e' }}>
             {isLoading ? '...' : employees.filter(e => e.status !== 'OFFLINE' && e.status !== 'IDLE').length}
           </div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
@@ -194,13 +215,12 @@ export default function Employees() {
           </div>
         </div>
 
-        {/* Stat Card 2: Active Tasks */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div className="card stat-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="card-title">Active Tasks</span>
+            <span className="stat-label">Active Tasks</span>
             <Activity size={18} style={{ color: '#e359ac' }} />
           </div>
-          <div className="card-value" style={{ color: '#e359ac' }}>
+          <div className="stat-value" style={{ color: '#e359ac' }}>
             {isLoading ? '...' : employees.filter(e => ['PICKING', 'PUTAWAY', 'SORTING', 'RECEIVING', 'DISPATCHING'].includes(e.status)).length}
           </div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
@@ -208,13 +228,12 @@ export default function Employees() {
           </div>
         </div>
 
-        {/* Stat Card 3: On Break */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div className="card stat-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="card-title">On Break</span>
+            <span className="stat-label">On Break</span>
             <Coffee size={18} style={{ color: '#f59e0b' }} />
           </div>
-          <div className="card-value" style={{ color: '#f59e0b' }}>
+          <div className="stat-value" style={{ color: '#f59e0b' }}>
             {isLoading ? '...' : employees.filter(e => e.status === 'BREAK').length}
           </div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
@@ -222,13 +241,12 @@ export default function Employees() {
           </div>
         </div>
 
-        {/* Stat Card 4: Offline */}
-        <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        <div className="card stat-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="card-title">Offline</span>
+            <span className="stat-label">Offline</span>
             <UserX size={18} style={{ color: 'var(--text-muted)' }} />
           </div>
-          <div className="card-value" style={{ color: 'var(--text-muted)' }}>
+          <div className="stat-value" style={{ color: 'var(--text-muted)' }}>
             {isLoading ? '...' : employees.filter(e => e.status === 'OFFLINE' || e.status === 'IDLE').length}
           </div>
           <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
@@ -237,10 +255,9 @@ export default function Employees() {
         </div>
       </div>
 
-      {/* 3. Main Data Table in a .data-panel */}
-      <div className="data-panel">
-        {/* Panel Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+      {/* 3. Main Data Panel (Cards List) */}
+      <div className="data-panel" style={{ padding: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
             <Radio size={18} style={{ color: '#e359ac' }} />
             <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
@@ -248,7 +265,6 @@ export default function Employees() {
             </h2>
           </div>
 
-          {/* Sort Dropdown */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
               <ArrowUpDown size={14} /> Sort:
@@ -258,153 +274,170 @@ export default function Employees() {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortKey)}
               style={{ 
-                cursor: 'pointer',
-                outline: 'none',
-                appearance: 'auto',
-                backgroundColor: 'rgba(18, 24, 38, 0.8)',
-                paddingRight: '1rem'
+                cursor: 'pointer', outline: 'none', appearance: 'auto',
+                backgroundColor: 'rgba(18, 24, 38, 0.8)', paddingRight: '1rem'
               }}
             >
-              <option value="status" style={{ background: '#0b0f19', color: '#f8fafc' }}>Status</option>
-              <option value="name" style={{ background: '#0b0f19', color: '#f8fafc' }}>Name</option>
-              <option value="progress" style={{ background: '#0b0f19', color: '#f8fafc' }}>Progress</option>
-              <option value="totalPicked" style={{ background: '#0b0f19', color: '#f8fafc' }}>Total Picked</option>
+              <option value="status" style={{ background: '#0b0f19' }}>Status</option>
+              <option value="name" style={{ background: '#0b0f19' }}>Name</option>
+              <option value="progress" style={{ background: '#0b0f19' }}>Progress</option>
+              <option value="totalPicked" style={{ background: '#0b0f19' }}>Total Picked</option>
             </select>
           </div>
         </div>
 
-        {/* Table */}
-        <div style={{ overflowX: 'auto' }}>
-          <table className="wms-table">
-            <thead>
-              <tr>
-                <th>Employee</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Efficiency</th>
-                <th>Picking Wave</th>
-                <th style={{ minWidth: '160px' }}>Progress</th>
-                <th>Location</th>
-                <th>Shift Time</th>
-                <th>Total Picked</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Loading employees...</td>
-                </tr>
-              ) : sortedEmployees.length === 0 ? (
-                <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No employees found.</td>
-                </tr>
-              ) : sortedEmployees.map((emp) => {
-                const hasProgress = emp.currentProgress !== null && emp.totalProgress !== null;
-                const pct = hasProgress 
-                  ? Math.round((emp.currentProgress! / emp.totalProgress!) * 100) 
-                  : 0;
+        {/* Header Labels (Optional, purely visual for grid alignment) */}
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1.5fr', padding: '0 24px 12px 24px', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+          <div>Employee</div>
+          <div>Role</div>
+          <div>Status</div>
+          <div>Efficiency</div>
+          <div>Activity</div>
+        </div>
 
-                return (
-                  <tr key={emp.id}>
-                    {/* Employee with Status Dot */}
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                        <span className={`dot ${emp.dotClass}`} title={emp.status} />
-                        <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{emp.name}</span>
+        {/* Cards List */}
+        <div className="employee-list" style={{ marginTop: '16px' }}>
+          {isLoading ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Loading employees...</div>
+          ) : sortedEmployees.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No employees found.</div>
+          ) : sortedEmployees.map((emp) => {
+            const hasProgress = emp.currentProgress !== null && emp.totalProgress !== null;
+            const pct = hasProgress ? Math.round((emp.currentProgress! / emp.totalProgress!) * 100) : 0;
+            const isExpanded = expandedCardId === emp.id;
+
+            return (
+              <div key={emp.id} className="employee-card">
+                {/* Main Row */}
+                <div 
+                  className="employee-card-main" 
+                  onClick={() => setExpandedCardId(isExpanded ? null : emp.id)}
+                >
+                  {/* Name & Dot */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span className={`dot ${emp.dotClass}`} />
+                    <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>{emp.name}</span>
+                  </div>
+
+                  {/* Role */}
+                  <div style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+                    {emp.role}
+                  </div>
+
+                  {/* Status Badges with Custom Dropdown */}
+                  <div className="status-dropdown-container" onClick={(e) => e.stopPropagation()}>
+                    <div 
+                      className={`badge ${emp.badgeClass}`}
+                      style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                      onClick={() => setOpenStatusDropdownId(openStatusDropdownId === emp.id ? null : emp.id)}
+                    >
+                      {emp.status}
+                      <ChevronDown size={12} />
+                    </div>
+                    {openStatusDropdownId === emp.id && (
+                      <div className="status-dropdown-menu">
+                        {statuses.map(s => (
+                          <button
+                            key={s}
+                            className="status-dropdown-item"
+                            onClick={() => {
+                              handleUpdateWorker(emp.id, { status: s });
+                              setOpenStatusDropdownId(null);
+                            }}
+                          >
+                            {s}
+                          </button>
+                        ))}
                       </div>
-                    </td>
+                    )}
+                  </div>
 
-                    {/* Role */}
-                    <td>
-                      <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', fontWeight: 600 }}>
-                        {emp.role}
-                      </span>
-                    </td>
-
-                    {/* Status Select */}
-                    <td>
-                      <select 
-                        value={emp.status} 
-                        onChange={(e) => handleUpdateWorker(emp.id, { status: e.target.value })}
-                        className={`badge ${emp.badgeClass}`}
-                        style={{ cursor: 'pointer', outline: 'none', appearance: 'auto', border: 'none', backgroundColor: 'transparent' }}
+                  {/* Efficiency Inline Editor */}
+                  <div onClick={(e) => e.stopPropagation()}>
+                    {editingEfficiencyId === emp.id ? (
+                      <div className="efficiency-editor" style={{ background: 'rgba(227, 89, 172, 0.1)', borderColor: 'var(--accent-primary)' }}>
+                        <Zap size={14} />
+                        <input
+                          type="number"
+                          step="0.1"
+                          autoFocus
+                          className="efficiency-input"
+                          value={editingEfficiencyValue}
+                          onChange={(e) => setEditingEfficiencyValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleEfficiencySubmit(emp.id);
+                            if (e.key === 'Escape') setEditingEfficiencyId(null);
+                          }}
+                          onBlur={() => handleEfficiencySubmit(emp.id)}
+                        />
+                      </div>
+                    ) : (
+                      <div 
+                        className="efficiency-editor"
+                        onClick={() => {
+                          setEditingEfficiencyValue(emp.efficiency.toString());
+                          setEditingEfficiencyId(emp.id);
+                        }}
                       >
-                        <option value="IDLE">IDLE</option>
-                        <option value="PICKING">PICKING</option>
-                        <option value="PUTAWAY">PUTAWAY</option>
-                        <option value="SORTING">SORTING</option>
-                        <option value="RECEIVING">RECEIVING</option>
-                        <option value="DISPATCHING">DISPATCHING</option>
-                        <option value="BREAK">BREAK</option>
-                        <option value="OFFLINE">OFFLINE</option>
-                      </select>
-                    </td>
+                        <Zap size={14} />
+                        {emp.efficiency.toFixed(1)}x
+                      </div>
+                    )}
+                  </div>
 
-                    {/* Efficiency Input */}
-                    <td>
-                      <input 
-                        type="number"
-                        min="0"
-                        step="0.1"
-                        value={emp.efficiency}
-                        onChange={(e) => handleUpdateWorker(emp.id, { efficiency: parseFloat(e.target.value) })}
-                        style={{ width: '60px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '4px', padding: '2px 4px', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}
-                      />
-                    </td>
-
-                    {/* Picking Wave */}
-                    <td style={{ fontFamily: 'var(--font-mono)', color: emp.wave !== '—' ? 'var(--primary)' : 'var(--text-muted)' }}>
-                      {emp.wave}
-                    </td>
-
-                    {/* Progress Column */}
-                    <td>
-                      {hasProgress ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
-                            <span>{emp.currentProgress}/{emp.totalProgress}</span>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{pct}%</span>
-                          </div>
-                          <div className="progress-bar-bg">
-                            <div 
-                              className="progress-bar-fill" 
-                              style={{ 
-                                width: `${pct}%`,
-                                backgroundColor: emp.status === 'SORTING' 
-                                  ? '#e359ac' 
-                                  : pct === 100 
-                                    ? '#22c55e' 
-                                    : emp.status === 'PUTAWAY' || emp.status === 'DISPATCHING'
-                                      ? '#f59e0b'
-                                      : '#22c55e'
-                              }} 
-                            />
-                          </div>
+                  {/* Activity/Progress */}
+                  <div>
+                    {hasProgress ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '90%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
+                          <span style={{ color: 'var(--text-muted)' }}>{emp.wave}</span>
+                          <span style={{ color: 'var(--text-main)' }}>{pct}%</span>
                         </div>
-                      ) : (
-                        <span style={{ color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>—</span>
-                      )}
-                    </td>
+                        <div className="progress-bar">
+                          <div 
+                            className={`progress-bar-fill ${emp.status !== 'PICKING' ? 'cyan' : ''}`}
+                            style={{ width: `${pct}%` }} 
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <span style={{ color: 'rgba(255,255,255,0.2)', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>Idle</span>
+                    )}
+                  </div>
+                </div>
 
-                    {/* Location */}
-                    <td style={{ fontFamily: 'var(--font-mono)', color: emp.location !== '—' ? 'var(--text-main)' : 'var(--text-muted)' }}>
-                      {emp.location}
-                    </td>
-
-                    {/* Shift Time */}
-                    <td style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      {emp.shiftTime}
-                    </td>
-
-                    {/* Total Picked */}
-                    <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: '#e359ac' }}>
-                      {emp.totalPicked}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                {/* Expanded Details Section */}
+                {isExpanded && (
+                  <div className="employee-card-details">
+                    <div className="detail-item">
+                      <span className="detail-label">Location</span>
+                      <span className={`detail-value ${emp.location === 'N/A' || emp.location === '—' ? 'empty' : ''}`}>
+                        {emp.location}
+                      </span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Shift Time</span>
+                      <span className={`detail-value ${emp.shiftTime === '00:00' ? 'empty' : ''}`}>
+                        {emp.shiftTime}
+                      </span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Wave Assingment</span>
+                      <span className={`detail-value ${emp.wave === '—' ? 'empty' : ''}`}>
+                        {emp.wave}
+                      </span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">Total Items Picked</span>
+                      <span className={`detail-value ${emp.totalPicked === 0 ? 'empty' : ''}`} style={{ color: emp.totalPicked > 0 ? '#e359ac' : undefined }}>
+                        {emp.totalPicked}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
