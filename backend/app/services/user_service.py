@@ -113,7 +113,7 @@ async def get_current_shift(db: AsyncSession, user_id: uuid.UUID) -> Optional[Sh
         Shift.end_time == None
     ).order_by(Shift.start_time.desc())
     result = await db.execute(query)
-    return result.scalars().first()
+    return result.unique().scalars().first()
 
 async def get_past_shifts(db: AsyncSession, user_id: uuid.UUID) -> list[Shift]:
     query = select(Shift).options(joinedload(Shift.events)).where(
@@ -121,7 +121,7 @@ async def get_past_shifts(db: AsyncSession, user_id: uuid.UUID) -> list[Shift]:
         Shift.end_time != None
     ).order_by(Shift.start_time.desc())
     result = await db.execute(query)
-    return result.scalars().all()
+    return result.unique().scalars().all()
 
 async def get_current_shift_with_events(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
     query = select(Shift).options(joinedload(Shift.events)).where(
@@ -129,7 +129,7 @@ async def get_current_shift_with_events(db: AsyncSession, user_id: uuid.UUID) ->
         Shift.end_time == None
     ).order_by(Shift.start_time.desc())
     result = await db.execute(query)
-    return result.scalars().first()
+    return result.unique().scalars().first()
 
 async def start_shift(db: AsyncSession, user_id: uuid.UUID) -> Shift:
     # Close any existing open shifts
