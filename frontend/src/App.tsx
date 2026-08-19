@@ -8,6 +8,7 @@ import Orders from './pages/Orders';
 import Admin from './pages/Admin';
 import Inbound from './pages/Inbound';
 import Login from './pages/Login';
+import ShiftBoardPage from './pages/ShiftBoardPage';
 import SettingsModal from './components/SettingsModal';
 import { SettingsProvider } from './context/SettingsContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -82,13 +83,14 @@ const MainLayout = () => {
 export default function App() {
   return (
     <SettingsProvider>
-      <AuthProvider>
-        <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
-            
+
             {/* Захищені роути */}
             <Route element={<PrivateRoute />}>
+              <Route path="/shift/board" element={<ShiftBoardPage />} />
               <Route element={<MainLayout />}>
                 <Route path="/" element={<Dashboard />} />
                 <Route element={<AdminRoute />}>
@@ -101,15 +103,15 @@ export default function App() {
                 </Route>
                 <Route path="/orders-waves" element={<Orders />} />
                 <Route path="/analytics" element={<Dashboard />} />
-                <Route path="/shift-reports" element={<Orders />} />
+                <Route path="/shift-reports" element={<ShiftBoardPage />} />
               </Route>
             </Route>
-            
+
             {/* 404 Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </SettingsProvider>
   );
 }

@@ -1,18 +1,26 @@
 #!/bin/bash
-# wms.command - Головне меню управління WMS Nexus
+# wms.command — Головне меню управління WMS Nexus
 
-# Кольори
 CYAN='\033[0;36m'
 MAGENTA='\033[0;35m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
-NC='\033[0m' # Без кольору
+NC='\033[0m'
 BOLD='\033[1m'
 
-cd "$(dirname "$0")"
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+cd "$ROOT"
 
-function show_header() {
+PID_DIR="$ROOT/.wms"
+BACKEND_PID="$PID_DIR/backend.pid"
+FRONTEND_PID="$PID_DIR/frontend.pid"
+
+mkdir -p "$PID_DIR"
+
+# ─── Helpers ───────────────────────────────────────────────────────────────────
+
+show_header() {
     clear
     echo -e "${MAGENTA}${BOLD}"
     echo "  ██╗    ██╗███╗   ███╗███████╗    ███╗   ██╗███████╗██╗  ██╗██╗   ██╗███████╗"
@@ -28,105 +36,281 @@ function show_header() {
     echo ""
 }
 
-function stop_all() {
-    echo -e "${YELLOW}Зупиняємо всі сервіси WMS...${NC}"
-    lsof -ti:3000 | xargs kill -9 2>/dev/null || true
-    lsof -ti:8000 | xargs kill -9 2>/dev/null || true
-    docker compose down 2>/dev/null || true
-    echo -e "${GREEN}Сервіси зупинено.${NC}"
+kill_port() {
+    lsof -ti:"$1" | xargs kill -9 2>/dev/null || true
+}
+
+kill_by_pidfile() {
+    local pidfile="$1"
+    if [ -f "$pidfile" ]; then
+        local pid
+        pid=$(cat "$pidfile")
+        kill "$pid" 2>/dev/null || true
+        sleep 0.5
+        kill -9 "$pid" 2>/dev/null || true
+        rm -f "$pidfile"
+    fi
+}
+
+check_docker() {
+    if ! docker info >/dev/null 2>&1; then
+        echo -e "${RED}❌ Docker не запущений. Відкрий Docker Desktop і спробуй знову.${NC}"
+        return 1
+    fi
+    return 0
+}
+
+wait_for_postgres() {
+    echo -e "${CYAN}   Очікуємо PostgreSQL...${NC}"
+    local i
+    for i in {1..30}; do
+        if docker compose exec -T postgres pg_isready -U postgres -d wms_db >/dev/null 2>&1; then
+            echo -e "${GREEN}   ✓ PostgreSQL готовий${NC}"
+            return 0
+        fi
+        sleep 1
+    done
+    echo -e "${RED}   ✗ PostgreSQL не відповідає після 30 сек${NC}"
+    return 1
+}
+
+port_in_use() {
+    lsof -ti:"$1" >/dev/null 2>&1
+}
+
+ensure_backend_deps() {
+    cd "$ROOT/backend"
+    if [ ! -d ".venv" ]; then
+        echo -e "${YELLOW}   Створюємо Python venv...${NC}"
+        python3 -m venv .venv
+    fi
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
+    if [ ! -f ".venv/.wms_deps_ok" ]; then
+        echo -e "${YELLOW}   Встановлюємо Python залежності...${NC}"
+        pip install -q -r requirements.txt
+        touch .venv/.wms_deps_ok
+    fi
+    cd "$ROOT"
+}
+
+ensure_frontend_deps() {
+    cd "$ROOT/frontend"
+    if [ ! -d "node_modules" ]; then
+        echo -e "${YELLOW}   Встановлюємо npm залежності...${NC}"
+        npm install
+    fi
+    cd "$ROOT"
+}
+
+show_credentials() {
+    echo -e "${CYAN}==============================================================================${NC}"
+    echo -e " 🔑 ${BOLD}Demo-логіни${NC} (пароль для всіх: ${YELLOW}password123${NC})"
+    echo -e "    Admin:    admin@wms.local"
+    echo -e "    Picker:   ivan.p@wms.local"
+    echo -e "    Inbound:  oleg.d@wms.local"
+    echo -e "${CYAN}==============================================================================${NC}"
+}
+
+show_urls() {
+    local ip
+    ip=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo "localhost")
+    echo -e "${CYAN}==============================================================================${NC}"
+    echo -e " 🌐 ${BOLD}Сайт:${NC}     http://localhost:3000"
+    echo -e " 📱 ${BOLD}Мережа:${NC}   http://${ip}:3000"
+    echo -e " 📚 ${BOLD}API docs:${NC} http://localhost:8000/docs"
+    echo -e "${CYAN}==============================================================================${NC}"
+}
+
+# ─── Actions ─────────────────────────────────────────────────────────────────
+
+stop_apps() {
+    echo -e "${YELLOW}Зупиняємо backend і frontend...${NC}"
+    kill_by_pidfile "$BACKEND_PID"
+    kill_by_pidfile "$FRONTEND_PID"
+    kill_port 8000
+    kill_port 3000
+    echo -e "${GREEN}✓ Backend і frontend зупинено.${NC}"
+    echo -e "${CYAN}  PostgreSQL (Docker) залишається працювати.${NC}"
     sleep 1
 }
 
-function seed_db() {
-    echo -e "${CYAN}Запускаємо базу даних та додаємо користувачів...${NC}"
-    docker compose up -d
-    sleep 3
-    cd backend
-    if [ -d ".venv" ]; then
-        source .venv/bin/activate
-        python3 -m app.seed
-    else
-        echo -e "${RED}Помилка: не знайдено віртуальне середовище .venv у папці backend.${NC}"
-    fi
-    cd ..
+stop_everything() {
+    stop_apps
+    echo -e "${YELLOW}Зупиняємо PostgreSQL (Docker)...${NC}"
+    docker compose down 2>/dev/null || true
+    echo -e "${GREEN}✓ Усе зупинено.${NC}"
+    sleep 1
+}
+
+show_status() {
+    echo -e "${BOLD}Статус сервісів:${NC}"
     echo ""
-    echo -e "${GREEN}✅ Базу даних успішно заповнено (Користувачі створені)!${NC}"
-    echo -e "${YELLOW}Натисніть Enter, щоб повернутися в меню...${NC}"
+
+    if docker info >/dev/null 2>&1 && docker compose ps --status running 2>/dev/null | grep -q wms-postgres; then
+        echo -e "  PostgreSQL:  ${GREEN}● працює${NC} (Docker, :5432)"
+    else
+        echo -e "  PostgreSQL:  ${RED}○ зупинено${NC}"
+    fi
+
+    if curl -sf http://127.0.0.1:8000/health >/dev/null 2>&1; then
+        echo -e "  Backend:     ${GREEN}● працює${NC} (http://localhost:8000)"
+    else
+        echo -e "  Backend:     ${RED}○ зупинено${NC}"
+    fi
+
+    if curl -sf http://127.0.0.1:3000/ >/dev/null 2>&1; then
+        echo -e "  Frontend:    ${GREEN}● працює${NC} (http://localhost:3000)"
+    else
+        echo -e "  Frontend:    ${RED}○ зупинено${NC}"
+    fi
+
+    echo ""
+    echo -e "  Логи: ${BOLD}backend/backend.log${NC}, ${BOLD}frontend/frontend.log${NC}"
+    echo ""
+    echo -e "${YELLOW}Натисніть Enter...${NC}"
     read
 }
 
-function start_system() {
-    stop_all
-    
-    echo -e "${CYAN}[1/3] Запускаємо базу даних PostgreSQL...${NC}"
+seed_db() {
+    check_docker || { echo -e "${YELLOW}Enter...${NC}"; read; return; }
+
+    echo -e "${CYAN}Запускаємо PostgreSQL та наповнюємо базу...${NC}"
     docker compose up -d
-    sleep 2
+    wait_for_postgres || { echo -e "${YELLOW}Enter...${NC}"; read; return; }
 
-    echo -e "${CYAN}[2/3] Запускаємо бекенд FastAPI...${NC}"
-    cd backend
-    if [ -d ".venv" ]; then
-        source .venv/bin/activate
-    fi
-    # Запускаємо бекенд у фоні і перенаправляємо логі у файл
-    python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
-    cd ..
+    ensure_backend_deps
+    cd "$ROOT/backend"
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
+    python3 -m app.seed
+    cd "$ROOT"
 
-    echo -e "${CYAN}[3/3] Запускаємо фронтенд React...${NC}"
-    cd frontend
-    if [ ! -d "node_modules/react-i18next" ]; then
-        echo -e "${YELLOW}Встановлюємо необхідні бібліотеки для мов...${NC}"
-        npm install react-i18next i18next > /dev/null 2>&1
-    fi
-    # Запускаємо фронтенд у фоні
-    npm run dev -- --host 0.0.0.0 > frontend.log 2>&1 &
-    cd ..
-
-    sleep 4
-
-    LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo "localhost")
-    
-    show_header
-    echo -e "${GREEN}✅ ВСІ СЕРВІСИ УСПІШНО ЗАПУЩЕНО!${NC}"
-    echo -e "${CYAN}==============================================================================${NC}"
-    echo -e " 🌐 ${BOLD}Mac:${NC}      http://localhost:3000"
-    echo -e " 📱 ${BOLD}Мережа:${NC}   http://$LOCAL_IP:3000"
-    echo -e "${CYAN}==============================================================================${NC}"
-    echo -e " 🔑 ${YELLOW}Логін:${NC}    admin@wms.local"
-    echo -e " 🔒 ${YELLOW}Пароль:${NC}   password123"
-    echo -e "${CYAN}==============================================================================${NC}"
-    echo -e "Логи пишуться у файли: ${BOLD}backend/backend.log${NC} та ${BOLD}frontend/frontend.log${NC}"
     echo ""
-    echo -e "${MAGENTA}Натисніть CTRL+C щоб зупинити всі сервіси і повернутись до меню.${NC}"
-    
-    open http://localhost:3000
-    
-    stop_requested=0
-    trap "stop_requested=1" INT
-    while [ $stop_requested -eq 0 ]; do
+    echo -e "${GREEN}✅ Базу даних успішно заповнено!${NC}"
+    show_credentials
+    echo -e "${YELLOW}Натисніть Enter...${NC}"
+    read
+}
+
+run_tests() {
+    ensure_backend_deps
+    cd "$ROOT/backend"
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
+    echo -e "${CYAN}Запускаємо pytest...${NC}"
+    pytest tests/ -v --tb=short
+    cd "$ROOT"
+    echo ""
+    echo -e "${YELLOW}Натисніть Enter...${NC}"
+    read
+}
+
+view_logs() {
+    show_header
+    echo -e "  ${GREEN}[1]${NC} Backend log  (backend/backend.log)"
+    echo -e "  ${GREEN}[2]${NC} Frontend log (frontend/frontend.log)"
+    echo -e "  ${GREEN}[3]${NC} Обидва (tail -f)"
+    echo ""
+    read -p "Вибір: " logchoice
+    case $logchoice in
+        1) less +G "$ROOT/backend/backend.log" 2>/dev/null || echo "Лог порожній" ;;
+        2) less +G "$ROOT/frontend/frontend.log" 2>/dev/null || echo "Лог порожній" ;;
+        3)
+            echo -e "${CYAN}Ctrl+C щоб вийти${NC}"
+            tail -f "$ROOT/backend/backend.log" "$ROOT/frontend/frontend.log" 2>/dev/null
+            ;;
+    esac
+}
+
+start_system() {
+    check_docker || { echo -e "${YELLOW}Enter...${NC}"; read; return; }
+
+    # Зупиняємо лише app-сервери, Docker залишаємо
+    kill_by_pidfile "$BACKEND_PID"
+    kill_by_pidfile "$FRONTEND_PID"
+    kill_port 8000
+    kill_port 3000
+
+    echo -e "${CYAN}[1/4] PostgreSQL (Docker)...${NC}"
+    docker compose up -d
+    wait_for_postgres || { echo -e "${YELLOW}Enter...${NC}"; read; return; }
+
+    echo -e "${CYAN}[2/4] Перевірка залежностей...${NC}"
+    ensure_backend_deps
+    ensure_frontend_deps
+
+    echo -e "${CYAN}[3/4] Backend FastAPI (:8000, auto-reload)...${NC}"
+    cd "$ROOT/backend"
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
+    nohup python3 -m uvicorn app.main:app \
+        --host 0.0.0.0 --port 8000 --reload \
+        > backend.log 2>&1 &
+    echo $! > "$BACKEND_PID"
+    cd "$ROOT"
+
+    echo -e "${CYAN}[4/4] Frontend Vite (:3000)...${NC}"
+    cd "$ROOT/frontend"
+    nohup npm run dev -- --host 0.0.0.0 --port 3000 --strictPort \
+        > frontend.log 2>&1 &
+    echo $! > "$FRONTEND_PID"
+    cd "$ROOT"
+
+    echo -e "${CYAN}   Перевірка health...${NC}"
+    local ok=0
+    for _ in {1..20}; do
+        curl -sf http://127.0.0.1:8000/health >/dev/null 2>&1 && curl -sf http://127.0.0.1:3000/ >/dev/null 2>&1 && ok=1 && break
         sleep 1
     done
-    
-    stop_all
-    # Повертаємо стандартну поведінку CTRL+C для меню
-    trap - INT
+
+    show_header
+    if [ "$ok" -eq 1 ]; then
+        echo -e "${GREEN}✅ ВСІ СЕРВІСИ ЗАПУЩЕНО!${NC}"
+    else
+        echo -e "${YELLOW}⚠️  Сервіси запускаються... перевір логи якщо сайт не відкривається.${NC}"
+    fi
+    echo ""
+    show_urls
+    show_credentials
+    echo -e " 📋 ${BOLD}Логи:${NC} backend/backend.log, frontend/frontend.log"
+    echo -e "${CYAN}==============================================================================${NC}"
+    echo -e "${MAGENTA}Сервіси працюють у фоні. Можеш закрити це вікно — сайт залишиться доступним.${NC}"
+    echo -e "${MAGENTA}Зупинити: меню → [3] Зупинити сервери${NC}"
+    echo ""
+
+    open http://localhost:3000 2>/dev/null || true
+
+    echo -e "${YELLOW}Натисніть Enter щоб повернутись до меню...${NC}"
+    read
 }
+
+# ─── Main menu ───────────────────────────────────────────────────────────────
 
 while true; do
     show_header
-    echo -e "Оберіть опцію (введіть цифру і натисніть Enter):"
+    echo -e "Оберіть опцію:"
     echo ""
-    echo -e "  ${GREEN}[1]${NC} 🚀 Запустити всю систему WMS"
-    echo -e "  ${YELLOW}[2]${NC} 🔧 Скинути та наповнити базу даних (Виправить баг з логіном)"
-    echo -e "  ${RED}[3]${NC} 🛑 Зупинити всі сервіси"
-    echo -e "  ${CYAN}[4]${NC} 🚪 Вийти"
+    echo -e "  ${GREEN}[1]${NC} 🚀 Запустити систему (Docker + Backend + Frontend)"
+    echo -e "  ${YELLOW}[2]${NC} 🔧 Наповнити базу даних (seed — виправляє логін)"
+    echo -e "  ${CYAN}[3]${NC} 🛑 Зупинити backend і frontend (Docker лишається)"
+    echo -e "  ${RED}[4]${NC} ⏹  Зупинити ВСЕ (включно з PostgreSQL)"
+    echo -e "  ${CYAN}[5]${NC} 📊 Статус сервісів"
+    echo -e "  ${CYAN}[6]${NC} 📋 Переглянути логи"
+    echo -e "  ${CYAN}[7]${NC} 🧪 Запустити тести (pytest)"
+    echo -e "  ${CYAN}[8]${NC} 🚪 Вийти"
     echo ""
     read -p "Ваш вибір: " choice
 
     case $choice in
         1) start_system ;;
         2) seed_db ;;
-        3) stop_all; echo -e "${YELLOW}Натисніть Enter...${NC}"; read ;;
-        4) exit 0 ;;
+        3) stop_apps; echo -e "${YELLOW}Enter...${NC}"; read ;;
+        4) stop_everything; echo -e "${YELLOW}Enter...${NC}"; read ;;
+        5) show_status ;;
+        6) view_logs ;;
+        7) run_tests ;;
+        8) exit 0 ;;
         *) echo -e "${RED}Невірний вибір!${NC}"; sleep 1 ;;
     esac
 done

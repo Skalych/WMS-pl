@@ -142,7 +142,7 @@ export const inboundService = {
 
 export const inventoryService = {
   getInventory: async (page: number = 1, limit: number = 50, search?: string, status?: string, category?: string, sortBy?: string): Promise<{items: InventoryItem[], total: number}> => {
-    let url = `/inventory?page=${page}&size=${limit}`;
+    let url = `/inventory/?page=${page}&size=${limit}`;
     if (search) url += `&search=${search}`;
     if (status && status !== 'all') url += `&status=${status}`;
     if (category && category !== 'all') url += `&category=${category}`;

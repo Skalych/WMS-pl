@@ -8,3 +8,6 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+.wms/
+*.log
+backend/wms.db

@@ -60,6 +60,8 @@ async def start_shift(
 ):
     for uid in data.user_ids:
         await user_service.start_shift(db, uid)
+    from app.services.shift_live_service import publish_shift_live_update
+    await publish_shift_live_update(db)
     return [await user_service.get_user_by_id(db, uid) for uid in data.user_ids]
 
 
@@ -71,6 +73,8 @@ async def end_shift(
 ):
     for uid in data.user_ids:
         await user_service.end_shift(db, uid)
+    from app.services.shift_live_service import publish_shift_live_update
+    await publish_shift_live_update(db)
     return [await user_service.get_user_by_id(db, uid) for uid in data.user_ids]
 
 

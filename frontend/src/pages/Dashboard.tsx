@@ -3,9 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { dashboardService, orderService } from '../api/services';
 import { DashboardStats, Wave } from '../types';
 import { Clock, Activity, CheckCircle, Package, Users, Zap, TrendingUp, Layers } from 'lucide-react';
+import ShiftPulseBoard from '../components/ShiftPulseBoard';
+import { useShiftLive } from '../hooks/useShiftLive';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { data: shiftLive, connected } = useShiftLive();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activeWaves, setActiveWaves] = useState<Wave[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,6 +55,8 @@ export default function Dashboard() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+
+      <ShiftPulseBoard data={shiftLive} connected={connected} />
       
       {/* 1. Header with Clock */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>

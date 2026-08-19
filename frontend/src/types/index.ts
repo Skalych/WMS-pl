@@ -163,3 +163,42 @@ export interface MacroOrder {
   progress: number;
   createdAt: string;
 }
+
+export interface ShiftLiveBucket {
+  time: string;
+  picked: number;
+  inbound: number;
+}
+
+export interface ShiftLivePicker {
+  user_id: string;
+  name: string;
+  items: number;
+  pct_of_leader: number;
+}
+
+export interface ShiftLiveEventItem {
+  id: string;
+  at: string;
+  type: string;
+  actor: string;
+  detail: string;
+}
+
+export interface ShiftLiveSnapshot {
+  shift_active: boolean;
+  shift_started_at: string | null;
+  elapsed_seconds: number;
+  items_picked: number;
+  items_picked_delta_5m: number;
+  waves_completed: number;
+  waves_active: number;
+  orders_shipped: number;
+  inbound_received_units: number;
+  pickers_online: number;
+  pick_rate_per_hour: number;
+  hourly_buckets: ShiftLiveBucket[];
+  top_pickers: ShiftLivePicker[];
+  recent_events: ShiftLiveEventItem[];
+}
+

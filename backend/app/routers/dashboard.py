@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_roles
 from app.schemas.dashboard import DashboardStatsResponse
+from app.schemas.shift_live import ShiftLiveResponse
+from app.services.shift_live_service import build_shift_live_snapshot
 from app.services import user_service, order_service, inventory_service, wave_service, inbound_service
 from app.services import simulation_service
 from app.models.enums import UserRole
@@ -49,3 +51,11 @@ async def get_dashboard_stats(
         inbound_pending=pending_inbound,
         active_waves=active_waves,
     )
+
+
+@router.get("/shift-live", response_model=ShiftLiveResponse)
+async def get_shift_live(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
+    return await build_shift_live_snapshot(db)

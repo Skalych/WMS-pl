@@ -153,6 +153,7 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
       label: t('sidebar.reports'),
       items: [
         { id: 'shift-reports', label: t('sidebar.shiftReports'), Icon: ShiftReportsIcon },
+        { id: 'shift/board', label: 'Shift Board', Icon: ShiftReportsIcon },
         { id: 'analytics', label: t('sidebar.analytics'), Icon: AnalyticsIcon },
       ],
     },

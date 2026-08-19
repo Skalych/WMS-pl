@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import HTTPException
@@ -33,6 +34,7 @@ async def record_transaction(
     source_location_id: Optional[uuid.UUID] = None,
     target_location_id: Optional[uuid.UUID] = None,
     reference_id: Optional[uuid.UUID] = None,
+    created_at: Optional[datetime] = None,
 ) -> InventoryTransaction:
     tx = InventoryTransaction(
         id=uuid.uuid4(),
@@ -43,6 +45,7 @@ async def record_transaction(
         transaction_type=transaction_type,
         reference_id=reference_id,
         user_id=user_id,
+        created_at=created_at or datetime.now(timezone.utc),
     )
     db.add(tx)
     return tx
@@ -75,15 +78,6 @@ async def reserve_stock(
     if available < quantity:
         raise InsufficientStockError(product_id, quantity, available)
     balance.reserved_quantity += quantity
-    await record_transaction(
-        db,
-        product_id=product_id,
-        quantity=quantity,
-        transaction_type=TransactionType.WAVE_PICK_BATCH,
-        user_id=user_id,
-        source_location_id=location_id,
-        reference_id=reference_id,
-    )
     return balance
 
 

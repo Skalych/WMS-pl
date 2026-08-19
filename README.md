@@ -17,29 +17,35 @@ Warehouse Management System with wave batch picking, real-time worker monitoring
 - Python 3.9+
 - Node.js 18+
 
-## Quick Start
+## Quick Start (macOS — recommended)
+
+Double-click **`wms.command`** or run:
 
 ```bash
-# 1. Start PostgreSQL
-docker compose up -d
-
-# 2. Backend setup
-cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python -m app.seed          # or: make seed (from project root)
-
-# 3. Run backend (port 8000)
-uvicorn app.main:app --host 0.0.0.0 --port 8000
-
-# 4. Frontend (port 3000)
-cd ../frontend
-npm install
-npm run dev
+./wms.command
 ```
 
-Or use the macOS launcher: double-click `wms.command` and choose option `[1] Start All`.
+| Menu | Action |
+|------|--------|
+| **[1] Запустити систему** | Docker + Backend (auto-reload) + Frontend → http://localhost:3000 |
+| **[2] Seed бази** | Наповнити demo-даними (перший запуск або якщо логін не працює) |
+| **[3] Зупинити сервери** | Backend + Frontend (PostgreSQL лишається) |
+| **[4] Зупинити все** | Включно з Docker |
+| **[5] Статус** | Перевірка що працює |
+| **[6] Логи** | backend.log / frontend.log |
+| **[7] Тести** | pytest (33 tests) |
+
+Сервіси працюють **у фоні** — можна закрити вікно терміналу після запуску.
+
+### Manual start
+
+```bash
+make install    # перший раз
+make seed       # перший раз
+make start-all  # або окремо start-backend / start-frontend
+make status     # перевірка
+make stop-apps  # зупинка
+```
 
 ## Demo Credentials
 

@@ -210,3 +210,20 @@ async def end_break(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
     await db.commit()
     return await get_current_shift(db, user_id)
 
+
+async def increment_shift_pick(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    quantity: int = 1,
+    *,
+    tasks: int = 0,
+    orders: int = 0,
+) -> None:
+    shift = await get_current_shift(db, user_id)
+    if not shift:
+        return
+    shift.total_items_picked += quantity
+    shift.total_tasks_completed += tasks
+    shift.total_orders_completed += orders
+    db.add(shift)
+

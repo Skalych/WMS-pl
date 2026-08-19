@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { triggerUnauthorized } from './authSession';
 
 // Dev: Vite proxy /api → :8000. Prod: set VITE_API_URL.
 const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
@@ -10,7 +11,6 @@ export const apiClient = axios.create({
   },
 });
 
-// Автоматичне додавання токену авторизації до всіх запитів
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
@@ -19,22 +19,22 @@ apiClient.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error),
 );
 
-// Глобальна обробка помилок (наприклад, викидання на сторінку логіну якщо токен застарів)
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && error.config?.url !== '/auth/login') {
+    const status = error.response?.status;
+    const url = error.config?.url ?? '';
+    const hadToken = !!localStorage.getItem('access_token');
+
+    if (status === 401 && hadToken && !url.includes('/auth/login')) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('user_data');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
+      triggerUnauthorized();
     }
+
     return Promise.reject(error);
-  }
+  },
 );

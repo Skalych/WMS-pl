@@ -126,16 +126,20 @@ async def process_scan(db: AsyncSession, task_id: uuid.UUID, barcode: str, quant
         reference_id=task_id,
         user_id=user.id,
     )
-
     if active_item.quantity_picked >= active_item.quantity_to_pick:
         active_item.status = TaskStatus.COMPLETED
 
     all_done = all(i.quantity_picked >= i.quantity_to_pick for i in task.items)
+    await user_service.increment_shift_pick(db, user.id, pick_qty, tasks=1 if all_done else 0)
     if all_done:
         task.status = TaskStatus.COMPLETED
         await user_service.update_user_status(db, user.id, status=WorkerStatus.IDLE)
 
     await db.commit()
+
+    from app.services.shift_live_service import publish_shift_live_update
+    await publish_shift_live_update(db)
+
     return {
         "status": "accepted",
         "message": "Scan processed successfully",

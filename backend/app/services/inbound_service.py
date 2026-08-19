@@ -96,7 +96,12 @@ async def receive_shipment(db: AsyncSession, shipment_id: uuid.UUID, user_id: uu
 
     shipment.status = InboundStatus.RECEIVED
     await db.commit()
-    return await get_shipment_by_id(db, shipment.id)
+    result = await get_shipment_by_id(db, shipment.id)
+
+    from app.services.shift_live_service import publish_shift_live_update
+    await publish_shift_live_update(db)
+
+    return result
 
 
 async def count_pending_inbound(db: AsyncSession) -> int:

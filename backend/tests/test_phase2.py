@@ -17,7 +17,8 @@ async def test_wave_creation_reserves_stock(seeded_db, db_session):
     balance = result.scalar_one()
     reserved_before = balance.reserved_quantity
 
-    # Use a fresh order without existing wave
+    from sqlalchemy import func
+    tx_before = await db_session.scalar(select(func.count()).select_from(InventoryTransaction))
     from app.models.orders import Order, OrderItem
     from app.models.enums import OrderStatus, OrderPriority
     import uuid
@@ -48,8 +49,8 @@ async def test_wave_creation_reserves_stock(seeded_db, db_session):
     await db_session.refresh(balance)
     assert balance.reserved_quantity == reserved_before + 5
 
-    tx_count = await db_session.execute(select(InventoryTransaction))
-    assert len(tx_count.scalars().all()) >= 1
+    tx_after = await db_session.scalar(select(func.count()).select_from(InventoryTransaction))
+    assert tx_after == tx_before
 
 
 @pytest.mark.asyncio
