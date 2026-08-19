@@ -88,10 +88,7 @@ async def bulk_update_status(db: AsyncSession, user_ids: list[uuid.UUID], status
             user.status = status
 
         if user.status in [WorkerStatus.IDLE, WorkerStatus.RECEIVING, WorkerStatus.SORTING]:
-            user.picking_progress = 0
-            user.total_picked = 0
-            # Note: shift time is generated via DB updated_at or simulated, 
-            # for now we'll just reset progress.
+            user.current_cart_items = 0
     await db.commit()
     return users
 
@@ -154,9 +151,8 @@ async def start_shift(db: AsyncSession, user_id: uuid.UUID) -> Shift:
         elif user.role == UserRole.PACKER_DISPATCHER:
             target_status = WorkerStatus.SORTING
             
-        user.picking_progress = 0
-        user.total_picked = 0
-            
+        user.current_cart_items = 0
+
     await update_user_status(db, user_id, status=target_status)
     await db.commit()
     await db.refresh(new_shift)
