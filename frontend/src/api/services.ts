@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { 
   UserRole, WorkerStatus, Employee, DashboardStats, 
-  Order, Wave, InventoryItem, MacroOrder
+  Order, Wave, InventoryItem, MacroOrder, InboundShipment, InventoryTransaction
 } from '../types';
 
 // Auth Services
@@ -111,7 +111,35 @@ export const userService = {
   }
 };
 
-// Inventory Services
+export const inboundService = {
+  getShipments: async (): Promise<InboundShipment[]> => {
+    const response = await apiClient.get('/inbound');
+    return response.data.map((s: any) => ({
+      id: s.id,
+      shipmentNumber: s.shipment_number,
+      supplierName: s.supplier_name,
+      status: s.status,
+      dockNumber: s.dock_number,
+      itemsCount: s.items_count,
+      createdAt: s.created_at,
+    }));
+  },
+
+  createShipment: async (supplierName: string, dockNumber: string, items: { product_id: string; expected_quantity: number }[]) => {
+    const response = await apiClient.post('/inbound', {
+      supplier_name: supplierName,
+      dock_number: dockNumber || null,
+      items,
+    });
+    return response.data;
+  },
+
+  receiveShipment: async (shipmentId: string) => {
+    const response = await apiClient.post(`/inbound/${shipmentId}/receive`);
+    return response.data;
+  },
+};
+
 export const inventoryService = {
   getInventory: async (page: number = 1, limit: number = 50, search?: string, status?: string, category?: string, sortBy?: string): Promise<{items: InventoryItem[], total: number}> => {
     let url = `/inventory?page=${page}&size=${limit}`;
@@ -132,6 +160,22 @@ export const inventoryService = {
         reservedQuantity: item.reserved_quantity,
         status: item.status
       }))
+    };
+  },
+
+  getTransactions: async (page = 1, size = 50): Promise<{ items: InventoryTransaction[]; total: number }> => {
+    const response = await apiClient.get(`/inventory/transactions?page=${page}&size=${size}`);
+    return {
+      total: response.data.total,
+      items: response.data.items.map((tx: any) => ({
+        id: tx.id,
+        productSku: tx.product_sku,
+        quantity: tx.quantity,
+        transactionType: tx.transaction_type,
+        sourceLocation: tx.source_location,
+        targetLocation: tx.target_location,
+        createdAt: tx.created_at,
+      })),
     };
   }
 };

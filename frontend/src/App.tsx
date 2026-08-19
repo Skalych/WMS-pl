@@ -6,6 +6,7 @@ import Employees from './pages/Employees';
 import Inventory from './pages/Inventory';
 import Orders from './pages/Orders';
 import Admin from './pages/Admin';
+import Inbound from './pages/Inbound';
 import Login from './pages/Login';
 import SettingsModal from './components/SettingsModal';
 import { SettingsProvider } from './context/SettingsContext';
@@ -31,6 +32,21 @@ const AdminRoute = () => {
   }
 
   if (user?.role !== UserRole.ADMIN_MANAGER) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
+};
+
+const InboundRoute = () => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#08080f', color: '#e359ac' }}>LOADING KERNEL...</div>;
+  }
+
+  const allowed = user?.role === UserRole.ADMIN_MANAGER || user?.role === UserRole.INBOUND_OPERATOR;
+  if (!allowed) {
     return <Navigate to="/" replace />;
   }
 
@@ -77,6 +93,9 @@ export default function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/employees" element={<Employees />} />
                 <Route path="/inventory" element={<Inventory />} />
+                <Route element={<InboundRoute />}>
+                  <Route path="/inbound" element={<Inbound />} />
+                </Route>
                 <Route element={<AdminRoute />}>
                   <Route path="/admin" element={<Admin />} />
                 </Route>

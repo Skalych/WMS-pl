@@ -120,3 +120,10 @@ WMS/
 | `INBOUND_OPERATOR` | Inbound shipments, read inventory |
 | `PICKER` | Terminal API, read orders/waves/inventory |
 | `PACKER_DISPATCHER` | Terminal API, read orders/waves/inventory |
+
+## Phase 2 Features
+
+- **Stock reservation** — creating a wave reserves inventory (`reserved_quantity`)
+- **Inbound UI** — `/inbound` page to create and receive shipments
+- **Inventory audit trail** — `GET /api/v1/inventory/transactions`
+- **Pick commit** — terminal scan decrements stock and logs transactions

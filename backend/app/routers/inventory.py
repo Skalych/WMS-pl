@@ -1,10 +1,17 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.core.deps import get_current_user
-from app.schemas.inventory import InventoryItemResponse, InventoryStatsResponse, PaginatedInventoryResponse
+from app.core.deps import get_current_user, require_roles
+from app.schemas.inventory import (
+    InventoryItemResponse,
+    InventoryStatsResponse,
+    PaginatedInventoryResponse,
+    InventoryTransactionResponse,
+    PaginatedTransactionsResponse,
+)
 from app.services import inventory_service
 from app.models.users import User
+from app.models.enums import UserRole
 from typing import Optional
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
@@ -54,3 +61,31 @@ async def inventory_stats(
 ):
     stats = await inventory_service.get_inventory_stats(db)
     return stats
+
+
+@router.get("/transactions", response_model=PaginatedTransactionsResponse)
+async def list_transactions(
+    page: int = Query(1, ge=1),
+    size: int = Query(50, ge=1, le=100),
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(UserRole.ADMIN_MANAGER, UserRole.INBOUND_OPERATOR)),
+):
+    skip = (page - 1) * size
+    transactions, total = await inventory_service.get_transactions(db, skip=skip, limit=size)
+    return PaginatedTransactionsResponse(
+        items=[
+            InventoryTransactionResponse(
+                id=tx.id,
+                product_sku=tx.product.sku if tx.product else "",
+                quantity=tx.quantity,
+                transaction_type=tx.transaction_type.value,
+                source_location=tx.source_location.code if tx.source_location else None,
+                target_location=tx.target_location.code if tx.target_location else None,
+                created_at=tx.created_at,
+            )
+            for tx in transactions
+        ],
+        total=total,
+        page=page,
+        size=size,
+    )

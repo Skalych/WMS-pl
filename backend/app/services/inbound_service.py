@@ -2,13 +2,17 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
-from typing import Optional
+from typing import List, Optional
 
+from fastapi import HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
+
 from app.models.inbound import InboundShipment, InboundItem
-from app.models.enums import InboundStatus
+from app.models.enums import InboundStatus, LocationType
+from app.models.topology import Location
+from app.services import inventory_service
 
 
 async def get_shipments(db: AsyncSession):
@@ -58,6 +62,40 @@ async def create_shipment(db: AsyncSession, supplier_name: str, dock_number: Opt
 
     await db.commit()
     await db.refresh(shipment)
+    return await get_shipment_by_id(db, shipment.id)
+
+
+async def receive_shipment(db: AsyncSession, shipment_id: uuid.UUID, user_id: uuid.UUID):
+    shipment = await get_shipment_by_id(db, shipment_id)
+    if not shipment:
+        return None
+    if shipment.status in [InboundStatus.COMPLETED, InboundStatus.CANCELLED]:
+        raise HTTPException(status_code=400, detail="Shipment already finalized")
+
+    receiving_loc = await db.scalar(
+        select(Location).where(Location.type == LocationType.RECEIVING).limit(1)
+    )
+    if not receiving_loc:
+        receiving_loc = await db.scalar(select(Location).limit(1))
+    if not receiving_loc:
+        raise HTTPException(status_code=500, detail="No location available for receiving")
+
+    for item in shipment.items:
+        qty = item.expected_quantity - item.received_quantity
+        if qty <= 0:
+            continue
+        await inventory_service.receive_stock(
+            db,
+            product_id=item.product_id,
+            location_id=receiving_loc.id,
+            quantity=qty,
+            reference_id=shipment.id,
+            user_id=user_id,
+        )
+        item.received_quantity += qty
+
+    shipment.status = InboundStatus.RECEIVED
+    await db.commit()
     return await get_shipment_by_id(db, shipment.id)
 
 

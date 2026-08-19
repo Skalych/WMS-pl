@@ -127,7 +127,33 @@ export interface DashboardStats {
   activeWaves: number;
 }
 
-export interface MacroOrder {
+export enum InboundStatus {
+  PENDING = 'PENDING',
+  IN_RECEIVING = 'IN_RECEIVING',
+  RECEIVED = 'RECEIVED',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+}
+
+export interface InboundShipment {
+  id: string;
+  shipmentNumber: string;
+  supplierName: string;
+  status: InboundStatus;
+  dockNumber?: string;
+  itemsCount: number;
+  createdAt: string;
+}
+
+export interface InventoryTransaction {
+  id: string;
+  productSku: string;
+  quantity: number;
+  transactionType: string;
+  sourceLocation?: string;
+  targetLocation?: string;
+  createdAt: string;
+}
   id: string;
   referenceNumber: string;
   status: OrderStatus;

@@ -12,7 +12,7 @@ from app.core.security import verify_password, create_access_token
 from app.models.enums import TaskStatus, UserRole, WorkerStatus
 from app.models.users import User
 from app.models.waves import MicroTask, MicroTaskItem
-from app.services import user_service
+from app.services import user_service, inventory_service
 
 
 TERMINAL_ROLES = {UserRole.PICKER, UserRole.PACKER_DISPATCHER, UserRole.ADMIN_MANAGER}
@@ -117,6 +117,15 @@ async def process_scan(db: AsyncSession, task_id: uuid.UUID, barcode: str, quant
     remaining = active_item.quantity_to_pick - active_item.quantity_picked
     pick_qty = min(quantity, remaining)
     active_item.quantity_picked += pick_qty
+
+    await inventory_service.commit_pick(
+        db,
+        product_id=active_item.product_id,
+        location_id=active_item.source_location_id,
+        quantity=pick_qty,
+        reference_id=task_id,
+        user_id=user.id,
+    )
 
     if active_item.quantity_picked >= active_item.quantity_to_pick:
         active_item.status = TaskStatus.COMPLETED

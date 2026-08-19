@@ -73,6 +73,15 @@ const MapIcon: React.FC = () => (
   </svg>
 );
 
+const InboundIcon: React.FC = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="1" y="3" width="15" height="13" />
+    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+    <circle cx="5.5" cy="18.5" r="2.5" />
+    <circle cx="18.5" cy="18.5" r="2.5" />
+  </svg>
+);
+
 const AdminIcon: React.FC = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="4 17 10 11 4 5" />
@@ -132,6 +141,9 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
           : []),
         { id: 'employees', label: t('sidebar.employees'), Icon: EmployeesIcon },
         { id: 'inventory', label: t('sidebar.inventory'), Icon: InventoryIcon },
+        ...(user?.role === UserRole.ADMIN_MANAGER || user?.role === UserRole.INBOUND_OPERATOR
+          ? [{ id: 'inbound', label: 'Inbound', Icon: InboundIcon }]
+          : []),
         { id: 'orders-waves', label: t('sidebar.ordersWaves'), Icon: OrdersWavesIcon },
       ],
     },

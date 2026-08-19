@@ -20,7 +20,7 @@ from app.models.waves import Wave, WaveOrder, MicroTask, MicroTaskItem
 from app.models.sorting import SortingStation, SortingBin
 from app.core.security import hash_password, create_access_token
 from fastapi import FastAPI
-from app.routers import auth, users, inventory, orders, waves, dashboard, terminal
+from app.routers import auth, users, inventory, orders, waves, dashboard, terminal, inbound
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -77,6 +77,16 @@ async def seeded_db(db_session: AsyncSession):
         position=1,
         type=LocationType.STAGING_SORTING,
     )
+    receiving_loc = Location(
+        id=uuid.uuid4(),
+        zone_id=zone.id,
+        code="RCV-01",
+        aisle=0,
+        rack=0,
+        shelf=0,
+        position=2,
+        type=LocationType.RECEIVING,
+    )
     category = Category(id=uuid.uuid4(), name="Electronics")
 
     product_small = Product(
@@ -102,6 +112,14 @@ async def seeded_db(db_session: AsyncSession):
         password_hash=hash_password("password123"),
         full_name="Test Admin",
         role=UserRole.ADMIN_MANAGER,
+        status=WorkerStatus.OFFLINE,
+    )
+    inbound_op = User(
+        id=uuid.uuid4(),
+        email="inbound@test.local",
+        password_hash=hash_password("password123"),
+        full_name="Test Inbound",
+        role=UserRole.INBOUND_OPERATOR,
         status=WorkerStatus.OFFLINE,
     )
     picker = User(
@@ -181,10 +199,12 @@ async def seeded_db(db_session: AsyncSession):
             zone,
             storage_loc,
             staging_loc,
+            receiving_loc,
             category,
             product_small,
             product_large,
             admin,
+            inbound_op,
             picker,
             order,
             *order_items,
@@ -198,10 +218,12 @@ async def seeded_db(db_session: AsyncSession):
 
     return {
         "admin": admin,
+        "inbound_op": inbound_op,
         "picker": picker,
         "order": order,
         "storage_loc": storage_loc,
         "staging_loc": staging_loc,
+        "receiving_loc": receiving_loc,
         "product_small": product_small,
         "product_large": product_large,
         "wave": wave,
@@ -222,6 +244,7 @@ async def test_app(db_engine):
     app.include_router(waves.router, prefix=api_prefix)
     app.include_router(dashboard.router, prefix=api_prefix)
     app.include_router(terminal.router, prefix=api_prefix)
+    app.include_router(inbound.router, prefix=api_prefix)
 
     session_factory = async_sessionmaker(
         bind=db_engine,
@@ -263,6 +286,11 @@ def admin_headers(seeded_db) -> dict[str, str]:
 @pytest.fixture
 def picker_headers(seeded_db) -> dict[str, str]:
     return auth_headers_for(seeded_db["picker"])
+
+
+@pytest.fixture
+def inbound_headers(seeded_db) -> dict[str, str]:
+    return auth_headers_for(seeded_db["inbound_op"])
 
 
 @pytest.fixture
