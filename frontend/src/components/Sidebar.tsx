@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { dashboardService } from '../api/services';
@@ -10,6 +9,8 @@ export interface SidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onOpenSettings: () => void;
+  isOpen?: boolean;
+  onNavigate?: () => void;
 }
 
 const DashboardIcon: React.FC = () => (
@@ -94,15 +95,15 @@ const LogOutIcon: React.FC = () => (
   </svg>
 );
 
-export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: SidebarProps) {
+export default function Sidebar({ activeTab, onTabChange, onOpenSettings, isOpen = false, onNavigate }: SidebarProps) {
   const { t } = useTranslation();
-  useSettings();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isSimulationActive, setIsSimulationActive] = useState(true);
 
   const handleTabClick = (tabId: string) => {
     onTabChange(tabId);
+    onNavigate?.();
     navigate(`/${tabId === 'dashboard' ? '' : tabId}`);
   };
 
@@ -135,38 +136,35 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
         { id: 'dashboard', label: t('sidebar.dashboard'), Icon: DashboardIcon },
         ...(user?.role === UserRole.ADMIN_MANAGER
           ? [
-              { id: 'admin', label: 'Simulation', Icon: AdminIcon },
+              { id: 'admin', label: t('sidebar.simulation'), Icon: AdminIcon },
               { id: 'employees', label: t('sidebar.employees'), Icon: EmployeesIcon },
             ]
           : []),
         { id: 'inventory', label: t('sidebar.inventory'), Icon: InventoryIcon },
         ...(user?.role === UserRole.ADMIN_MANAGER || user?.role === UserRole.INBOUND_OPERATOR
-          ? [{ id: 'inbound', label: 'Inbound', Icon: InboundIcon }]
+          ? [{ id: 'inbound', label: t('sidebar.inbound'), Icon: InboundIcon }]
           : []),
         { id: 'orders-waves', label: t('sidebar.ordersWaves'), Icon: OrdersWavesIcon },
         ...(user?.role === UserRole.PICKER ||
         user?.role === UserRole.PACKER_DISPATCHER ||
         user?.role === UserRole.ADMIN_MANAGER
-          ? [{ id: 'terminal', label: 'Pick terminal', Icon: TerminalIcon }]
+          ? [{ id: 'terminal', label: t('sidebar.terminal'), Icon: TerminalIcon }]
           : []),
       ],
     },
     {
       label: t('sidebar.reports'),
-      items: [
-        { id: 'shift-reports', label: t('sidebar.shiftReports'), Icon: ShiftReportsIcon },
-        { id: 'shift/board', label: 'Shift board', Icon: ShiftReportsIcon },
-      ],
+      items: [{ id: 'shift/board', label: t('sidebar.shiftBoard'), Icon: ShiftReportsIcon }],
     },
   ];
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar ${isOpen ? 'sidebar--open' : ''}`} aria-label={t('sidebar.operations')}>
       <div className="sidebar-logo">
         <div className="logo-mark">W</div>
         <div>
           <div className="logo-text">WMS</div>
-          <div className="logo-subtitle">Operations</div>
+          <div className="logo-subtitle">{t('sidebar.brandSubtitle')}</div>
         </div>
       </div>
 
@@ -208,14 +206,15 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
           <div className="sidebar-autopilot">
             <span className="sidebar-autopilot-label">
               <span className={`sidebar-autopilot-dot ${isSimulationActive ? 'on' : ''}`} />
-              Simulation
+              {t('sidebar.simulation')}
             </span>
             <button
               type="button"
               className={`sidebar-autopilot-btn ${isSimulationActive ? 'on' : ''}`}
               onClick={handleToggleSimulation}
+              aria-pressed={isSimulationActive}
             >
-              {isSimulationActive ? 'On' : 'Off'}
+              {isSimulationActive ? t('common.on') : t('common.off')}
             </button>
           </div>
         )}

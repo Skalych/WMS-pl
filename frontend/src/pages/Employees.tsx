@@ -1,4 +1,5 @@
 import { useState, useEffect, type MouseEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { userService } from '../api/services';
 import {
   Users,
@@ -57,6 +58,7 @@ const mapEmployeeData = (emp: any) => {
 };
 
 export default function Employees() {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<FilterType>('All');
   const [sortBy, setSortBy] = useState<SortKey>('status');
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -192,8 +194,8 @@ export default function Employees() {
     <div className="page-stack">
       <header className="page-header">
         <div>
-          <h1 className="page-title">Employees</h1>
-          <p className="page-subtitle">Real-time worker monitoring</p>
+          <h1 className="page-title">{t('employees.title')}</h1>
+          <p className="page-subtitle">{t('employees.subtitle')}</p>
         </div>
 
         <div className="header-actions">

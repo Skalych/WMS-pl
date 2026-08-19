@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Layers, CheckSquare, Square, Box, ArrowRight, Activity } from 'lucide-react';
 import { orderService } from '../api/services';
 import { Order, Wave, WaveStatus } from '../types';
@@ -6,6 +7,13 @@ import { Order, Wave, WaveStatus } from '../types';
 type OrderFilter = 'All' | 'Pending' | 'In Wave' | 'Shipped';
 
 export default function Orders() {
+  const { t } = useTranslation();
+  const filterLabels: Record<OrderFilter, string> = {
+    All: t('orders.filterAll'),
+    Pending: t('orders.filterPending'),
+    'In Wave': t('orders.filterInWave'),
+    Shipped: t('orders.filterShipped'),
+  };
   const [activeTab, setActiveTab] = useState<'orders' | 'waves'>('orders');
   const [activeOrderFilter, setActiveOrderFilter] = useState<OrderFilter>('All');
   const [orders, setOrders] = useState<Order[]>([]);
@@ -101,7 +109,7 @@ export default function Orders() {
       setActiveTab('waves');
     } catch (error) {
       console.error('Failed to create wave:', error);
-      alert('Failed to create wave.');
+      alert(t('orders.createWaveFailed'));
     } finally {
       setIsCreatingWave(false);
     }
@@ -122,25 +130,25 @@ export default function Orders() {
               setSelectedOrders([]);
             }}
           >
-            {filter}
+            {filterLabels[filter]}
           </button>
         ))}
       </div>
 
       <div className="data-panel">
         <div className="data-panel-header">
-          <h3 className="data-panel-title">Customer orders</h3>
+          <h3 className="data-panel-title">{t('orders.customerOrders')}</h3>
         </div>
 
         {isLoading && orders.length === 0 ? (
-          <div className="panel-empty">Loading orders…</div>
+          <div className="panel-empty">{t('orders.loadingOrders')}</div>
         ) : (
           <div className="table-scroll">
             <table className="data-table">
               <thead>
                 <tr>
                   <th style={{ width: 40 }}>
-                    <button type="button" className="table-check-btn" onClick={toggleSelectAll} aria-label="Select all pending">
+                    <button type="button" className="table-check-btn" onClick={toggleSelectAll} aria-label={t('orders.selectAllPending')}>
                       {allPendingSelected ? (
                         <CheckSquare size={18} className="text-accent" />
                       ) : (
@@ -160,7 +168,7 @@ export default function Orders() {
                 {filteredOrders.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="panel-empty">
-                      No orders for this filter
+                      {t('orders.noOrders')}
                     </td>
                   </tr>
                 ) : (
@@ -216,9 +224,9 @@ export default function Orders() {
       {selectedOrders.length > 0 && (
         <div className="wave-action-bar">
           <div>
-            <span className="wave-action-label">Ready for grouping</span>
+            <span className="wave-action-label">{t('orders.readyGrouping')}</span>
             <span className="wave-action-count">
-              <span className="text-accent">{selectedOrders.length}</span> orders selected
+              <span className="text-accent">{selectedOrders.length}</span> {t('orders.ordersSelected')}
             </span>
           </div>
           <button
@@ -227,7 +235,7 @@ export default function Orders() {
             onClick={handleCreateWave}
             disabled={isCreatingWave}
           >
-            {isCreatingWave ? 'Creating…' : 'Create wave'}
+            {isCreatingWave ? t('orders.creating') : t('orders.createWave')}
             <ArrowRight size={16} />
           </button>
         </div>
@@ -238,9 +246,9 @@ export default function Orders() {
   const renderWavesTab = () => (
     <div className="wave-grid">
       {isLoading && waves.length === 0 ? (
-        <div className="panel-empty">Loading waves…</div>
+        <div className="panel-empty">{t('orders.loadingWaves')}</div>
       ) : waves.length === 0 ? (
-        <div className="panel-empty">No waves yet — select pending orders and create a wave</div>
+        <div className="panel-empty">{t('orders.noWaves')}</div>
       ) : (
         waves.map((wave) => {
           const isCompleted = wave.status === WaveStatus.COMPLETED;
@@ -260,7 +268,7 @@ export default function Orders() {
               <div className="wave-card-body">
                 <div className="wave-card-header">
                   <div>
-                    <span className="wave-card-label">Wave</span>
+                    <span className="wave-card-label">{t('orders.wave')}</span>
                     <h3 className="text-mono">WAVE-{wave.waveNumber}</h3>
                   </div>
                   <span className={`badge ${isCompleted ? 'badge-active' : isSorting ? 'badge-info' : isActive ? 'badge-accent' : 'badge-muted'}`}>
@@ -281,7 +289,7 @@ export default function Orders() {
 
                 <div>
                   <div className="flex-between" style={{ fontSize: '0.8rem', marginBottom: 8 }}>
-                    <span className="text-muted">Progress</span>
+                    <span className="text-muted">{t('orders.progress')}</span>
                     <span className="text-mono">{wave.progress}%</span>
                   </div>
                   <div className="progress-bar">
@@ -308,9 +316,9 @@ export default function Orders() {
         <div>
           <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <Layers className="text-accent" size={24} />
-            Orders & waves
+            {t('orders.title')}
           </h1>
-          <p className="page-subtitle">Group orders into waves and monitor execution</p>
+          <p className="page-subtitle">{t('orders.subtitle')}</p>
         </div>
 
         <div className="tab-switcher">
@@ -320,7 +328,7 @@ export default function Orders() {
             onClick={() => setActiveTab('orders')}
           >
             <Box size={16} />
-            Orders
+            {t('orders.ordersTab')}
           </button>
           <button
             type="button"
@@ -328,7 +336,7 @@ export default function Orders() {
             onClick={() => setActiveTab('waves')}
           >
             <Activity size={16} />
-            Waves
+            {t('orders.wavesTab')}
             {activeWaveCount > 0 && <span className="tab-badge">{activeWaveCount}</span>}
           </button>
         </div>

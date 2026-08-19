@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { inventoryService } from '../api/services';
 import { InventoryItem } from '../types';
 import {
@@ -10,6 +11,7 @@ import {
 } from 'lucide-react';
 
 export default function Inventory() {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
@@ -65,8 +67,8 @@ export default function Inventory() {
     <div className="page-stack">
       <header className="page-header">
         <div>
-          <h1 className="page-title">Inventory</h1>
-          <p className="page-subtitle">Product catalog & stock levels</p>
+          <h1 className="page-title">{t('inventory.title')}</h1>
+          <p className="page-subtitle">{t('inventory.subtitle')}</p>
         </div>
 
         <div className="header-actions">

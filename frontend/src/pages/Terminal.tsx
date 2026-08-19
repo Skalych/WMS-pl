@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState, FormEvent } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, LogOut, MapPin, Package, RefreshCw, ScanLine } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { terminalService } from '../api/services';
 import { TerminalTask } from '../types';
 
 export default function TerminalPage() {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const [task, setTask] = useState<TerminalTask | null>(null);
   const [noTask, setNoTask] = useState(false);
@@ -24,11 +26,11 @@ export default function TerminalPage() {
       setTask(next);
       setNoTask(!next);
     } catch {
-      setMessage({ type: 'error', text: 'Could not load task' });
+      setMessage({ type: 'error', text: t('terminal.loadError') });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadTask();
@@ -50,10 +52,10 @@ export default function TerminalPage() {
       const result = await terminalService.scan(task.taskId, barcode.trim(), quantity);
       setBarcode('');
       if (result.task_completed) {
-        setMessage({ type: 'success', text: 'Task completed' });
+        setMessage({ type: 'success', text: t('terminal.taskCompletedMsg') });
         await loadTask();
       } else {
-        setMessage({ type: 'success', text: `Picked ${quantity} — ${result.quantity_picked} total on line` });
+        setMessage({ type: 'success', text: t('terminal.pickedProgress', { qty: quantity, total: result.quantity_picked }) });
         const updated = await terminalService.getNextTask();
         setTask(updated);
         setNoTask(!updated);
@@ -62,7 +64,7 @@ export default function TerminalPage() {
       const axiosErr = err as { response?: { data?: { detail?: string } } };
       setMessage({
         type: 'error',
-        text: axiosErr.response?.data?.detail || 'Scan rejected',
+        text: axiosErr.response?.data?.detail || t('terminal.scanRejected'),
       });
       inputRef.current?.focus();
     } finally {
@@ -75,16 +77,16 @@ export default function TerminalPage() {
       <header className="terminal-header">
         <Link to="/" className="terminal-back">
           <ArrowLeft size={18} />
-          Back
+          {t('common.back')}
         </Link>
         <div className="terminal-header-center">
-          <h1>Pick terminal</h1>
+          <h1>{t('terminal.title')}</h1>
           <p>{user?.fullName ?? user?.email}</p>
         </div>
-        <button type="button" className="icon-btn" onClick={loadTask} aria-label="Refresh task">
+        <button type="button" className="icon-btn" onClick={loadTask} aria-label={t('common.refresh')}>
           <RefreshCw size={18} className={loading ? 'spin' : ''} />
         </button>
-        <button type="button" className="icon-btn terminal-logout" onClick={logout} aria-label="Log out">
+        <button type="button" className="icon-btn terminal-logout" onClick={logout} aria-label={t('sidebar.logout')}>
           <LogOut size={18} />
         </button>
       </header>
@@ -93,15 +95,15 @@ export default function TerminalPage() {
         {loading && !task ? (
           <div className="terminal-state">
             <div className="app-loading-spinner" />
-            <span>Loading task…</span>
+            <span>{t('terminal.loadingTask')}</span>
           </div>
         ) : noTask ? (
           <div className="terminal-state">
             <Package size={48} strokeWidth={1.25} />
-            <h2>No pick task</h2>
-            <p>Wait for a wave assignment or ask your supervisor to start a shift.</p>
+            <h2>{t('terminal.noTask')}</h2>
+            <p>{t('terminal.noTaskHint')}</p>
             <button type="button" className="btn btn-primary" onClick={loadTask}>
-              Check again
+              {t('terminal.checkAgain')}
             </button>
           </div>
         ) : task ? (
@@ -117,7 +119,7 @@ export default function TerminalPage() {
                 <span className="text-mono">{task.productSku}</span>
               </div>
               <div className="terminal-qty-row">
-                <span>Pick quantity</span>
+                <span>{t('terminal.pickQty')}</span>
                 <span className="terminal-qty-value">{task.quantityRequired}</span>
               </div>
             </div>
@@ -130,7 +132,7 @@ export default function TerminalPage() {
 
             <form className="terminal-scan-form" onSubmit={handleScan}>
               <label className="form-label" htmlFor="barcode">
-                Scan barcode (SKU, product, or location)
+                {t('terminal.scanLabel')}
               </label>
               <div className="terminal-scan-row">
                 <input
@@ -139,14 +141,14 @@ export default function TerminalPage() {
                   className="input-field terminal-scan-input"
                   value={barcode}
                   onChange={(e) => setBarcode(e.target.value)}
-                  placeholder="Scan or type…"
+                  placeholder={t('terminal.scanPlaceholder')}
                   autoComplete="off"
                   disabled={scanning}
                 />
               </div>
 
               <div className="terminal-qty-controls">
-                <span className="form-label">Units per scan</span>
+                <span className="form-label">{t('terminal.unitsPerScan')}</span>
                 <div className="qty-stepper">
                   <button
                     type="button"
@@ -170,7 +172,7 @@ export default function TerminalPage() {
 
               <button type="submit" className="btn btn-primary terminal-submit" disabled={scanning || !barcode.trim()}>
                 <ScanLine size={20} />
-                {scanning ? 'Processing…' : 'Confirm pick'}
+                {scanning ? t('terminal.processing') : t('terminal.confirmPick')}
               </button>
             </form>
           </>

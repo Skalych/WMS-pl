@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { inboundService, inventoryService } from '../api/services';
 import { InboundShipment, InboundStatus, InventoryItem } from '../types';
 import { PackagePlus, Truck, CheckCircle, X, Plus } from 'lucide-react';
@@ -19,6 +20,7 @@ function inboundStatusBadge(status: InboundStatus): string {
 }
 
 export default function Inbound() {
+  const { t } = useTranslation();
   const [shipments, setShipments] = useState<InboundShipment[]>([]);
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -45,7 +47,7 @@ export default function Inbound() {
       setError('');
     } catch (e) {
       console.error(e);
-      setError('Failed to load inbound data');
+      setError(t('inbound.loadError'));
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +91,7 @@ export default function Inbound() {
       await loadData();
     } catch (e: unknown) {
       const err = e as { response?: { data?: { detail?: string } } };
-      setError(err.response?.data?.detail || 'Failed to create shipment');
+      setError(err.response?.data?.detail || t('inbound.createFailed'));
     }
   };
 
@@ -100,7 +102,7 @@ export default function Inbound() {
       await loadData();
     } catch (e: unknown) {
       const err = e as { response?: { data?: { detail?: string } } };
-      setError(err.response?.data?.detail || 'Failed to receive shipment');
+      setError(err.response?.data?.detail || t('inbound.receiveFailed'));
     } finally {
       setReceivingId(null);
     }
@@ -110,26 +112,26 @@ export default function Inbound() {
     <div className="page-stack">
       <header className="page-header">
         <div>
-          <h1 className="page-title">Inbound</h1>
-          <p className="page-subtitle">Receive supplier shipments into the warehouse</p>
+          <h1 className="page-title">{t('inbound.title')}</h1>
+          <p className="page-subtitle">{t('inbound.subtitle')}</p>
         </div>
         <button type="button" className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
           <PackagePlus size={16} />
-          {showForm ? 'Cancel' : 'New shipment'}
+          {showForm ? t('inbound.cancel') : t('inbound.newShipment')}
         </button>
       </header>
 
       <div className="stats-grid inbound-stats">
         <div className="stat-card">
-          <span className="stat-label">Total shipments</span>
+          <span className="stat-label">{t('inbound.totalShipments')}</span>
           <span className="stat-value">{isLoading ? '…' : shipments.length}</span>
         </div>
         <div className="stat-card">
-          <span className="stat-label">Awaiting receive</span>
+          <span className="stat-label">{t('inbound.awaitingReceive')}</span>
           <span className="stat-value accent">{isLoading ? '…' : pendingCount}</span>
         </div>
         <div className="stat-card">
-          <span className="stat-label">Products in catalog</span>
+          <span className="stat-label">{t('inbound.productsCatalog')}</span>
           <span className="stat-value">{isLoading ? '…' : products.length}</span>
         </div>
       </div>
@@ -139,12 +141,12 @@ export default function Inbound() {
       {showForm && (
         <div className="data-panel inbound-form-panel">
           <div className="data-panel-header">
-            <h3 className="data-panel-title">Create inbound shipment</h3>
+            <h3 className="data-panel-title">{t('inbound.createTitle')}</h3>
           </div>
           <div className="inbound-form-body">
             <div className="form-row">
               <div className="form-field">
-                <label className="form-label" htmlFor="supplier">Supplier</label>
+                <label className="form-label" htmlFor="supplier">{t('inbound.supplier')}</label>
                 <input
                   id="supplier"
                   className="input-field"
@@ -154,7 +156,7 @@ export default function Inbound() {
                 />
               </div>
               <div className="form-field">
-                <label className="form-label" htmlFor="dock">Dock</label>
+                <label className="form-label" htmlFor="dock">{t('inbound.dock')}</label>
                 <input
                   id="dock"
                   className="input-field"
@@ -167,7 +169,7 @@ export default function Inbound() {
 
             <div className="form-row form-row--items">
               <div className="form-field form-field--grow">
-                <label className="form-label" htmlFor="product">Product</label>
+                <label className="form-label" htmlFor="product">{t('inbound.product')}</label>
                 <select
                   id="product"
                   className="select-field"
@@ -183,7 +185,7 @@ export default function Inbound() {
                 </select>
               </div>
               <div className="form-field form-field--qty">
-                <label className="form-label" htmlFor="qty">Qty</label>
+                <label className="form-label" htmlFor="qty">{t('inbound.qty')}</label>
                 <input
                   id="qty"
                   type="number"
@@ -195,7 +197,7 @@ export default function Inbound() {
               </div>
               <button type="button" className="btn btn-ghost" onClick={addFormItem}>
                 <Plus size={16} />
-                Add line
+                {t('inbound.addLine')}
               </button>
             </div>
 
@@ -219,7 +221,7 @@ export default function Inbound() {
             )}
 
             <button type="button" className="btn btn-primary" onClick={handleCreate} disabled={formItems.length === 0}>
-              Create shipment
+              {t('inbound.createShipment')}
             </button>
           </div>
         </div>
@@ -227,12 +229,12 @@ export default function Inbound() {
 
       <div className="data-panel">
         <div className="data-panel-header">
-          <h3 className="data-panel-title">Shipments</h3>
+          <h3 className="data-panel-title">{t('inbound.shipments')}</h3>
         </div>
         {isLoading ? (
-          <div className="panel-empty">Loading shipments…</div>
+          <div className="panel-empty">{t('inbound.loadingShipments')}</div>
         ) : shipments.length === 0 ? (
-          <div className="panel-empty">No inbound shipments yet</div>
+          <div className="panel-empty">{t('inbound.noShipments')}</div>
         ) : (
           <div className="table-scroll">
             <table className="data-table">
@@ -269,7 +271,7 @@ export default function Inbound() {
                           onClick={() => handleReceive(s.id)}
                         >
                           <CheckCircle size={14} />
-                          {receivingId === s.id ? 'Receiving…' : 'Receive'}
+                          {receivingId === s.id ? t('inbound.receiving') : t('inbound.receive')}
                         </button>
                       )}
                     </td>
@@ -283,7 +285,7 @@ export default function Inbound() {
 
       <p className="page-hint">
         <Truck size={16} />
-        Receiving adds stock to the receiving zone and logs inventory transactions.
+        {t('inbound.hint')}
       </p>
     </div>
   );

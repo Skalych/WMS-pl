@@ -1,5 +1,6 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Activity, Maximize2, Radio, Package, Layers, Truck, Users, TrendingUp } from 'lucide-react';
 import { ShiftLiveSnapshot } from '../types';
 
@@ -24,6 +25,8 @@ function formatBucketLabel(iso: string): string {
 }
 
 export default function ShiftPulseBoard({ data, connected, fullscreen = false }: ShiftPulseBoardProps) {
+  const { t } = useTranslation();
+
   const maxBucket = useMemo(() => {
     if (!data?.hourly_buckets?.length) return 1;
     return Math.max(...data.hourly_buckets.map((b) => Math.max(b.picked, b.inbound)), 1);
@@ -42,18 +45,18 @@ export default function ShiftPulseBoard({ data, connected, fullscreen = false }:
   if (!data) {
     return (
       <div className={`shift-pulse ${fullscreen ? 'shift-pulse--fullscreen' : ''}`}>
-        <div className="shift-pulse-loading">Loading shift data...</div>
+        <div className="shift-pulse-loading">{t('shiftPulse.loading')}</div>
       </div>
     );
   }
 
   const kpis = [
-    { label: 'Items picked', value: data.items_picked, delta: data.items_picked_delta_5m, icon: Package, accent: 'blue' },
-    { label: 'Waves done / active', value: `${data.waves_completed} / ${data.waves_active}`, icon: Layers, accent: 'pink' },
-    { label: 'Shipped today', value: data.orders_shipped, icon: Truck, accent: 'green' },
-    { label: 'Inbound received', value: data.inbound_received_units, icon: Package, accent: 'amber' },
-    { label: 'Pickers online', value: data.pickers_online, icon: Users, accent: 'cyan' },
-    { label: 'Pick rate / hr', value: data.pick_rate_per_hour, icon: TrendingUp, accent: 'blue' },
+    { label: t('shiftPulse.kpiItemsPicked'), value: data.items_picked, delta: data.items_picked_delta_5m, icon: Package, accent: 'blue' },
+    { label: t('shiftPulse.kpiWaves'), value: `${data.waves_completed} / ${data.waves_active}`, icon: Layers, accent: 'pink' },
+    { label: t('shiftPulse.kpiShipped'), value: data.orders_shipped, icon: Truck, accent: 'green' },
+    { label: t('shiftPulse.kpiInbound'), value: data.inbound_received_units, icon: Package, accent: 'amber' },
+    { label: t('shiftPulse.kpiPickers'), value: data.pickers_online, icon: Users, accent: 'cyan' },
+    { label: t('shiftPulse.kpiPickRate'), value: data.pick_rate_per_hour, icon: TrendingUp, accent: 'blue' },
   ];
 
   return (
@@ -62,12 +65,15 @@ export default function ShiftPulseBoard({ data, connected, fullscreen = false }:
         <div className="shift-pulse-title">
           <Activity size={fullscreen ? 28 : 20} />
           <div>
-            <h2>Shift Pulse</h2>
+            <h2>{t('shiftPulse.title')}</h2>
             <p>
               {data.shift_active && data.shift_started_at ? (
-                <>Started {formatTime(data.shift_started_at)} · {formatElapsed(data.elapsed_seconds)} elapsed</>
+                <>
+                  {t('shiftPulse.started')} {formatTime(data.shift_started_at)} · {formatElapsed(data.elapsed_seconds)}{' '}
+                  {t('shiftPulse.elapsed')}
+                </>
               ) : (
-                <>No active shift — start shifts on Team page</>
+                <>{t('shiftPulse.noShift')}</>
               )}
             </p>
           </div>
@@ -75,12 +81,12 @@ export default function ShiftPulseBoard({ data, connected, fullscreen = false }:
         <div className="shift-pulse-meta">
           <span className={`shift-live-badge ${connected ? 'live' : 'polling'}`}>
             <Radio size={14} />
-            {connected ? 'Live' : 'Polling'}
+            {connected ? t('shiftPulse.live') : t('shiftPulse.polling')}
           </span>
           {!fullscreen && (
-            <Link to="/shift/board" className="shift-board-link" title="Open fullscreen board">
+            <Link to="/shift/board" className="shift-board-link" title={t('shiftPulse.fullscreen')}>
               <Maximize2 size={16} />
-              Fullscreen board
+              {t('shiftPulse.fullscreen')}
             </Link>
           )}
         </div>
@@ -95,7 +101,7 @@ export default function ShiftPulseBoard({ data, connected, fullscreen = false }:
             </div>
             <div className="shift-kpi-value">{kpi.value}</div>
             {kpi.delta !== undefined && kpi.delta > 0 && (
-              <div className="shift-kpi-delta">+{kpi.delta} last 5 min</div>
+              <div className="shift-kpi-delta">{t('shiftPulse.deltaLast5Min', { count: kpi.delta })}</div>
             )}
           </div>
         ))}
@@ -104,7 +110,7 @@ export default function ShiftPulseBoard({ data, connected, fullscreen = false }:
       <div className="shift-pulse-body">
         <div className="shift-chart-panel">
           <h3>
-            Throughput — last 4 hours ({bucketLabel} min)
+            {t('shiftPulse.throughput', { minutes: bucketLabel })}
             {chartRange && <span className="shift-chart-range"> · {chartRange}</span>}
           </h3>
           <div className="shift-chart">
@@ -127,16 +133,16 @@ export default function ShiftPulseBoard({ data, connected, fullscreen = false }:
             ))}
           </div>
           <div className="shift-chart-legend">
-            <span><i className="dot dot-picked" /> Picked</span>
-            <span><i className="dot dot-inbound" /> Inbound</span>
+            <span><i className="dot dot-picked" /> {t('shiftPulse.picked')}</span>
+            <span><i className="dot dot-inbound" /> {t('shiftPulse.inbound')}</span>
           </div>
         </div>
 
         <div className="shift-feed-panel">
-          <h3>Live activity</h3>
+          <h3>{t('shiftPulse.liveActivity')}</h3>
           <ul className="shift-feed">
             {data.recent_events.length === 0 ? (
-              <li className="shift-feed-empty">No activity yet this shift</li>
+              <li className="shift-feed-empty">{t('shiftPulse.noActivity')}</li>
             ) : (
               data.recent_events
                 .slice()
@@ -155,7 +161,7 @@ export default function ShiftPulseBoard({ data, connected, fullscreen = false }:
 
       {data.top_pickers.length > 0 && (
         <div className="shift-leaderboard">
-          <h3>Top pickers this shift</h3>
+          <h3>{t('shiftPulse.topPickers')}</h3>
           <div className="shift-leaderboard-list">
             {data.top_pickers.map((picker, index) => (
               <div key={picker.user_id} className="shift-leader-row">

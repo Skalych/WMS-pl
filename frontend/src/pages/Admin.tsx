@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { orderService } from '../api/services';
 
 export default function Admin() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -25,8 +27,8 @@ export default function Admin() {
     <div className="page-stack">
       <header className="page-header">
         <div>
-          <h1 className="page-title">Sim Tools</h1>
-          <p className="page-subtitle">Generate macro-orders for simulation</p>
+          <h1 className="page-title">{t('admin.title')}</h1>
+          <p className="page-subtitle">{t('admin.subtitle')}</p>
         </div>
       </header>
 

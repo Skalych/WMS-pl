@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { dashboardService, orderService } from '../api/services';
 import { DashboardStats, Wave } from '../types';
 import { Clock, Activity, CheckCircle, Package, Users, Zap, TrendingUp, Layers } from 'lucide-react';
@@ -7,6 +8,7 @@ import ShiftPulseBoard from '../components/ShiftPulseBoard';
 import { useShiftLive } from '../hooks/useShiftLive';
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: shiftLive, connected } = useShiftLive();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -59,9 +61,9 @@ export default function Dashboard() {
         <div>
           <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Activity className="text-accent" size={22} />
-            Operations overview
+            {t('dashboard.title')}
           </h1>
-          <p className="page-subtitle">Warehouse status and active work</p>
+          <p className="page-subtitle">{t('dashboard.subtitle')}</p>
         </div>
 
         <div className="clock-widget">
@@ -76,43 +78,43 @@ export default function Dashboard() {
       <div className="stats-grid">
         <div className="stat-card" style={{ borderTop: '2px solid var(--color-success)' }}>
           <div className="flex-between">
-            <span className="stat-label">Orders shipped today</span>
+            <span className="stat-label">{t('dashboard.shippedToday')}</span>
             <CheckCircle size={16} color="var(--color-success)" />
           </div>
           <span className="stat-value">{isLoading ? '…' : stats?.ordersShippedToday ?? 0}</span>
           <div className="stat-change positive">
             <TrendingUp size={12} />
-            Daily throughput
+            {t('dashboard.dailyThroughput')}
           </div>
         </div>
 
         <div className="stat-card" style={{ borderTop: '2px solid var(--accent-primary)' }}>
           <div className="flex-between">
-            <span className="stat-label">Active orders</span>
+            <span className="stat-label">{t('dashboard.activeOrders')}</span>
             <Zap size={16} className="text-accent" />
           </div>
           <span className="stat-value accent">{isLoading ? '…' : stats?.activeOrders ?? 0}</span>
-          <div className="stat-change text-muted">Pending fulfillment</div>
+          <div className="stat-change text-muted">{t('dashboard.pendingFulfillment')}</div>
         </div>
 
         <div className="stat-card" style={{ borderTop: '2px solid var(--color-warning)' }}>
           <div className="flex-between">
-            <span className="stat-label">Inbound pending</span>
+            <span className="stat-label">{t('dashboard.inboundPending')}</span>
             <Package size={16} color="var(--color-warning)" />
           </div>
           <span className="stat-value">{isLoading ? '…' : stats?.inboundPending ?? 0}</span>
-          <div className="stat-change text-muted">Awaiting putaway</div>
+          <div className="stat-change text-muted">{t('dashboard.awaitingPutaway')}</div>
         </div>
 
         <div className="stat-card" style={{ borderTop: '2px solid var(--color-info)' }}>
           <div className="flex-between">
-            <span className="stat-label">Workforce online</span>
+            <span className="stat-label">{t('dashboard.workforceOnline')}</span>
             <Users size={16} color="var(--color-info)" />
           </div>
           <span className="stat-value">
             {isLoading ? '…' : `${stats?.employeesOnline ?? 0} / ${stats?.totalEmployees ?? 0}`}
           </span>
-          <div className="stat-change text-muted">Active on floor</div>
+          <div className="stat-change text-muted">{t('dashboard.activeOnFloor')}</div>
         </div>
       </div>
 
@@ -121,15 +123,15 @@ export default function Dashboard() {
           <div className="data-panel-header">
             <h3 className="data-panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Layers size={18} className="text-accent" />
-              Active waves ({stats?.activeWaves ?? 0})
+              {t('dashboard.activeWavesTitle', { count: stats?.activeWaves ?? 0 })}
             </h3>
           </div>
           <div style={{ padding: '20px' }}>
             {isLoading ? (
-              <p className="text-muted">Loading waves…</p>
+              <p className="text-muted">{t('dashboard.loadingWaves')}</p>
             ) : activeWaves.length === 0 ? (
               <p className="text-muted" style={{ textAlign: 'center', padding: '20px 0' }}>
-                No active waves
+                {t('dashboard.noActiveWaves')}
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -147,7 +149,7 @@ export default function Dashboard() {
                         className="flex-between text-muted"
                         style={{ fontSize: '0.75rem', marginBottom: '6px' }}
                       >
-                        <span>Orders: {wave.ordersCount ?? 0}</span>
+                        <span>{t('dashboard.ordersCount', { count: wave.ordersCount ?? 0 })}</span>
                         <span>{wave.progress}%</span>
                       </div>
                       <div className="progress-bar">
@@ -166,7 +168,7 @@ export default function Dashboard() {
 
         <div className="data-panel">
           <div className="data-panel-header">
-            <h3 className="data-panel-title">Quick actions</h3>
+            <h3 className="data-panel-title">{t('dashboard.quickActions')}</h3>
           </div>
           <div className="quick-actions">
             <button
@@ -176,7 +178,7 @@ export default function Dashboard() {
               onClick={() => navigate('/orders-waves')}
             >
               <Layers size={16} />
-              Manage waves
+              {t('dashboard.manageWaves')}
             </button>
             <button
               type="button"
@@ -185,7 +187,7 @@ export default function Dashboard() {
               onClick={() => navigate('/inventory')}
             >
               <Package size={16} />
-              Check inventory
+              {t('dashboard.checkInventory')}
             </button>
             <button
               type="button"
@@ -194,7 +196,7 @@ export default function Dashboard() {
               onClick={() => navigate('/employees')}
             >
               <Users size={16} />
-              View team
+              {t('dashboard.viewTeam')}
             </button>
             <button
               type="button"
@@ -203,7 +205,7 @@ export default function Dashboard() {
               onClick={() => navigate('/shift/board')}
             >
               <Activity size={16} />
-              Shift board
+              {t('dashboard.shiftBoard')}
             </button>
             <button
               type="button"
@@ -212,7 +214,7 @@ export default function Dashboard() {
               onClick={() => navigate('/terminal')}
             >
               <Package size={16} />
-              Pick terminal
+              {t('dashboard.pickTerminal')}
             </button>
           </div>
         </div>

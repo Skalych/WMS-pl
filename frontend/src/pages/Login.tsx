@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../api/services';
 import { UserRole } from '../types';
 
 const Login: React.FC = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -37,11 +39,11 @@ const Login: React.FC = () => {
       navigate('/');
     } catch (err: unknown) {
       const axiosErr = err as { response?: { status?: number; data?: { detail?: string | { msg?: string }[] } } };
-      let errorMsg = 'Invalid email or password.';
+      let errorMsg = t('login.invalidCredentials');
       if (!axiosErr.response) {
-        errorMsg = 'Cannot reach server. Is the backend running on port 8000?';
+        errorMsg = t('login.serverUnreachable');
       } else if ((axiosErr.response.status ?? 0) >= 500) {
-        errorMsg = 'Server error — check PostgreSQL and run seed if needed.';
+        errorMsg = t('login.serverError');
       }
       const detail = axiosErr.response?.data?.detail;
       if (typeof detail === 'string') {
@@ -73,8 +75,8 @@ const Login: React.FC = () => {
       <div className="login-card">
         <div className="login-brand">
           <div className="login-logo">W</div>
-          <h1 className="login-title">WMS Operations</h1>
-          <p className="login-subtitle">Sign in to continue</p>
+          <h1 className="login-title">{t('login.title')}</h1>
+          <p className="login-subtitle">{t('login.subtitle')}</p>
         </div>
 
         {error && <div className="login-error">{error}</div>}
@@ -82,7 +84,7 @@ const Login: React.FC = () => {
         <form className="login-form" onSubmit={handleSubmit}>
           <div>
             <label className="login-label" htmlFor="email">
-              Email
+              {t('login.email')}
             </label>
             <input
               id="email"
@@ -99,7 +101,7 @@ const Login: React.FC = () => {
 
           <div>
             <label className="login-label" htmlFor="password">
-              Password
+              {t('login.password')}
             </label>
             <input
               id="password"
@@ -115,19 +117,19 @@ const Login: React.FC = () => {
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={isLoading}>
-            {isLoading ? 'Signing in…' : 'Sign in'}
+            {isLoading ? t('login.signingIn') : t('login.signIn')}
           </button>
         </form>
 
         <div className="login-demo">
           <button type="button" className="login-demo-btn" onClick={() => fillDemo('admin')}>
-            Admin demo
+            {t('login.demoAdmin')}
           </button>
           <button type="button" className="login-demo-btn" onClick={() => fillDemo('picker')}>
-            Picker demo
+            {t('login.demoPicker')}
           </button>
           <button type="button" className="login-demo-btn" onClick={() => fillDemo('inbound')}>
-            Inbound demo
+            {t('login.demoInbound')}
           </button>
         </div>
       </div>
