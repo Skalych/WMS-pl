@@ -197,6 +197,9 @@ export interface ShiftLiveSnapshot {
   inbound_received_units: number;
   pickers_online: number;
   pick_rate_per_hour: number;
+  bucket_minutes: number;
+  chart_window_start: string | null;
+  chart_window_end: string | null;
   hourly_buckets: ShiftLiveBucket[];
   top_pickers: ShiftLivePicker[];
   recent_events: ShiftLiveEventItem[];

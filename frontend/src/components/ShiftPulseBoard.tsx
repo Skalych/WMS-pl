@@ -29,6 +29,16 @@ export default function ShiftPulseBoard({ data, connected, fullscreen = false }:
     return Math.max(...data.hourly_buckets.map((b) => Math.max(b.picked, b.inbound)), 1);
   }, [data]);
 
+  const labelEvery = useMemo(() => {
+    const minutes = data?.bucket_minutes ?? 15;
+    return Math.max(1, Math.round(60 / minutes));
+  }, [data?.bucket_minutes]);
+
+  const bucketLabel = data?.bucket_minutes ?? 15;
+  const chartRange = data?.chart_window_start && data?.chart_window_end
+    ? `${formatBucketLabel(data.chart_window_start)} – ${formatBucketLabel(data.chart_window_end)}`
+    : null;
+
   if (!data) {
     return (
       <div className={`shift-pulse ${fullscreen ? 'shift-pulse--fullscreen' : ''}`}>
@@ -93,14 +103,12 @@ export default function ShiftPulseBoard({ data, connected, fullscreen = false }:
 
       <div className="shift-pulse-body">
         <div className="shift-chart-panel">
-          <h3>{data.shift_active ? 'Throughput this shift (15 min)' : 'Throughput (shift not started)'}</h3>
+          <h3>
+            Throughput — last 4 hours ({bucketLabel} min)
+            {chartRange && <span className="shift-chart-range"> · {chartRange}</span>}
+          </h3>
           <div className="shift-chart">
-            {data.hourly_buckets.length === 0 ? (
-              <div className="shift-feed-empty" style={{ width: '100%', padding: '40px 0' }}>
-                Chart appears when a shift is started
-              </div>
-            ) : (
-            data.hourly_buckets.map((bucket) => (
+            {data.hourly_buckets.map((bucket, index) => (
               <div key={bucket.time} className="shift-chart-col" title={`${formatBucketLabel(bucket.time)}: ${bucket.picked} picked, ${bucket.inbound} inbound`}>
                 <div className="shift-chart-bars">
                   <div
@@ -112,10 +120,11 @@ export default function ShiftPulseBoard({ data, connected, fullscreen = false }:
                     style={{ height: `${(bucket.inbound / maxBucket) * 100}%` }}
                   />
                 </div>
-                <span className="shift-chart-label">{formatBucketLabel(bucket.time)}</span>
+                <span className={`shift-chart-label ${index % labelEvery !== 0 ? 'shift-chart-label--hidden' : ''}`}>
+                  {formatBucketLabel(bucket.time)}
+                </span>
               </div>
-            ))
-            )}
+            ))}
           </div>
           <div className="shift-chart-legend">
             <span><i className="dot dot-picked" /> Picked</span>

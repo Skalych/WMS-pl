@@ -1158,12 +1158,18 @@ body {
   margin-bottom: 12px;
 }
 
+.shift-chart-range {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
 .shift-chart {
   display: flex;
   align-items: flex-end;
-  gap: 6px;
+  gap: 4px;
   height: 140px;
   padding-top: 8px;
+  width: 100%;
 }
 
 .shift-chart-col {
@@ -1199,6 +1205,11 @@ body {
   color: var(--text-muted);
   font-family: var(--font-mono);
   margin-top: 4px;
+  white-space: nowrap;
+}
+
+.shift-chart-label--hidden {
+  visibility: hidden;
 }
 
 .shift-chart-legend {

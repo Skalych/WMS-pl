@@ -36,6 +36,9 @@ class ShiftLiveResponse(BaseModel):
     inbound_received_units: int
     pickers_online: int
     pick_rate_per_hour: float
+    bucket_minutes: int = 15
+    chart_window_start: Optional[str] = None
+    chart_window_end: Optional[str] = None
     hourly_buckets: List[HourlyBucket]
     top_pickers: List[TopPicker]
     recent_events: List[ShiftLiveEvent]

@@ -30,30 +30,26 @@ async def _shift_window_start(db: AsyncSession) -> Optional[datetime]:
     return earliest
 
 
-def _floor_to_bucket(dt: datetime, minutes: int = 15) -> datetime:
+CHART_WINDOW_HOURS = 4
+CHART_BUCKET_MINUTES = 15
+
+
+def _floor_to_bucket(dt: datetime, minutes: int = CHART_BUCKET_MINUTES) -> datetime:
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return dt.replace(minute=(dt.minute // minutes) * minutes, second=0, microsecond=0)
 
 
-async def _hourly_buckets(db: AsyncSession, since: datetime) -> list[dict]:
-    """15-min buckets from shift start → now (not a fixed wall-clock window)."""
+async def _hourly_buckets(db: AsyncSession) -> list[dict]:
+    """Exactly 16 × 15-min buckets ending at the current interval (rolling 4 h)."""
     now = _utcnow()
-    bucket_size = timedelta(minutes=15)
-    cursor = _floor_to_bucket(since)
-
-    slot_starts: list[datetime] = []
-    while cursor <= now:
-        slot_starts.append(cursor)
-        cursor += bucket_size
-
-    # Cap display at 12 hours; for longer shifts show the most recent window
-    max_buckets = 48
-    if len(slot_starts) > max_buckets:
-        slot_starts = slot_starts[-max_buckets:]
-
-    if not slot_starts:
-        slot_starts = [cursor - bucket_size]
+    bucket_minutes = CHART_BUCKET_MINUTES
+    bucket_size = timedelta(minutes=bucket_minutes)
+    num_buckets = (CHART_WINDOW_HOURS * 60) // bucket_minutes
+    end_bucket = _floor_to_bucket(now, bucket_minutes)
+    slot_starts = [
+        end_bucket - bucket_size * (num_buckets - 1 - i) for i in range(num_buckets)
+    ]
 
     buckets: dict[str, dict] = {
         slot.isoformat(): {"time": slot.isoformat(), "picked": 0, "inbound": 0}
@@ -72,7 +68,7 @@ async def _hourly_buckets(db: AsyncSession, since: datetime) -> list[dict]:
     for created_at, quantity, tx_type in result.all():
         if created_at.tzinfo is None:
             created_at = created_at.replace(tzinfo=timezone.utc)
-        key = _floor_to_bucket(created_at).isoformat()
+        key = _floor_to_bucket(created_at, bucket_minutes).isoformat()
         if key not in buckets:
             continue
         if tx_type == TransactionType.WAVE_PICK_BATCH:
@@ -83,7 +79,22 @@ async def _hourly_buckets(db: AsyncSession, since: datetime) -> list[dict]:
     return list(buckets.values())
 
 
+def _chart_window_bounds(buckets: list[dict]) -> tuple[Optional[str], Optional[str]]:
+    if not buckets:
+        return None, None
+    return buckets[0]["time"], buckets[-1]["time"]
+
+
 async def _items_picked_since(db: AsyncSession, since: datetime) -> int:
+    shift_sum = await db.scalar(
+        select(func.coalesce(func.sum(Shift.total_items_picked), 0)).where(
+            Shift.end_time.is_(None),
+            Shift.start_time >= since,
+        )
+    )
+    if shift_sum and int(shift_sum) > 0:
+        return int(shift_sum)
+
     from_tx = await db.scalar(
         select(func.coalesce(func.sum(InventoryTransaction.quantity), 0)).where(
             InventoryTransaction.transaction_type == TransactionType.WAVE_PICK_BATCH,
@@ -144,28 +155,28 @@ async def _pickers_online(db: AsyncSession) -> int:
 
 
 async def _top_pickers(db: AsyncSession, since: datetime) -> list[dict]:
-    result = await db.execute(
-        select(User.id, User.full_name, func.coalesce(func.sum(InventoryTransaction.quantity), 0))
-        .join(InventoryTransaction, InventoryTransaction.user_id == User.id)
-        .where(
-            InventoryTransaction.transaction_type == TransactionType.WAVE_PICK_BATCH,
-            InventoryTransaction.created_at >= since,
-        )
-        .group_by(User.id, User.full_name)
-        .order_by(func.sum(InventoryTransaction.quantity).desc())
+    shift_rows = await db.execute(
+        select(User.id, User.full_name, Shift.total_items_picked)
+        .join(Shift, Shift.user_id == User.id)
+        .where(Shift.end_time.is_(None), Shift.start_time >= since)
+        .order_by(Shift.total_items_picked.desc())
         .limit(5)
     )
-    rows = result.all()
+    rows = [(r[0], r[1], r[2]) for r in shift_rows.all() if int(r[2]) > 0]
 
     if not rows:
-        shift_rows = await db.execute(
-            select(User.id, User.full_name, Shift.total_items_picked)
-            .join(Shift, Shift.user_id == User.id)
-            .where(Shift.end_time.is_(None))
-            .order_by(Shift.total_items_picked.desc())
+        result = await db.execute(
+            select(User.id, User.full_name, func.coalesce(func.sum(InventoryTransaction.quantity), 0))
+            .join(InventoryTransaction, InventoryTransaction.user_id == User.id)
+            .where(
+                InventoryTransaction.transaction_type == TransactionType.WAVE_PICK_BATCH,
+                InventoryTransaction.created_at >= since,
+            )
+            .group_by(User.id, User.full_name)
+            .order_by(func.sum(InventoryTransaction.quantity).desc())
             .limit(5)
         )
-        rows = [(r[0], r[1], r[2]) for r in shift_rows.all()]
+        rows = result.all()
 
     if not rows:
         return []
@@ -182,8 +193,8 @@ async def _top_pickers(db: AsyncSession, since: datetime) -> list[dict]:
     ]
 
 
-async def _recent_events(db: AsyncSession, limit: int = 15) -> list[dict]:
-    result = await db.execute(
+async def _recent_events(db: AsyncSession, since: Optional[datetime] = None, limit: int = 15) -> list[dict]:
+    query = (
         select(InventoryTransaction)
         .options(
             joinedload(InventoryTransaction.product),
@@ -194,6 +205,9 @@ async def _recent_events(db: AsyncSession, limit: int = 15) -> list[dict]:
         .order_by(InventoryTransaction.created_at.desc())
         .limit(limit)
     )
+    if since is not None:
+        query = query.where(InventoryTransaction.created_at >= since)
+    result = await db.execute(query)
     txs = result.unique().scalars().all()
     events = []
     for tx in reversed(txs):
@@ -225,6 +239,8 @@ async def build_shift_live_snapshot(db: AsyncSession) -> dict:
     now = _utcnow()
 
     if since is None:
+        hourly = await _hourly_buckets(db)
+        window_start, window_end = _chart_window_bounds(hourly)
         return {
             "shift_active": False,
             "shift_started_at": None,
@@ -237,7 +253,10 @@ async def build_shift_live_snapshot(db: AsyncSession) -> dict:
             "inbound_received_units": 0,
             "pickers_online": await _pickers_online(db),
             "pick_rate_per_hour": 0.0,
-            "hourly_buckets": [],
+            "bucket_minutes": CHART_BUCKET_MINUTES,
+            "chart_window_start": window_start,
+            "chart_window_end": window_end,
+            "hourly_buckets": hourly,
             "top_pickers": [],
             "recent_events": await _recent_events(db),
         }
@@ -256,6 +275,8 @@ async def build_shift_live_snapshot(db: AsyncSession) -> dict:
 
     elapsed_hours = elapsed / 3600
     pick_rate = round(items_picked / elapsed_hours, 1) if elapsed_hours > 0 else 0.0
+    hourly = await _hourly_buckets(db)
+    window_start, window_end = _chart_window_bounds(hourly)
 
     return {
         "shift_active": True,
@@ -269,9 +290,12 @@ async def build_shift_live_snapshot(db: AsyncSession) -> dict:
         "inbound_received_units": inbound_units,
         "pickers_online": pickers,
         "pick_rate_per_hour": pick_rate,
-        "hourly_buckets": await _hourly_buckets(db, since),
+        "bucket_minutes": CHART_BUCKET_MINUTES,
+        "chart_window_start": window_start,
+        "chart_window_end": window_end,
+        "hourly_buckets": hourly,
         "top_pickers": await _top_pickers(db, since),
-        "recent_events": await _recent_events(db),
+        "recent_events": await _recent_events(db, since),
     }
 
 
