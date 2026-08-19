@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// За замовчуванням звертаємося до локального FastAPI (порт 8000)
-const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1';
+// Dev: Vite proxy /api → :8000. Prod: set VITE_API_URL.
+const API_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -28,7 +28,7 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    if (error.response?.status === 401 && error.config?.url !== '/auth/login') {
       localStorage.removeItem('access_token');
       localStorage.removeItem('user_data');
       if (window.location.pathname !== '/login') {

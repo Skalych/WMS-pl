@@ -137,9 +137,11 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
       items: [
         { id: 'dashboard', label: t('sidebar.dashboard'), Icon: DashboardIcon },
         ...(user?.role === UserRole.ADMIN_MANAGER
-          ? [{ id: 'admin', label: 'Sim Tools', Icon: AdminIcon }]
+          ? [
+              { id: 'admin', label: 'Sim Tools', Icon: AdminIcon },
+              { id: 'employees', label: t('sidebar.employees'), Icon: EmployeesIcon },
+            ]
           : []),
-        { id: 'employees', label: t('sidebar.employees'), Icon: EmployeesIcon },
         { id: 'inventory', label: t('sidebar.inventory'), Icon: InventoryIcon },
         ...(user?.role === UserRole.ADMIN_MANAGER || user?.role === UserRole.INBOUND_OPERATOR
           ? [{ id: 'inbound', label: 'Inbound', Icon: InboundIcon }]
@@ -259,7 +261,8 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
       {/* Bottom Section */}
       <div className="sidebar-bottom" style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         
-        {/* Simulation Toggle */}
+        {/* Simulation Toggle — admin only */}
+        {user?.role === UserRole.ADMIN_MANAGER && (
         <div style={{ padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: isSimulationActive ? '#e359ac' : '#64748b', boxShadow: isSimulationActive ? '0 0 8px #e359ac' : 'none' }} />
@@ -283,6 +286,7 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
             {isSimulationActive ? 'ON' : 'OFF'}
           </button>
         </div>
+        )}
 
         <div 
           className="sidebar-nav-item" 

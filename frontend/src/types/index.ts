@@ -154,6 +154,8 @@ export interface InventoryTransaction {
   targetLocation?: string;
   createdAt: string;
 }
+
+export interface MacroOrder {
   id: string;
   referenceNumber: string;
   status: OrderStatus;

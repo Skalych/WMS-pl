@@ -33,6 +33,11 @@ const Login: React.FC = () => {
       navigate('/');
     } catch (err: any) {
       let errorMsg = 'Authentication failed. Check credentials.';
+      if (!err.response) {
+        errorMsg = 'Cannot reach API server. Is the backend running on port 8000?';
+      } else if (err.response.status >= 500) {
+        errorMsg = 'Server error — is PostgreSQL running? Start Docker, then: docker compose up -d && make seed';
+      }
       const detail = err.response?.data?.detail;
       if (typeof detail === 'string') {
         errorMsg = detail;
@@ -46,9 +51,12 @@ const Login: React.FC = () => {
   };
 
   // Демонстраційні логіни для зручності
-  const fillDemo = (role: 'admin' | 'picker') => {
+  const fillDemo = (role: 'admin' | 'picker' | 'inbound') => {
     if (role === 'admin') {
       setEmail('admin@wms.local');
+      setPassword('password123');
+    } else if (role === 'inbound') {
+      setEmail('oleg.d@wms.local');
       setPassword('password123');
     } else {
       setEmail('ivan.p@wms.local');
@@ -182,6 +190,9 @@ const Login: React.FC = () => {
           </button>
           <button type="button" className="badge badge-info" onClick={() => fillDemo('picker')} style={{ cursor: 'pointer', border: 'none' }}>
             [ DEMO PICKER ]
+          </button>
+          <button type="button" className="badge badge-warning" onClick={() => fillDemo('inbound')} style={{ cursor: 'pointer', border: 'none', background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>
+            [ DEMO INBOUND ]
           </button>
         </div>
       </div>

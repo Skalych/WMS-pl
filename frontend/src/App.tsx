@@ -91,13 +91,13 @@ export default function App() {
             <Route element={<PrivateRoute />}>
               <Route element={<MainLayout />}>
                 <Route path="/" element={<Dashboard />} />
-                <Route path="/employees" element={<Employees />} />
+                <Route element={<AdminRoute />}>
+                  <Route path="/employees" element={<Employees />} />
+                  <Route path="/admin" element={<Admin />} />
+                </Route>
                 <Route path="/inventory" element={<Inventory />} />
                 <Route element={<InboundRoute />}>
                   <Route path="/inbound" element={<Inbound />} />
-                </Route>
-                <Route element={<AdminRoute />}>
-                  <Route path="/admin" element={<Admin />} />
                 </Route>
                 <Route path="/orders-waves" element={<Orders />} />
                 <Route path="/analytics" element={<Dashboard />} />
