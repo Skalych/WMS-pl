@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language, translations } from '../i18n/translations';
+import i18n from '../i18n';
 
 interface SettingsContextType {
   language: Language;
@@ -16,12 +17,14 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     const savedLang = localStorage.getItem('wms-language') as Language;
     if (savedLang && (savedLang === 'en' || savedLang === 'uk')) {
       setLanguageState(savedLang);
+      i18n.changeLanguage(savedLang);
     }
   }, []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('wms-language', lang);
+    i18n.changeLanguage(lang);
   };
 
   const t = (section: keyof typeof translations.en, key: string): string => {

@@ -164,6 +164,22 @@ export interface MacroOrder {
   createdAt: string;
 }
 
+export interface TerminalTask {
+  taskId: string;
+  taskType: string;
+  locationCode: string;
+  productSku: string;
+  quantityRequired: number;
+  cartId: string | null;
+}
+
+export interface TerminalScanResult {
+  status: string;
+  message: string;
+  quantity_picked?: number;
+  task_completed?: boolean;
+}
+
 export interface ShiftLiveBucket {
   time: string;
   picked: number;

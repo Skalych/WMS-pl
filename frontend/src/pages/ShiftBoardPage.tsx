@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { X, Clock } from 'lucide-react';
+import { X, Clock, LogOut } from 'lucide-react';
 import ShiftPulseBoard from '../components/ShiftPulseBoard';
 import { useShiftLive } from '../hooks/useShiftLive';
+import { useAuth } from '../context/AuthContext';
 
 export default function ShiftBoardPage() {
   const { data, connected } = useShiftLive();
+  const { logout } = useAuth();
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
@@ -33,6 +35,10 @@ export default function ShiftBoardPage() {
           <X size={18} />
           Exit fullscreen
         </Link>
+        <button type="button" className="shift-board-exit" onClick={logout}>
+          <LogOut size={18} />
+          Log out
+        </button>
       </header>
 
       <ShiftPulseBoard data={data} connected={connected} fullscreen />

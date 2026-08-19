@@ -1,7 +1,8 @@
 import { apiClient } from './client';
 import { 
   UserRole, WorkerStatus, Employee, DashboardStats, 
-  Order, Wave, InventoryItem, MacroOrder, InboundShipment, InventoryTransaction
+  Order, Wave, InventoryItem, MacroOrder, InboundShipment, InventoryTransaction,
+  TerminalTask, TerminalScanResult,
 } from '../types';
 
 // Auth Services
@@ -246,3 +247,28 @@ export const orderService = {
     };
   }
 };
+
+export const terminalService = {
+  getNextTask: async (): Promise<TerminalTask | null> => {
+    const response = await apiClient.get('/terminal/tasks/next');
+    const t = response.data;
+    if (!t) return null;
+    return {
+      taskId: t.task_id,
+      taskType: t.task_type,
+      locationCode: t.location_code,
+      productSku: t.product_sku,
+      quantityRequired: t.quantity_required,
+      cartId: t.cart_id ?? null,
+    };
+  },
+
+  scan: async (taskId: string, barcode: string, quantity: number): Promise<TerminalScanResult> => {
+    const response = await apiClient.post(`/terminal/tasks/${taskId}/scan`, {
+      barcode,
+      quantity,
+    });
+    return response.data;
+  },
+};
+

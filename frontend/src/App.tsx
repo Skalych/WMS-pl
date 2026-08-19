@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
@@ -9,17 +9,25 @@ import Admin from './pages/Admin';
 import Inbound from './pages/Inbound';
 import Login from './pages/Login';
 import ShiftBoardPage from './pages/ShiftBoardPage';
+import TerminalPage from './pages/Terminal';
 import SettingsModal from './components/SettingsModal';
 import { SettingsProvider } from './context/SettingsContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { UserRole } from './types';
+
+const AppLoading = () => (
+  <div className="app-loading">
+    <div className="app-loading-spinner" aria-hidden />
+    <span>Loading…</span>
+  </div>
+);
 
 // Захищений компонент (Private Route)
 const PrivateRoute = () => {
   const { isAuthenticated, isLoading } = useAuth();
   
   if (isLoading) {
-    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#08080f', color: '#e359ac' }}>LOADING KERNEL...</div>;
+    return <AppLoading />;
   }
   
   return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
@@ -29,7 +37,7 @@ const AdminRoute = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#08080f', color: '#e359ac' }}>LOADING KERNEL...</div>;
+    return <AppLoading />;
   }
 
   if (user?.role !== UserRole.ADMIN_MANAGER) {
@@ -43,10 +51,29 @@ const InboundRoute = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#08080f', color: '#e359ac' }}>LOADING KERNEL...</div>;
+    return <AppLoading />;
   }
 
   const allowed = user?.role === UserRole.ADMIN_MANAGER || user?.role === UserRole.INBOUND_OPERATOR;
+  if (!allowed) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
+};
+
+const TerminalRoute = () => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <AppLoading />;
+  }
+
+  const allowed =
+    user?.role === UserRole.PICKER ||
+    user?.role === UserRole.PACKER_DISPATCHER ||
+    user?.role === UserRole.ADMIN_MANAGER;
+
   if (!allowed) {
     return <Navigate to="/" replace />;
   }
@@ -91,6 +118,9 @@ export default function App() {
             {/* Захищені роути */}
             <Route element={<PrivateRoute />}>
               <Route path="/shift/board" element={<ShiftBoardPage />} />
+              <Route element={<TerminalRoute />}>
+                <Route path="/terminal" element={<TerminalPage />} />
+              </Route>
               <Route element={<MainLayout />}>
                 <Route path="/" element={<Dashboard />} />
                 <Route element={<AdminRoute />}>
@@ -102,7 +132,6 @@ export default function App() {
                   <Route path="/inbound" element={<Inbound />} />
                 </Route>
                 <Route path="/orders-waves" element={<Orders />} />
-                <Route path="/analytics" element={<Dashboard />} />
                 <Route path="/shift-reports" element={<ShiftBoardPage />} />
               </Route>
             </Route>

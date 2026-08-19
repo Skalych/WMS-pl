@@ -15,7 +15,8 @@ const resources = {
         shiftReports: "Shift Reports",
         analytics: "Analytics",
         settings: "Settings",
-        connected: "Connected"
+        connected: "Connected",
+        logout: "Log out"
       }
     }
   },
@@ -31,7 +32,8 @@ const resources = {
         shiftReports: "Shift Reports",
         analytics: "Аналітика",
         settings: "Налаштування",
-        connected: "Підключено"
+        connected: "Підключено",
+        logout: "Вийти"
       }
     }
   }

@@ -1,7 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { inboundService, inventoryService } from '../api/services';
 import { InboundShipment, InboundStatus, InventoryItem } from '../types';
-import { PackagePlus, Truck, CheckCircle } from 'lucide-react';
+import { PackagePlus, Truck, CheckCircle, X, Plus } from 'lucide-react';
+
+function inboundStatusBadge(status: InboundStatus): string {
+  switch (status) {
+    case InboundStatus.RECEIVED:
+    case InboundStatus.COMPLETED:
+      return 'badge badge-active';
+    case InboundStatus.PENDING:
+    case InboundStatus.IN_RECEIVING:
+      return 'badge badge-warning';
+    case InboundStatus.CANCELLED:
+      return 'badge badge-danger';
+    default:
+      return 'badge badge-muted';
+  }
+}
 
 export default function Inbound() {
   const [shipments, setShipments] = useState<InboundShipment[]>([]);
@@ -14,6 +29,9 @@ export default function Inbound() {
   const [expectedQty, setExpectedQty] = useState(10);
   const [formItems, setFormItems] = useState<{ product_id: string; expected_quantity: number; label: string }[]>([]);
   const [error, setError] = useState('');
+  const [receivingId, setReceivingId] = useState<string | null>(null);
+
+  const pendingCount = shipments.filter((s) => s.status === InboundStatus.PENDING).length;
 
   const loadData = async () => {
     setIsLoading(true);
@@ -24,6 +42,7 @@ export default function Inbound() {
       ]);
       setShipments(shipmentsData);
       setProducts(inventoryData.items);
+      setError('');
     } catch (e) {
       console.error(e);
       setError('Failed to load inbound data');
@@ -47,18 +66,20 @@ export default function Inbound() {
         label: product ? `${product.sku} — ${product.productName}` : selectedProductId,
       },
     ]);
+    setSelectedProductId('');
+    setExpectedQty(10);
   };
 
   const handleCreate = async () => {
-    if (!supplierName || formItems.length === 0) {
-      setError('Supplier name and at least one item are required');
+    if (!supplierName.trim() || formItems.length === 0) {
+      setError('Supplier name and at least one line item are required');
       return;
     }
     setError('');
     try {
       await inboundService.createShipment(
-        supplierName,
-        dockNumber,
+        supplierName.trim(),
+        dockNumber.trim(),
         formItems.map(({ product_id, expected_quantity }) => ({ product_id, expected_quantity }))
       );
       setShowForm(false);
@@ -66,149 +87,204 @@ export default function Inbound() {
       setDockNumber('');
       setFormItems([]);
       await loadData();
-    } catch (e: any) {
-      setError(e.response?.data?.detail || 'Failed to create shipment');
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { detail?: string } } };
+      setError(err.response?.data?.detail || 'Failed to create shipment');
     }
   };
 
   const handleReceive = async (id: string) => {
+    setReceivingId(id);
     try {
       await inboundService.receiveShipment(id);
       await loadData();
-    } catch (e: any) {
-      setError(e.response?.data?.detail || 'Failed to receive shipment');
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { detail?: string } } };
+      setError(err.response?.data?.detail || 'Failed to receive shipment');
+    } finally {
+      setReceivingId(null);
     }
   };
 
-  const statusColor = (status: InboundStatus) => {
-    if (status === InboundStatus.RECEIVED || status === InboundStatus.COMPLETED) return '#10b981';
-    if (status === InboundStatus.PENDING) return '#f59e0b';
-    return '#94a3b8';
-  };
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <header className="top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+    <div className="page-stack">
+      <header className="page-header">
         <div>
-          <h1 className="page-title">Inbound Receipts</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.2rem' }}>
-            Receive supplier shipments into warehouse
-          </p>
+          <h1 className="page-title">Inbound</h1>
+          <p className="page-subtitle">Receive supplier shipments into the warehouse</p>
         </div>
-        <button
-          className="btn-primary"
-          onClick={() => setShowForm(!showForm)}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-        >
+        <button type="button" className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
           <PackagePlus size={16} />
-          New Shipment
+          {showForm ? 'Cancel' : 'New shipment'}
         </button>
       </header>
 
-      {error && (
-        <div style={{ padding: '0.75rem 1rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#f87171' }}>
-          {error}
+      <div className="stats-grid inbound-stats">
+        <div className="stat-card">
+          <span className="stat-label">Total shipments</span>
+          <span className="stat-value">{isLoading ? '…' : shipments.length}</span>
         </div>
-      )}
+        <div className="stat-card">
+          <span className="stat-label">Awaiting receive</span>
+          <span className="stat-value accent">{isLoading ? '…' : pendingCount}</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Products in catalog</span>
+          <span className="stat-value">{isLoading ? '…' : products.length}</span>
+        </div>
+      </div>
+
+      {error && <div className="alert alert-error">{error}</div>}
 
       {showForm && (
-        <div className="glass-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <h3 style={{ margin: 0, color: '#fff' }}>Create Inbound Shipment</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-            <input
-              placeholder="Supplier name"
-              value={supplierName}
-              onChange={(e) => setSupplierName(e.target.value)}
-              style={{ padding: '0.75rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-            />
-            <input
-              placeholder="Dock number (optional)"
-              value={dockNumber}
-              onChange={(e) => setDockNumber(e.target.value)}
-              style={{ padding: '0.75rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-            />
+        <div className="data-panel inbound-form-panel">
+          <div className="data-panel-header">
+            <h3 className="data-panel-title">Create inbound shipment</h3>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-            <select
-              value={selectedProductId}
-              onChange={(e) => setSelectedProductId(e.target.value)}
-              style={{ flex: 1, minWidth: '200px', padding: '0.75rem', borderRadius: '8px', background: '#1a1a2e', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-            >
-              <option value="">Select product...</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>{p.sku} — {p.productName}</option>
-              ))}
-            </select>
-            <input
-              type="number"
-              min={1}
-              value={expectedQty}
-              onChange={(e) => setExpectedQty(Number(e.target.value))}
-              style={{ width: '100px', padding: '0.75rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fff' }}
-            />
-            <button className="btn-secondary" onClick={addFormItem}>Add item</button>
+          <div className="inbound-form-body">
+            <div className="form-row">
+              <div className="form-field">
+                <label className="form-label" htmlFor="supplier">Supplier</label>
+                <input
+                  id="supplier"
+                  className="input-field"
+                  placeholder="Supplier name"
+                  value={supplierName}
+                  onChange={(e) => setSupplierName(e.target.value)}
+                />
+              </div>
+              <div className="form-field">
+                <label className="form-label" htmlFor="dock">Dock</label>
+                <input
+                  id="dock"
+                  className="input-field"
+                  placeholder="Dock number (optional)"
+                  value={dockNumber}
+                  onChange={(e) => setDockNumber(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="form-row form-row--items">
+              <div className="form-field form-field--grow">
+                <label className="form-label" htmlFor="product">Product</label>
+                <select
+                  id="product"
+                  className="select-field"
+                  value={selectedProductId}
+                  onChange={(e) => setSelectedProductId(e.target.value)}
+                >
+                  <option value="">Select product…</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.sku} — {p.productName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-field form-field--qty">
+                <label className="form-label" htmlFor="qty">Qty</label>
+                <input
+                  id="qty"
+                  type="number"
+                  min={1}
+                  className="input-field"
+                  value={expectedQty}
+                  onChange={(e) => setExpectedQty(Number(e.target.value))}
+                />
+              </div>
+              <button type="button" className="btn btn-ghost" onClick={addFormItem}>
+                <Plus size={16} />
+                Add line
+              </button>
+            </div>
+
+            {formItems.length > 0 && (
+              <ul className="inbound-line-list">
+                {formItems.map((item, idx) => (
+                  <li key={idx} className="inbound-line-item">
+                    <span>{item.label}</span>
+                    <span className="text-mono">× {item.expected_quantity}</span>
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      aria-label="Remove line"
+                      onClick={() => setFormItems((prev) => prev.filter((_, i) => i !== idx))}
+                    >
+                      <X size={14} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <button type="button" className="btn btn-primary" onClick={handleCreate} disabled={formItems.length === 0}>
+              Create shipment
+            </button>
           </div>
-          {formItems.length > 0 && (
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-              {formItems.map((item, idx) => (
-                <li key={idx} style={{ padding: '0.5rem 0', color: 'var(--text-muted)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  {item.label} × {item.expected_quantity}
-                </li>
-              ))}
-            </ul>
-          )}
-          <button className="btn-primary" onClick={handleCreate}>Create Shipment</button>
         </div>
       )}
 
-      <div className="glass-card" style={{ overflow: 'hidden' }}>
+      <div className="data-panel">
+        <div className="data-panel-header">
+          <h3 className="data-panel-title">Shipments</h3>
+        </div>
         {isLoading ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading shipments...</div>
+          <div className="panel-empty">Loading shipments…</div>
         ) : shipments.length === 0 ? (
-          <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>No inbound shipments yet</div>
+          <div className="panel-empty">No inbound shipments yet</div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                {['Shipment', 'Supplier', 'Dock', 'Items', 'Status', 'Created', 'Actions'].map((h) => (
-                  <th key={h} style={{ padding: '1rem', textAlign: 'left', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.05em' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {shipments.map((s) => (
-                <tr key={s.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                  <td style={{ padding: '1rem', color: '#fff', fontFamily: 'var(--font-mono)' }}>{s.shipmentNumber}</td>
-                  <td style={{ padding: '1rem', color: '#fff' }}>{s.supplierName}</td>
-                  <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{s.dockNumber || '—'}</td>
-                  <td style={{ padding: '1rem', color: '#fff' }}>{s.itemsCount}</td>
-                  <td style={{ padding: '1rem' }}>
-                    <span style={{ color: statusColor(s.status), fontWeight: 600, fontSize: '0.85rem' }}>{s.status}</span>
-                  </td>
-                  <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                    {new Date(s.createdAt).toLocaleDateString()}
-                  </td>
-                  <td style={{ padding: '1rem' }}>
-                    {s.status === InboundStatus.PENDING && (
-                      <button
-                        onClick={() => handleReceive(s.id)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#10b981', padding: '0.4rem 0.75rem', borderRadius: '6px', cursor: 'pointer', fontSize: '0.8rem' }}
-                      >
-                        <CheckCircle size={14} /> Receive
-                      </button>
-                    )}
-                  </td>
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Shipment</th>
+                  <th>Supplier</th>
+                  <th>Dock</th>
+                  <th>Items</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {shipments.map((s) => (
+                  <tr key={s.id}>
+                    <td className="text-mono">{s.shipmentNumber}</td>
+                    <td>{s.supplierName}</td>
+                    <td className="text-muted">{s.dockNumber || '—'}</td>
+                    <td className="text-mono">{s.itemsCount}</td>
+                    <td>
+                      <span className={inboundStatusBadge(s.status)}>{s.status}</span>
+                    </td>
+                    <td className="text-muted" style={{ fontSize: '0.85rem' }}>
+                      {new Date(s.createdAt).toLocaleDateString()}
+                    </td>
+                    <td>
+                      {s.status === InboundStatus.PENDING && (
+                        <button
+                          type="button"
+                          className="btn btn-ghost btn-sm"
+                          disabled={receivingId === s.id}
+                          onClick={() => handleReceive(s.id)}
+                        >
+                          <CheckCircle size={14} />
+                          {receivingId === s.id ? 'Receiving…' : 'Receive'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+      <p className="page-hint">
         <Truck size={16} />
         Receiving adds stock to the receiving zone and logs inventory transactions.
-      </div>
+      </p>
     </div>
   );
 }

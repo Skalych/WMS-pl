@@ -12,7 +12,6 @@ export interface SidebarProps {
   onOpenSettings: () => void;
 }
 
-// Simple inline SVG Icons (18x18)
 const DashboardIcon: React.FC = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -53,23 +52,6 @@ const ShiftReportsIcon: React.FC = () => (
     <polyline points="14 2 14 8 20 8" />
     <line x1="16" y1="13" x2="8" y2="13" />
     <line x1="16" y1="17" x2="8" y2="17" />
-    <polyline points="10 9 9 9 8 9" />
-  </svg>
-);
-
-const AnalyticsIcon: React.FC = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="18" y1="20" x2="18" y2="10" />
-    <line x1="12" y1="20" x2="12" y2="4" />
-    <line x1="6" y1="20" x2="6" y2="14" />
-  </svg>
-);
-
-const MapIcon: React.FC = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
-    <line x1="8" y1="2" x2="8" y2="18" />
-    <line x1="16" y1="6" x2="16" y2="22" />
   </svg>
 );
 
@@ -96,10 +78,26 @@ const SettingsIcon: React.FC = () => (
   </svg>
 );
 
+const TerminalIcon: React.FC = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="3" width="20" height="14" rx="2" />
+    <line x1="8" y1="21" x2="16" y2="21" />
+    <line x1="12" y1="17" x2="12" y2="21" />
+  </svg>
+);
+
+const LogOutIcon: React.FC = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
+  </svg>
+);
+
 export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: SidebarProps) {
   const { t } = useTranslation();
-  const { language } = useSettings();
-  const { user } = useAuth();
+  useSettings();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isSimulationActive, setIsSimulationActive] = useState(true);
 
@@ -114,8 +112,7 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
     try {
       await dashboardService.toggleSimulation(newState);
     } catch (e) {
-      console.error("Failed to toggle simulation", e);
-      // Revert on failure
+      console.error('Failed to toggle simulation', e);
       setIsSimulationActive(!newState);
     }
   };
@@ -138,7 +135,7 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
         { id: 'dashboard', label: t('sidebar.dashboard'), Icon: DashboardIcon },
         ...(user?.role === UserRole.ADMIN_MANAGER
           ? [
-              { id: 'admin', label: 'Sim Tools', Icon: AdminIcon },
+              { id: 'admin', label: 'Simulation', Icon: AdminIcon },
               { id: 'employees', label: t('sidebar.employees'), Icon: EmployeesIcon },
             ]
           : []),
@@ -147,96 +144,43 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
           ? [{ id: 'inbound', label: 'Inbound', Icon: InboundIcon }]
           : []),
         { id: 'orders-waves', label: t('sidebar.ordersWaves'), Icon: OrdersWavesIcon },
+        ...(user?.role === UserRole.PICKER ||
+        user?.role === UserRole.PACKER_DISPATCHER ||
+        user?.role === UserRole.ADMIN_MANAGER
+          ? [{ id: 'terminal', label: 'Pick terminal', Icon: TerminalIcon }]
+          : []),
       ],
     },
     {
       label: t('sidebar.reports'),
       items: [
         { id: 'shift-reports', label: t('sidebar.shiftReports'), Icon: ShiftReportsIcon },
-        { id: 'shift/board', label: 'Shift Board', Icon: ShiftReportsIcon },
-        { id: 'analytics', label: t('sidebar.analytics'), Icon: AnalyticsIcon },
+        { id: 'shift/board', label: 'Shift board', Icon: ShiftReportsIcon },
       ],
     },
   ];
 
   return (
     <aside className="sidebar">
-      {/* Top Logo Section */}
-      <div className="sidebar-logo logo-container">
-        <div
-          className="logo-mark"
-          style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '8px',
-            background: 'linear-gradient(135deg, #e359ac 0%, #c026d3 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#ffffff',
-            fontWeight: 800,
-            fontSize: '1.15rem',
-            fontFamily: 'var(--font-mono, monospace)',
-            boxShadow: '0 0 15px rgba(227, 89, 172, 0.4)',
-            flexShrink: 0,
-          }}
-        >
-          W
-        </div>
-        <div className="logo-text-wrapper" style={{ display: 'flex', flexDirection: 'column' }}>
-          <span
-            className="logo-text"
-            style={{
-              color: '#ffffff',
-              fontWeight: 800,
-              fontSize: '1.25rem',
-              lineHeight: '1.1',
-              letterSpacing: '-0.5px',
-            }}
-          >
-            WMS
-          </span>
-          <span
-            className="logo-subtitle"
-            style={{
-              color: 'var(--text-muted, #94a3b8)',
-              fontSize: '0.75rem',
-              fontWeight: 500,
-              letterSpacing: '1px',
-              textTransform: 'lowercase',
-            }}
-          >
-            nexus
-          </span>
+      <div className="sidebar-logo">
+        <div className="logo-mark">W</div>
+        <div>
+          <div className="logo-text">WMS</div>
+          <div className="logo-subtitle">Operations</div>
         </div>
       </div>
 
-      {/* Navigation Sections */}
-      <nav className="sidebar-nav" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flex: 1 }}>
+      <nav className="sidebar-nav">
         {navigationSections.map((section) => (
           <div key={section.label} className="sidebar-section">
-            <div
-              className="sidebar-section-label"
-              style={{
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                color: 'var(--text-muted, #94a3b8)',
-                letterSpacing: '1.2px',
-                textTransform: 'uppercase',
-                marginBottom: '0.6rem',
-                paddingLeft: '0.75rem',
-                opacity: 0.8,
-              }}
-            >
-              {section.label}
-            </div>
-            <ul className="nav-menu" style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', listStyle: 'none', padding: 0, margin: 0 }}>
+            <div className="sidebar-section-label">{section.label}</div>
+            <ul className="nav-menu" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {section.items.map((item) => {
                 const active = isTabActive(item.id);
                 return (
                   <li
                     key={item.id}
-                    className={`sidebar-nav-item nav-item ${active ? 'active' : ''}`}
+                    className={`sidebar-nav-item ${active ? 'active' : ''}`}
                     onClick={() => handleTabClick(item.id)}
                     role="button"
                     tabIndex={0}
@@ -247,7 +191,7 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
                       }
                     }}
                   >
-                    <span className="nav-icon" style={{ display: 'flex', alignItems: 'center', opacity: active ? 1 : 0.75 }}>
+                    <span className="nav-icon">
                       <item.Icon />
                     </span>
                     <span className="nav-label">{item.label}</span>
@@ -259,80 +203,52 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
         ))}
       </nav>
 
-      {/* Bottom Section */}
-      <div className="sidebar-bottom" style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        
-        {/* Simulation Toggle — admin only */}
+      <div className="sidebar-bottom" style={{ marginTop: 'auto', paddingTop: '1rem' }}>
         {user?.role === UserRole.ADMIN_MANAGER && (
-        <div style={{ padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: isSimulationActive ? '#e359ac' : '#64748b', boxShadow: isSimulationActive ? '0 0 8px #e359ac' : 'none' }} />
-            Autopilot
-          </span>
-          <button 
-            onClick={handleToggleSimulation}
-            style={{
-              background: isSimulationActive ? 'rgba(227, 89, 172, 0.15)' : 'rgba(255,255,255,0.05)',
-              border: `1px solid ${isSimulationActive ? 'rgba(227, 89, 172, 0.3)' : 'rgba(255,255,255,0.1)'}`,
-              color: isSimulationActive ? '#e359ac' : '#94a3b8',
-              padding: '4px 10px',
-              borderRadius: '12px',
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              width: '45px'
-            }}
-          >
-            {isSimulationActive ? 'ON' : 'OFF'}
-          </button>
-        </div>
+          <div className="sidebar-autopilot">
+            <span className="sidebar-autopilot-label">
+              <span className={`sidebar-autopilot-dot ${isSimulationActive ? 'on' : ''}`} />
+              Simulation
+            </span>
+            <button
+              type="button"
+              className={`sidebar-autopilot-btn ${isSimulationActive ? 'on' : ''}`}
+              onClick={handleToggleSimulation}
+            >
+              {isSimulationActive ? 'On' : 'Off'}
+            </button>
+          </div>
         )}
 
-        <div 
-          className="sidebar-nav-item" 
+        <div
+          className="sidebar-nav-item"
           onClick={onOpenSettings}
-          style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '10px 16px', cursor: 'pointer', color: 'var(--text-muted)' }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onOpenSettings();
+            }
+          }}
         >
           <SettingsIcon />
-          <span style={{ fontSize: '0.85rem' }}>{t('sidebar.settings')}</span>
+          <span>{t('sidebar.settings')}</span>
         </div>
 
-        <div
-          className="sidebar-separator"
-          style={{
-            height: '1px',
-            backgroundColor: 'rgba(255, 255, 255, 0.08)',
-          }}
-        />
-        
-        <div
-          className="websocket-status"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            fontSize: '0.8rem',
-            color: 'var(--text-muted, #94a3b8)',
-            padding: '0 0.5rem',
-          }}
-        >
-          <span>WebSocket</span>
-          <span
-            className="status-dot-green"
-            style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: '#10b981',
-              boxShadow: '0 0 8px #10b981',
-              display: 'inline-block',
-            }}
-          />
-          <span style={{ color: '#10b981', fontWeight: 500 }}>{t('sidebar.connected')}</span>
-        </div>
+        {user && (
+          <div className="sidebar-user">
+            <div className="sidebar-user-info">
+              <span className="sidebar-user-name">{user.fullName}</span>
+              <span className="sidebar-user-email">{user.email}</span>
+            </div>
+            <button type="button" className="sidebar-logout" onClick={logout}>
+              <LogOutIcon />
+              {t('sidebar.logout')}
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );
-};
-
+}
