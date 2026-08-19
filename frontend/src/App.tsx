@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import SettingsModal from './components/SettingsModal';
 import { SettingsProvider } from './context/SettingsContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { UserRole } from './types';
 
 // Захищений компонент (Private Route)
 const PrivateRoute = () => {
@@ -20,6 +21,20 @@ const PrivateRoute = () => {
   }
   
   return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+};
+
+const AdminRoute = () => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#08080f', color: '#e359ac' }}>LOADING KERNEL...</div>;
+  }
+
+  if (user?.role !== UserRole.ADMIN_MANAGER) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
 };
 
 // Компоновка додатку (Sidebar + Main)
@@ -62,7 +77,9 @@ export default function App() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/employees" element={<Employees />} />
                 <Route path="/inventory" element={<Inventory />} />
-                <Route path="/admin" element={<Admin />} />
+                <Route element={<AdminRoute />}>
+                  <Route path="/admin" element={<Admin />} />
+                </Route>
                 <Route path="/orders-waves" element={<Orders />} />
                 <Route path="/analytics" element={<Dashboard />} />
                 <Route path="/shift-reports" element={<Orders />} />

@@ -18,21 +18,18 @@ const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // 1. Отримуємо JWT токен
       const tokenData = await authService.login(email, password);
-      
-      // 2. В реальному API ми б мали ще роут /users/me щоб отримати профайл. 
-      // Зараз ми просто симулюємо збереження профайлу після успішного логіну.
-      // В майбутньому FastAPI треба буде налаштувати на повернення ролі або зробити додатковий запит.
-      const mockUser = {
-        id: '1',
-        email: email,
-        fullName: email.split('@')[0], // Тимчасово
-        role: UserRole.ADMIN_MANAGER
+      localStorage.setItem('access_token', tokenData.access_token);
+
+      const profile = await authService.getMe();
+      const userData = {
+        id: profile.id,
+        email: profile.email,
+        fullName: profile.full_name,
+        role: profile.role as UserRole,
       };
 
-      // 3. Зберігаємо в Context та перенаправляємо
-      login(tokenData.access_token, mockUser);
+      login(tokenData.access_token, userData);
       navigate('/');
     } catch (err: any) {
       let errorMsg = 'Authentication failed. Check credentials.';
@@ -51,11 +48,11 @@ const Login: React.FC = () => {
   // Демонстраційні логіни для зручності
   const fillDemo = (role: 'admin' | 'picker') => {
     if (role === 'admin') {
-      setEmail('admin@nexus.local');
-      setPassword('admin123');
+      setEmail('admin@wms.local');
+      setPassword('password123');
     } else {
-      setEmail('picker@nexus.local');
-      setPassword('picker123');
+      setEmail('ivan.p@wms.local');
+      setPassword('password123');
     }
   };
 

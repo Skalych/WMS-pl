@@ -10,9 +10,10 @@ async def test_health(client):
 
 
 @pytest.mark.asyncio
-async def test_register_and_login(client):
+async def test_register_and_login(client, admin_headers):
     register_resp = await client.post(
         "/api/v1/auth/register",
+        headers=admin_headers,
         json={
             "email": "api@test.local",
             "password": "password123",
@@ -43,8 +44,14 @@ async def test_login_invalid_credentials(client, seeded_db):
 
 
 @pytest.mark.asyncio
-async def test_inventory_list(client, seeded_db):
+async def test_inventory_requires_auth(client):
     response = await client.get("/api/v1/inventory/?page=1&size=10")
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_inventory_list(client, admin_headers):
+    response = await client.get("/api/v1/inventory/?page=1&size=10", headers=admin_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["total"] >= 2
@@ -52,14 +59,15 @@ async def test_inventory_list(client, seeded_db):
 
 
 @pytest.mark.asyncio
-async def test_create_wave_via_api(client, seeded_db):
-    orders_resp = await client.get("/api/v1/orders")
+async def test_create_wave_via_api(client, admin_headers):
+    orders_resp = await client.get("/api/v1/orders", headers=admin_headers)
     assert orders_resp.status_code == 200
     orders = orders_resp.json()
     assert len(orders) >= 1
 
     wave_resp = await client.post(
         "/api/v1/waves",
+        headers=admin_headers,
         json={"order_ids": [orders[0]["id"]]},
     )
     assert wave_resp.status_code == 201

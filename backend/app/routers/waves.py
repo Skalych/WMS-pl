@@ -1,11 +1,12 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from app.core.database import get_db
+from app.core.deps import get_current_user, require_roles
 from app.schemas.waves import WaveCreate, WaveResponse
 from app.services import wave_service
 from app.models.users import User
+from app.models.enums import UserRole
 from app.models.waves import Wave
 
 def calculate_wave_progress(wave: Wave) -> float:
@@ -24,7 +25,10 @@ router = APIRouter(prefix="/waves", tags=["Waves"])
 
 
 @router.get("", response_model=list[WaveResponse])
-async def list_waves(db: AsyncSession = Depends(get_db)):
+async def list_waves(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
     waves = await wave_service.get_waves(db)
     return [
         WaveResponse(
@@ -40,15 +44,12 @@ async def list_waves(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("", response_model=WaveResponse, status_code=201)
-async def create_wave(data: WaveCreate, db: AsyncSession = Depends(get_db)):
-    # Тимчасове рішення до повноцінного впровадження JWT-авторизації:
-    # Беремо першого адміністратора або будь-якого користувача з бази
-    result = await db.execute(select(User).limit(1))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(status_code=500, detail="No users found in database to assign as wave creator.")
-
-    wave = await wave_service.create_wave(db, data.order_ids, user.id)
+async def create_wave(
+    data: WaveCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
+):
+    wave = await wave_service.create_wave(db, data.order_ids, current_user.id)
     return WaveResponse(
         id=wave.id,
         wave_number=wave.wave_number,
@@ -60,7 +61,11 @@ async def create_wave(data: WaveCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/{wave_id}", response_model=WaveResponse)
-async def get_wave(wave_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def get_wave(
+    wave_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
     wave = await wave_service.get_wave_by_id(db, wave_id)
     if not wave:
         raise HTTPException(status_code=404, detail="Wave not found")

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { dashboardService } from '../api/services';
+import { UserRole } from '../types';
 
 export interface SidebarProps {
   activeTab: string;
@@ -88,6 +90,7 @@ const SettingsIcon: React.FC = () => (
 export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: SidebarProps) {
   const { t } = useTranslation();
   const { language } = useSettings();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [isSimulationActive, setIsSimulationActive] = useState(true);
 
@@ -124,7 +127,9 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings }: Side
       label: t('sidebar.operations'),
       items: [
         { id: 'dashboard', label: t('sidebar.dashboard'), Icon: DashboardIcon },
-        { id: 'admin', label: 'Sim Tools', Icon: AdminIcon },
+        ...(user?.role === UserRole.ADMIN_MANAGER
+          ? [{ id: 'admin', label: 'Sim Tools', Icon: AdminIcon }]
+          : []),
         { id: 'employees', label: t('sidebar.employees'), Icon: EmployeesIcon },
         { id: 'inventory', label: t('sidebar.inventory'), Icon: InventoryIcon },
         { id: 'orders-waves', label: t('sidebar.ordersWaves'), Icon: OrdersWavesIcon },

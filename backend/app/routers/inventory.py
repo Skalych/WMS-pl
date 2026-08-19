@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
+from app.core.deps import get_current_user
 from app.schemas.inventory import InventoryItemResponse, InventoryStatsResponse, PaginatedInventoryResponse
 from app.services import inventory_service
+from app.models.users import User
 from typing import Optional
 
 router = APIRouter(prefix="/inventory", tags=["Inventory"])
@@ -15,7 +17,8 @@ async def get_inventory(
     category: Optional[str] = None,
     status: Optional[str] = None,
     sort_by: Optional[str] = None,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
 ):
     skip = (page - 1) * size
     items, total = await inventory_service.get_inventory_items(
@@ -45,6 +48,9 @@ async def get_inventory(
 
 
 @router.get("/stats", response_model=InventoryStatsResponse)
-async def inventory_stats(db: AsyncSession = Depends(get_db)):
+async def inventory_stats(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(get_current_user),
+):
     stats = await inventory_service.get_inventory_stats(db)
     return stats

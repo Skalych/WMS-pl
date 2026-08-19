@@ -10,17 +10,17 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from app.core.database import Base, get_db
 from app.models.catalog import Category, Product
-from app.models.enums import LocationType, OrderStatus, OrderPriority, UserRole, WorkerStatus
+from app.models.enums import LocationType, OrderStatus, OrderPriority, TaskStatus, TaskType, UserRole, WaveStatus, WorkerStatus
 from app.models.inventory import InventoryBalance
-from app.models.orders import MacroOrder, Order, OrderItem
+from app.models.orders import Order, OrderItem
 from app.models.topology import Location, Zone
 from app.models.users import Shift, ShiftEvent, User
 from app.models.inbound import InboundShipment, InboundItem
 from app.models.waves import Wave, WaveOrder, MicroTask, MicroTaskItem
 from app.models.sorting import SortingStation, SortingBin
-from app.core.security import hash_password
+from app.core.security import hash_password, create_access_token
 from fastapi import FastAPI
-from app.routers import auth, users, inventory, orders, waves, dashboard
+from app.routers import auth, users, inventory, orders, waves, dashboard, terminal
 
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
@@ -55,7 +55,7 @@ async def db_session(db_engine) -> AsyncGenerator[AsyncSession, None]:
 
 @pytest.fixture
 async def seeded_db(db_session: AsyncSession):
-    """Minimal warehouse dataset: 1 user, 2 products, 1 order, locations."""
+    """Minimal warehouse dataset: admin, picker, products, order, locations."""
     zone = Zone(id=uuid.uuid4(), code="Z-A", name="Zone A")
     storage_loc = Location(
         id=uuid.uuid4(),
@@ -151,6 +151,31 @@ async def seeded_db(db_session: AsyncSession):
         ),
     ]
 
+    wave = Wave(
+        id=uuid.uuid4(),
+        wave_number="WAVE-TEST-001",
+        status=WaveStatus.IN_PROGRESS,
+        total_orders_count=1,
+        created_by_user_id=admin.id,
+    )
+    micro_task = MicroTask(
+        id=uuid.uuid4(),
+        wave_id=wave.id,
+        task_number="TASK-TEST-001",
+        type=TaskType.BATCH_PICK,
+        status=TaskStatus.PENDING,
+    )
+    micro_task_item = MicroTaskItem(
+        id=uuid.uuid4(),
+        micro_task_id=micro_task.id,
+        product_id=product_small.id,
+        source_location_id=storage_loc.id,
+        target_location_id=staging_loc.id,
+        quantity_to_pick=5,
+        quantity_picked=0,
+        status=TaskStatus.PENDING,
+    )
+
     db_session.add_all(
         [
             zone,
@@ -164,6 +189,9 @@ async def seeded_db(db_session: AsyncSession):
             order,
             *order_items,
             *balances,
+            wave,
+            micro_task,
+            micro_task_item,
         ]
     )
     await db_session.commit()
@@ -176,6 +204,9 @@ async def seeded_db(db_session: AsyncSession):
         "staging_loc": staging_loc,
         "product_small": product_small,
         "product_large": product_large,
+        "wave": wave,
+        "micro_task": micro_task,
+        "micro_task_item": micro_task_item,
     }
 
 
@@ -190,6 +221,7 @@ async def test_app(db_engine):
     app.include_router(orders.router, prefix=api_prefix)
     app.include_router(waves.router, prefix=api_prefix)
     app.include_router(dashboard.router, prefix=api_prefix)
+    app.include_router(terminal.router, prefix=api_prefix)
 
     session_factory = async_sessionmaker(
         bind=db_engine,
@@ -215,4 +247,35 @@ async def test_app(db_engine):
 async def client(test_app, seeded_db) -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=test_app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
+
+
+def auth_headers_for(user: User) -> dict[str, str]:
+    token = create_access_token({"sub": str(user.id), "role": user.role.value})
+    return {"Authorization": f"Bearer {token}"}
+
+
+@pytest.fixture
+def admin_headers(seeded_db) -> dict[str, str]:
+    return auth_headers_for(seeded_db["admin"])
+
+
+@pytest.fixture
+def picker_headers(seeded_db) -> dict[str, str]:
+    return auth_headers_for(seeded_db["picker"])
+
+
+@pytest.fixture
+async def admin_client(test_app, seeded_db) -> AsyncGenerator[AsyncClient, None]:
+    transport = ASGITransport(app=test_app)
+    headers = auth_headers_for(seeded_db["admin"])
+    async with AsyncClient(transport=transport, base_url="http://test", headers=headers) as ac:
+        yield ac
+
+
+@pytest.fixture
+async def picker_client(test_app, seeded_db) -> AsyncGenerator[AsyncClient, None]:
+    transport = ASGITransport(app=test_app)
+    headers = auth_headers_for(seeded_db["picker"])
+    async with AsyncClient(transport=transport, base_url="http://test", headers=headers) as ac:
         yield ac

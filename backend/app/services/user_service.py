@@ -19,21 +19,27 @@ async def get_users(db: AsyncSession, role: Optional[UserRole] = None, status: O
         query = query.where(User.status == status)
     result = await db.execute(query.order_by(User.full_name))
     users = result.scalars().all()
-    for user in users:
-        if user.status == WorkerStatus.BREAK:
-            user.current_location_code = "CAFETERIA"
-        elif user.status == WorkerStatus.OFFLINE:
-            user.current_location_code = "OFFLINE"
-        elif user.status == WorkerStatus.IDLE:
-            user.current_location_code = "IDLE (Base)"
-        else:
-            user.current_location_code = user.current_location.code if user.current_location else None
-    return users
+    return [enrich_user(user) for user in users]
+
+
+def enrich_user(user: User) -> User:
+    if user.status == WorkerStatus.BREAK:
+        user.current_location_code = "CAFETERIA"
+    elif user.status == WorkerStatus.OFFLINE:
+        user.current_location_code = "OFFLINE"
+    elif user.status == WorkerStatus.IDLE:
+        user.current_location_code = "IDLE (Base)"
+    else:
+        user.current_location_code = user.current_location.code if user.current_location else None
+    return user
 
 
 async def get_user_by_id(db: AsyncSession, user_id: uuid.UUID):
-    result = await db.execute(select(User).where(User.id == user_id))
-    return result.scalar_one_or_none()
+    result = await db.execute(
+        select(User).options(joinedload(User.current_location)).where(User.id == user_id)
+    )
+    user = result.scalar_one_or_none()
+    return enrich_user(user) if user else None
 
 
 async def get_user_by_email(db: AsyncSession, email: str):

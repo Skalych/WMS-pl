@@ -13,6 +13,11 @@ export const authService = {
     });
     return response.data;
   },
+
+  getMe: async () => {
+    const response = await apiClient.get('/users/me');
+    return response.data;
+  },
   
   register: async (email: string, password: string, fullName: string, role: UserRole) => {
     const response = await apiClient.post('/auth/register', {

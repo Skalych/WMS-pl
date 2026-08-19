@@ -1,15 +1,21 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
+from app.core.deps import get_current_user, require_roles
 from app.schemas.inbound import InboundCreate, InboundResponse
 from app.services import inbound_service
+from app.models.enums import UserRole
+from app.models.users import User
 
 router = APIRouter(prefix="/inbound", tags=["Inbound"])
 
 
 @router.get("", response_model=list[InboundResponse])
-async def list_shipments(db: AsyncSession = Depends(get_db)):
+async def list_shipments(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(UserRole.ADMIN_MANAGER, UserRole.INBOUND_OPERATOR)),
+):
     shipments = await inbound_service.get_shipments(db)
     return [
         InboundResponse(
@@ -26,10 +32,13 @@ async def list_shipments(db: AsyncSession = Depends(get_db)):
 
 
 @router.post("", response_model=InboundResponse, status_code=201)
-async def create_shipment(data: InboundCreate, db: AsyncSession = Depends(get_db)):
-    # TODO: get user from JWT token
+async def create_shipment(
+    data: InboundCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.ADMIN_MANAGER, UserRole.INBOUND_OPERATOR)),
+):
     shipment = await inbound_service.create_shipment(
-        db, data.supplier_name, data.dock_number, data.items, uuid.uuid4()
+        db, data.supplier_name, data.dock_number, data.items, current_user.id
     )
     return InboundResponse(
         id=shipment.id,

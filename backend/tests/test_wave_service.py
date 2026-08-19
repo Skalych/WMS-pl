@@ -59,10 +59,11 @@ async def test_create_wave_splits_by_volume(seeded_db, db_session):
 
 @pytest.mark.asyncio
 async def test_count_active_waves(seeded_db, db_session):
+    count_before = await wave_service.count_active_waves(db_session)
     await wave_service.create_wave(
         db_session,
         order_ids=[seeded_db["order"].id],
         created_by_user_id=seeded_db["admin"].id,
     )
     count = await wave_service.count_active_waves(db_session)
-    assert count == 1
+    assert count == count_before + 1
