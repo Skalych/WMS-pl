@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
-from app.core.deps import get_current_user, require_roles
+from app.core.deps import require_roles
 from app.schemas.dashboard import DashboardStatsResponse
 from app.schemas.shift_live import ShiftLiveResponse
 from app.services.shift_live_service import build_shift_live_snapshot
@@ -28,7 +28,7 @@ async def toggle_simulation(
 @router.get("/stats", response_model=DashboardStatsResponse)
 async def get_dashboard_stats(
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
 ):
     active_orders = await order_service.count_active_orders(db)
     employees_online = await user_service.count_online_users(db)
@@ -56,6 +56,6 @@ async def get_dashboard_stats(
 @router.get("/shift-live", response_model=ShiftLiveResponse)
 async def get_shift_live(
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
 ):
     return await build_shift_live_snapshot(db)

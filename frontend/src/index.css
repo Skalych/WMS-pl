@@ -265,12 +265,14 @@ body {
 }
 
 .stat-label {
+  display: block;
   color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 500;
 }
 
 .stat-value {
+  display: block;
   font-size: 1.75rem;
   font-weight: 700;
   font-family: var(--font-mono);

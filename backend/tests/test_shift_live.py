@@ -24,6 +24,12 @@ async def test_shift_live_requires_auth(client):
 
 
 @pytest.mark.asyncio
+async def test_shift_live_rejects_non_admin(picker_client):
+    response = await picker_client.get("/api/v1/dashboard/shift-live")
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
 async def test_hourly_buckets_cover_four_hours(db_session):
     from app.services.shift_live_service import _hourly_buckets, CHART_BUCKET_MINUTES, CHART_WINDOW_HOURS
 

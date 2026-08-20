@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
 import Inventory from './pages/Inventory';
 import Orders from './pages/Orders';
+import Waves from './pages/Waves';
 import Admin from './pages/Admin';
 import Inbound from './pages/Inbound';
 import Login from './pages/Login';
@@ -16,6 +17,20 @@ import SettingsModal from './components/SettingsModal';
 import { SettingsProvider } from './context/SettingsContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { UserRole } from './types';
+
+/** Safe landing path when a role cannot open the current page (no post-login redirect policy). */
+export function homePathForRole(role: UserRole | undefined): string {
+  switch (role) {
+    case UserRole.INBOUND_OPERATOR:
+      return '/inbound';
+    case UserRole.PICKER:
+    case UserRole.PACKER_DISPATCHER:
+      return '/terminal';
+    case UserRole.ADMIN_MANAGER:
+    default:
+      return '/';
+  }
+}
 
 const AppLoading = () => {
   const { t } = useTranslation();
@@ -36,7 +51,9 @@ const PrivateRoute = () => {
 const AdminRoute = () => {
   const { user, isLoading } = useAuth();
   if (isLoading) return <AppLoading />;
-  if (user?.role !== UserRole.ADMIN_MANAGER) return <Navigate to="/" replace />;
+  if (user?.role !== UserRole.ADMIN_MANAGER) {
+    return <Navigate to={homePathForRole(user?.role)} replace />;
+  }
   return <Outlet />;
 };
 
@@ -44,7 +61,7 @@ const InboundRoute = () => {
   const { user, isLoading } = useAuth();
   if (isLoading) return <AppLoading />;
   const allowed = user?.role === UserRole.ADMIN_MANAGER || user?.role === UserRole.INBOUND_OPERATOR;
-  if (!allowed) return <Navigate to="/" replace />;
+  if (!allowed) return <Navigate to={homePathForRole(user?.role)} replace />;
   return <Outlet />;
 };
 
@@ -55,7 +72,7 @@ const TerminalRoute = () => {
     user?.role === UserRole.PICKER ||
     user?.role === UserRole.PACKER_DISPATCHER ||
     user?.role === UserRole.ADMIN_MANAGER;
-  if (!allowed) return <Navigate to="/" replace />;
+  if (!allowed) return <Navigate to={homePathForRole(user?.role)} replace />;
   return <Outlet />;
 };
 
@@ -120,25 +137,28 @@ export default function App() {
             <Route path="/login" element={<Login />} />
 
             <Route element={<PrivateRoute />}>
-              <Route path="/shift/board" element={<ShiftBoardPage />} />
+              <Route element={<AdminRoute />}>
+                <Route path="/shift/board" element={<ShiftBoardPage />} />
+              </Route>
               <Route element={<TerminalRoute />}>
                 <Route path="/terminal" element={<TerminalPage />} />
               </Route>
               <Route element={<MainLayout />}>
-                <Route path="/" element={<Dashboard />} />
                 <Route element={<AdminRoute />}>
+                  <Route path="/" element={<Dashboard />} />
                   <Route path="/employees" element={<Employees />} />
                   <Route path="/admin" element={<Admin />} />
+                  <Route path="/inventory" element={<Inventory />} />
+                  <Route path="/orders" element={<Orders />} />
+                  <Route path="/waves" element={<Waves />} />
                 </Route>
-                <Route path="/inventory" element={<Inventory />} />
                 <Route element={<InboundRoute />}>
                   <Route path="/inbound" element={<Inbound />} />
                 </Route>
-                <Route path="/orders-waves" element={<Orders />} />
               </Route>
               <Route path="/shift-reports" element={<Navigate to="/shift/board" replace />} />
               <Route path="/analytics" element={<Navigate to="/" replace />} />
-              <Route path="/orders" element={<Navigate to="/orders-waves" replace />} />
+              <Route path="/orders-waves" element={<Navigate to="/orders" replace />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

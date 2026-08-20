@@ -175,7 +175,7 @@ export default function Dashboard() {
               type="button"
               className="btn btn-primary"
               style={{ width: '100%' }}
-              onClick={() => navigate('/orders-waves')}
+              onClick={() => navigate('/orders')}
             >
               <Layers size={16} />
               {t('dashboard.manageWaves')}

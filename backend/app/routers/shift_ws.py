@@ -6,9 +6,9 @@ from typing import Optional
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, status
 from jose import JWTError
 
-from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.core.security import decode_access_token
+from app.models.enums import UserRole
 from app.services.shift_live_service import build_shift_live_snapshot_json
 from app.services.ws_manager import shift_ws_manager
 from app.services import user_service
@@ -16,7 +16,7 @@ from app.services import user_service
 router = APIRouter(tags=["WebSocket"])
 
 
-async def _validate_ws_token(token: Optional[str]) -> bool:
+async def _validate_ws_admin_token(token: Optional[str]) -> bool:
     if not token:
         return False
     try:
@@ -26,7 +26,7 @@ async def _validate_ws_token(token: Optional[str]) -> bool:
             return False
         async with AsyncSessionLocal() as db:
             user = await user_service.get_user_by_id(db, uuid.UUID(str(user_id)))
-            return user is not None
+            return user is not None and user.role == UserRole.ADMIN_MANAGER
     except (JWTError, ValueError):
         return False
 
@@ -36,7 +36,7 @@ async def shift_live_websocket(
     websocket: WebSocket,
     token: Optional[str] = Query(None),
 ):
-    if not await _validate_ws_token(token):
+    if not await _validate_ws_admin_token(token):
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
 

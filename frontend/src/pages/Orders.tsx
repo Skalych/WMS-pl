@@ -1,23 +1,23 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Layers, CheckSquare, Square, Box, ArrowRight, Activity } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Layers, CheckSquare, Square, ArrowRight } from 'lucide-react';
 import { orderService } from '../api/services';
-import { Order, Wave, WaveStatus } from '../types';
+import { Order } from '../types';
 
 type OrderFilter = 'All' | 'Pending' | 'In Wave' | 'Shipped';
 
 export default function Orders() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const filterLabels: Record<OrderFilter, string> = {
     All: t('orders.filterAll'),
     Pending: t('orders.filterPending'),
     'In Wave': t('orders.filterInWave'),
     Shipped: t('orders.filterShipped'),
   };
-  const [activeTab, setActiveTab] = useState<'orders' | 'waves'>('orders');
   const [activeOrderFilter, setActiveOrderFilter] = useState<OrderFilter>('All');
   const [orders, setOrders] = useState<Order[]>([]);
-  const [waves, setWaves] = useState<Wave[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
   const [isCreatingWave, setIsCreatingWave] = useState(false);
@@ -25,14 +25,10 @@ export default function Orders() {
   const fetchData = async (isPolling = false) => {
     try {
       if (!isPolling) setIsLoading(true);
-      const [ordersData, wavesData] = await Promise.all([
-        orderService.getOrders(),
-        orderService.getWaves(),
-      ]);
+      const ordersData = await orderService.getOrders();
       setOrders(ordersData);
-      setWaves(wavesData);
     } catch (error) {
-      console.error('Failed to fetch data:', error);
+      console.error('Failed to fetch orders:', error);
     } finally {
       if (!isPolling) setIsLoading(false);
     }
@@ -105,8 +101,7 @@ export default function Orders() {
     try {
       await orderService.createWave(selectedOrders);
       setSelectedOrders([]);
-      await fetchData();
-      setActiveTab('waves');
+      navigate('/waves');
     } catch (error) {
       console.error('Failed to create wave:', error);
       alert(t('orders.createWaveFailed'));
@@ -115,10 +110,18 @@ export default function Orders() {
     }
   };
 
-  const activeWaveCount = waves.filter((w) => w.status !== WaveStatus.COMPLETED && w.status !== WaveStatus.CANCELLED).length;
+  return (
+    <div className="page-stack page-stack--actions">
+      <header className="page-header">
+        <div>
+          <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Layers className="text-accent" size={24} />
+            {t('orders.ordersTab')}
+          </h1>
+          <p className="page-subtitle">{t('orders.subtitle')}</p>
+        </div>
+      </header>
 
-  const renderOrdersTab = () => (
-    <>
       <div className="filter-pills">
         {(['All', 'Pending', 'In Wave', 'Shipped'] as OrderFilter[]).map((filter) => (
           <button
@@ -240,109 +243,6 @@ export default function Orders() {
           </button>
         </div>
       )}
-    </>
-  );
-
-  const renderWavesTab = () => (
-    <div className="wave-grid">
-      {isLoading && waves.length === 0 ? (
-        <div className="panel-empty">{t('orders.loadingWaves')}</div>
-      ) : waves.length === 0 ? (
-        <div className="panel-empty">{t('orders.noWaves')}</div>
-      ) : (
-        waves.map((wave) => {
-          const isCompleted = wave.status === WaveStatus.COMPLETED;
-          const isSorting = wave.status === WaveStatus.SORTING;
-          const isActive =
-            wave.status === WaveStatus.IN_PROGRESS ||
-            wave.status === WaveStatus.RELEASED ||
-            wave.status === WaveStatus.PICKED;
-
-          let cardClass = 'wave-card';
-          if (isCompleted) cardClass += ' wave-card--done';
-          else if (isSorting) cardClass += ' wave-card--sorting';
-          else if (isActive) cardClass += ' wave-card--active';
-
-          return (
-            <div key={wave.id} className={`data-panel ${cardClass}`}>
-              <div className="wave-card-body">
-                <div className="wave-card-header">
-                  <div>
-                    <span className="wave-card-label">{t('orders.wave')}</span>
-                    <h3 className="text-mono">WAVE-{wave.waveNumber}</h3>
-                  </div>
-                  <span className={`badge ${isCompleted ? 'badge-active' : isSorting ? 'badge-info' : isActive ? 'badge-accent' : 'badge-muted'}`}>
-                    {wave.status}
-                  </span>
-                </div>
-
-                <div className="wave-card-meta">
-                  <div>
-                    <span className="wave-card-meta-label">Orders</span>
-                    <span className="wave-card-meta-value">{wave.ordersCount}</span>
-                  </div>
-                  <div>
-                    <span className="wave-card-meta-label">Zone</span>
-                    <span className="badge badge-muted">{wave.zone || 'Mixed'}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex-between" style={{ fontSize: '0.8rem', marginBottom: 8 }}>
-                    <span className="text-muted">{t('orders.progress')}</span>
-                    <span className="text-mono">{wave.progress}%</span>
-                  </div>
-                  <div className="progress-bar">
-                    <div
-                      className={`progress-bar-fill ${isSorting ? 'cyan' : ''}`}
-                      style={{
-                        width: `${wave.progress}%`,
-                        background: isCompleted ? 'var(--color-success)' : undefined,
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })
-      )}
-    </div>
-  );
-
-  return (
-    <div className="page-stack page-stack--actions">
-      <header className="page-header">
-        <div>
-          <h1 className="page-title" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <Layers className="text-accent" size={24} />
-            {t('orders.title')}
-          </h1>
-          <p className="page-subtitle">{t('orders.subtitle')}</p>
-        </div>
-
-        <div className="tab-switcher">
-          <button
-            type="button"
-            className={`tab-switcher-btn ${activeTab === 'orders' ? 'active' : ''}`}
-            onClick={() => setActiveTab('orders')}
-          >
-            <Box size={16} />
-            {t('orders.ordersTab')}
-          </button>
-          <button
-            type="button"
-            className={`tab-switcher-btn ${activeTab === 'waves' ? 'active' : ''}`}
-            onClick={() => setActiveTab('waves')}
-          >
-            <Activity size={16} />
-            {t('orders.wavesTab')}
-            {activeWaveCount > 0 && <span className="tab-badge">{activeWaveCount}</span>}
-          </button>
-        </div>
-      </header>
-
-      {activeTab === 'orders' ? renderOrdersTab() : renderWavesTab()}
     </div>
   );
 }

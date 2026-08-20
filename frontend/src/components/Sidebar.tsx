@@ -39,7 +39,15 @@ const InventoryIcon: React.FC = () => (
   </svg>
 );
 
-const OrdersWavesIcon: React.FC = () => (
+const OrdersIcon: React.FC = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+    <line x1="3" y1="6" x2="21" y2="6" />
+    <path d="M16 10a4 4 0 0 1-8 0" />
+  </svg>
+);
+
+const WavesIcon: React.FC = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polygon points="12 2 2 7 12 12 22 7 12 2" />
     <polyline points="2 17 12 22 22 17" />
@@ -118,13 +126,20 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings, isOpen
     }
   };
 
+  const isAdmin = user?.role === UserRole.ADMIN_MANAGER;
+  const isInbound =
+    user?.role === UserRole.ADMIN_MANAGER || user?.role === UserRole.INBOUND_OPERATOR;
+  const canUseTerminal =
+    user?.role === UserRole.PICKER ||
+    user?.role === UserRole.PACKER_DISPATCHER ||
+    user?.role === UserRole.ADMIN_MANAGER;
+
   const isTabActive = (itemId: string): boolean => {
     if (activeTab === itemId) return true;
     const lowerActive = activeTab.toLowerCase();
     const lowerItem = itemId.toLowerCase();
     if (lowerActive === lowerItem) return true;
     if (lowerItem === 'employees' && (lowerActive === 'workers' || lowerActive === 'people')) return true;
-    if (lowerItem === 'orders-waves' && (lowerActive === 'waves' || lowerActive === 'orders')) return true;
     if (lowerItem === 'shift-reports' && lowerActive === 'reports') return true;
     return false;
   };
@@ -133,29 +148,28 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings, isOpen
     {
       label: t('sidebar.operations'),
       items: [
-        { id: 'dashboard', label: t('sidebar.dashboard'), Icon: DashboardIcon },
-        ...(user?.role === UserRole.ADMIN_MANAGER
+        ...(isAdmin
           ? [
+              { id: 'dashboard', label: t('sidebar.dashboard'), Icon: DashboardIcon },
               { id: 'admin', label: t('sidebar.simulation'), Icon: AdminIcon },
               { id: 'employees', label: t('sidebar.employees'), Icon: EmployeesIcon },
+              { id: 'inventory', label: t('sidebar.inventory'), Icon: InventoryIcon },
+              { id: 'orders', label: t('sidebar.orders'), Icon: OrdersIcon },
+              { id: 'waves', label: t('sidebar.waves'), Icon: WavesIcon },
             ]
           : []),
-        { id: 'inventory', label: t('sidebar.inventory'), Icon: InventoryIcon },
-        ...(user?.role === UserRole.ADMIN_MANAGER || user?.role === UserRole.INBOUND_OPERATOR
-          ? [{ id: 'inbound', label: t('sidebar.inbound'), Icon: InboundIcon }]
-          : []),
-        { id: 'orders-waves', label: t('sidebar.ordersWaves'), Icon: OrdersWavesIcon },
-        ...(user?.role === UserRole.PICKER ||
-        user?.role === UserRole.PACKER_DISPATCHER ||
-        user?.role === UserRole.ADMIN_MANAGER
-          ? [{ id: 'terminal', label: t('sidebar.terminal'), Icon: TerminalIcon }]
-          : []),
+        ...(isInbound ? [{ id: 'inbound', label: t('sidebar.inbound'), Icon: InboundIcon }] : []),
+        ...(canUseTerminal ? [{ id: 'terminal', label: t('sidebar.terminal'), Icon: TerminalIcon }] : []),
       ],
     },
-    {
-      label: t('sidebar.reports'),
-      items: [{ id: 'shift/board', label: t('sidebar.shiftBoard'), Icon: ShiftReportsIcon }],
-    },
+    ...(isAdmin
+      ? [
+          {
+            label: t('sidebar.reports'),
+            items: [{ id: 'shift/board', label: t('sidebar.shiftBoard'), Icon: ShiftReportsIcon }],
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -169,7 +183,9 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings, isOpen
       </div>
 
       <nav className="sidebar-nav">
-        {navigationSections.map((section) => (
+        {navigationSections
+          .filter((section) => section.items.length > 0)
+          .map((section) => (
           <div key={section.label} className="sidebar-section">
             <div className="sidebar-section-label">{section.label}</div>
             <ul className="nav-menu" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
