@@ -37,6 +37,7 @@ class Shift(Base):
     total_volume_cm3: Mapped[float] = mapped_column(Float, default=0.0)
     total_orders_completed: Mapped[int] = mapped_column(Integer, default=0)
     error_count: Mapped[int] = mapped_column(Integer, default=0)
+    total_units_received: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
     user: Mapped["User"] = relationship("User", back_populates="shifts")
     events: Mapped[List["ShiftEvent"]] = relationship("ShiftEvent", back_populates="shift", cascade="all, delete-orphan")

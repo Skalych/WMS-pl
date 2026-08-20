@@ -2819,3 +2819,106 @@ select:focus:not(:focus-visible) {
     display: none !important;
   }
 }
+
+/* My shift — floor home */
+.my-shift-page {
+  max-width: 720px;
+}
+
+.my-shift-hero {
+  padding: 28px 24px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.my-shift-label {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.my-shift-task-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 12px 20px;
+}
+
+.my-shift-big {
+  font-family: var(--font-mono);
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  line-height: 1.1;
+}
+
+.my-shift-big-sep {
+  color: var(--text-muted);
+  margin: 0 4px;
+  font-weight: 500;
+}
+
+.my-shift-task-type {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.my-shift-no-task {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text-muted);
+}
+
+.my-shift-stats {
+  margin-bottom: var(--spacing-lg);
+}
+
+.my-shift-unit {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.my-shift-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.my-shift-break-btn,
+.my-shift-cta {
+  width: 100%;
+  justify-content: center;
+  min-height: 48px;
+  gap: 8px;
+}
+
+.my-shift-cta:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.my-shift-empty {
+  padding: 32px 24px;
+  text-align: center;
+}
+
+.my-shift-empty h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+
+.my-shift-empty p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.my-shift-error {
+  color: var(--color-danger, #f87171);
+  margin: 0 0 12px;
+}

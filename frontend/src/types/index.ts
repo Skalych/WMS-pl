@@ -83,7 +83,31 @@ export interface Shift {
   total_volume_cm3: number;
   total_orders_completed: number;
   error_count: number;
+  total_units_received?: number;
   events?: ShiftEvent[];
+}
+
+export interface MyShiftTaskProgress {
+  taskId: string;
+  taskType: string;
+  quantityDone: number;
+  quantityTotal: number;
+}
+
+export interface MyShiftSnapshot {
+  hasActiveShift: boolean;
+  status: WorkerStatus;
+  role: UserRole;
+  shiftId: string | null;
+  startTime: string | null;
+  elapsedMinutes: number;
+  breakMinutes: number;
+  onBreak: boolean;
+  totalItemsPicked: number;
+  totalUnitsReceived: number;
+  totalTasksCompleted: number;
+  pickRatePerHour: number;
+  currentTask: MyShiftTaskProgress | null;
 }
 
 export interface InventoryItem {

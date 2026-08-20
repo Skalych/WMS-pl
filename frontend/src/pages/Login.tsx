@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../api/services';
 import { UserRole } from '../types';
+import { homePathForRole } from '../utils/homePath';
 
 const Login: React.FC = () => {
   const { t } = useTranslation();
@@ -11,14 +12,14 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      navigate('/', { replace: true });
+      navigate(homePathForRole(user?.role), { replace: true });
     }
-  }, [isAuthenticated, authLoading, navigate]);
+  }, [isAuthenticated, authLoading, navigate, user?.role]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,13 +31,14 @@ const Login: React.FC = () => {
       localStorage.setItem('access_token', tokenData.access_token);
 
       const profile = await authService.getMe();
+      const role = profile.role as UserRole;
       login(tokenData.access_token, {
         id: profile.id,
         email: profile.email,
         fullName: profile.full_name,
-        role: profile.role as UserRole,
+        role,
       });
-      navigate('/');
+      navigate(homePathForRole(role));
     } catch (err: unknown) {
       const axiosErr = err as { response?: { status?: number; data?: { detail?: string | { msg?: string }[] } } };
       let errorMsg = t('login.invalidCredentials');

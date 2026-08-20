@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { 
   UserRole, WorkerStatus, Employee, DashboardStats, 
   Order, Wave, InventoryItem, MacroOrder, InboundShipment, InventoryTransaction,
-  TerminalTask, TerminalScanResult,
+  TerminalTask, TerminalScanResult, MyShiftSnapshot,
 } from '../types';
 
 // Auth Services
@@ -246,6 +246,47 @@ export const orderService = {
       zone: 'All'
     };
   }
+};
+
+function mapMyShift(d: Record<string, unknown>): MyShiftSnapshot {
+  const task = d.current_task as Record<string, unknown> | null | undefined;
+  return {
+    hasActiveShift: Boolean(d.has_active_shift),
+    status: d.status as WorkerStatus,
+    role: d.role as UserRole,
+    shiftId: (d.shift_id as string) || null,
+    startTime: (d.start_time as string) || null,
+    elapsedMinutes: Number(d.elapsed_minutes || 0),
+    breakMinutes: Number(d.break_minutes || 0),
+    onBreak: Boolean(d.on_break),
+    totalItemsPicked: Number(d.total_items_picked || 0),
+    totalUnitsReceived: Number(d.total_units_received || 0),
+    totalTasksCompleted: Number(d.total_tasks_completed || 0),
+    pickRatePerHour: Number(d.pick_rate_per_hour || 0),
+    currentTask: task
+      ? {
+          taskId: String(task.task_id),
+          taskType: String(task.task_type),
+          quantityDone: Number(task.quantity_done || 0),
+          quantityTotal: Number(task.quantity_total || 0),
+        }
+      : null,
+  };
+}
+
+export const myShiftService = {
+  getMyShift: async (): Promise<MyShiftSnapshot> => {
+    const response = await apiClient.get('/users/me/shift');
+    return mapMyShift(response.data);
+  },
+  startBreak: async (): Promise<MyShiftSnapshot> => {
+    const response = await apiClient.post('/users/me/break/start');
+    return mapMyShift(response.data);
+  },
+  endBreak: async (): Promise<MyShiftSnapshot> => {
+    const response = await apiClient.post('/users/me/break/end');
+    return mapMyShift(response.data);
+  },
 };
 
 export const terminalService = {

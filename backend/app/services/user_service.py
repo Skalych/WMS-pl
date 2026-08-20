@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import select, func
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.users import User, Shift, ShiftEvent
-from app.models.enums import UserRole, WorkerStatus, ShiftEventType
+from app.models.enums import UserRole, WorkerStatus, ShiftEventType, TaskStatus
+from app.models.waves import MicroTask
 from app.core.security import hash_password, verify_password
+from app.schemas.users import MyShiftResponse, MyShiftTaskProgress
 
 
 async def get_users(db: AsyncSession, role: Optional[UserRole] = None, status: Optional[WorkerStatus] = None):
@@ -226,4 +229,92 @@ async def increment_shift_pick(
     shift.total_tasks_completed += tasks
     shift.total_orders_completed += orders
     db.add(shift)
+
+
+async def increment_shift_receive(db: AsyncSession, user_id: uuid.UUID, quantity: int) -> None:
+    if quantity <= 0:
+        return
+    shift = await get_current_shift(db, user_id)
+    if not shift:
+        return
+    shift.total_units_received += quantity
+    db.add(shift)
+
+
+def _as_utc(dt: datetime) -> datetime:
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+def compute_break_minutes(events: list[ShiftEvent], *, now: Optional[datetime] = None) -> int:
+    now = now or datetime.now(timezone.utc)
+    total = 0.0
+    break_start: Optional[datetime] = None
+    for event in sorted(events, key=lambda e: e.timestamp):
+        if event.event_type == ShiftEventType.BREAK_START:
+            break_start = _as_utc(event.timestamp)
+        elif event.event_type == ShiftEventType.BREAK_END and break_start is not None:
+            total += (_as_utc(event.timestamp) - break_start).total_seconds()
+            break_start = None
+    if break_start is not None:
+        total += (_as_utc(now) - break_start).total_seconds()
+    return int(total // 60)
+
+
+async def get_active_task_progress(db: AsyncSession, user_id: uuid.UUID) -> Optional[MyShiftTaskProgress]:
+    result = await db.execute(
+        select(MicroTask)
+        .options(selectinload(MicroTask.items))
+        .where(MicroTask.assigned_user_id == user_id)
+        .where(MicroTask.status == TaskStatus.IN_PROGRESS)
+        .limit(1)
+    )
+    task = result.unique().scalar_one_or_none()
+    if not task or not task.items:
+        return None
+    done = sum(i.quantity_picked for i in task.items)
+    total = sum(i.quantity_to_pick for i in task.items)
+    return MyShiftTaskProgress(
+        task_id=task.id,
+        task_type=task.type.value,
+        quantity_done=done,
+        quantity_total=total,
+    )
+
+
+async def build_my_shift_snapshot(db: AsyncSession, user: User) -> MyShiftResponse:
+    shift = await get_current_shift_with_events(db, user.id)
+    on_break = user.status == WorkerStatus.BREAK
+    if not shift:
+        return MyShiftResponse(
+            has_active_shift=False,
+            status=user.status,
+            role=user.role,
+            on_break=on_break,
+        )
+
+    now = datetime.now(timezone.utc)
+    start = _as_utc(shift.start_time)
+    elapsed_minutes = max(0, int((now - start).total_seconds() // 60))
+    break_minutes = compute_break_minutes(list(shift.events or []), now=now)
+    worked_hours = max((elapsed_minutes - break_minutes) / 60.0, 1 / 60.0)
+    pick_rate = round(shift.total_items_picked / worked_hours, 1)
+    current_task = await get_active_task_progress(db, user.id)
+
+    return MyShiftResponse(
+        has_active_shift=True,
+        status=user.status,
+        role=user.role,
+        shift_id=shift.id,
+        start_time=shift.start_time,
+        elapsed_minutes=elapsed_minutes,
+        break_minutes=break_minutes,
+        on_break=on_break,
+        total_items_picked=shift.total_items_picked,
+        total_units_received=getattr(shift, "total_units_received", 0) or 0,
+        total_tasks_completed=shift.total_tasks_completed,
+        pick_rate_per_hour=pick_rate,
+        current_task=current_task,
+    )
 

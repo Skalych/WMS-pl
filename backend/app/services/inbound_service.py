@@ -12,7 +12,7 @@ from sqlalchemy.orm import joinedload
 from app.models.inbound import InboundShipment, InboundItem
 from app.models.enums import InboundStatus, LocationType
 from app.models.topology import Location
-from app.services import inventory_service
+from app.services import inventory_service, user_service
 
 
 async def get_shipments(db: AsyncSession):
@@ -80,6 +80,7 @@ async def receive_shipment(db: AsyncSession, shipment_id: uuid.UUID, user_id: uu
     if not receiving_loc:
         raise HTTPException(status_code=500, detail="No location available for receiving")
 
+    received_total = 0
     for item in shipment.items:
         qty = item.expected_quantity - item.received_quantity
         if qty <= 0:
@@ -93,6 +94,10 @@ async def receive_shipment(db: AsyncSession, shipment_id: uuid.UUID, user_id: uu
             user_id=user_id,
         )
         item.received_quantity += qty
+        received_total += qty
+
+    if received_total > 0:
+        await user_service.increment_shift_receive(db, user_id, received_total)
 
     shipment.status = InboundStatus.RECEIVED
     await db.commit()

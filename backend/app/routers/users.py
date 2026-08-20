@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_roles
-from app.schemas.users import UserResponse, UserStatusUpdate, BulkShiftUpdate, ShiftResponse
+from app.schemas.users import UserResponse, UserStatusUpdate, BulkShiftUpdate, ShiftResponse, MyShiftResponse
 from app.services import user_service
 from app.models.enums import UserRole, WorkerStatus
 from app.models.users import User
@@ -11,10 +11,48 @@ from typing import Optional
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
+FLOOR_ROLES = {UserRole.PICKER, UserRole.INBOUND_OPERATOR, UserRole.PACKER_DISPATCHER, UserRole.ADMIN_MANAGER}
+
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+@router.get("/me/shift", response_model=MyShiftResponse)
+async def get_my_shift(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return await user_service.build_my_shift_snapshot(db, current_user)
+
+
+@router.post("/me/break/start", response_model=MyShiftResponse)
+async def start_my_break(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role not in FLOOR_ROLES:
+        raise HTTPException(status_code=403, detail="Not allowed")
+    shift = await user_service.start_break(db, current_user.id)
+    if not shift:
+        raise HTTPException(status_code=404, detail="No active shift found")
+    user = await user_service.get_user_by_id(db, current_user.id)
+    return await user_service.build_my_shift_snapshot(db, user)
+
+
+@router.post("/me/break/end", response_model=MyShiftResponse)
+async def end_my_break(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if current_user.role not in FLOOR_ROLES:
+        raise HTTPException(status_code=403, detail="Not allowed")
+    shift = await user_service.end_break(db, current_user.id)
+    if not shift:
+        raise HTTPException(status_code=404, detail="No active shift found")
+    user = await user_service.get_user_by_id(db, current_user.id)
+    return await user_service.build_my_shift_snapshot(db, user)
 
 
 @router.get("", response_model=list[UserResponse])

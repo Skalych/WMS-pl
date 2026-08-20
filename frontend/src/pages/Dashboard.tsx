@@ -211,10 +211,10 @@ export default function Dashboard() {
               type="button"
               className="btn btn-ghost"
               style={{ width: '100%' }}
-              onClick={() => navigate('/terminal')}
+              onClick={() => navigate('/my-shift')}
             >
               <Package size={16} />
-              {t('dashboard.pickTerminal')}
+              {t('dashboard.myShift')}
             </button>
           </div>
         </div>

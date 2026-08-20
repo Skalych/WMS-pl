@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { dashboardService } from '../api/services';
 import { UserRole } from '../types';
+import { isFloorRole } from '../utils/homePath';
 
 export interface SidebarProps {
   activeTab: string;
@@ -87,11 +88,10 @@ const SettingsIcon: React.FC = () => (
   </svg>
 );
 
-const TerminalIcon: React.FC = () => (
+const MyShiftIcon: React.FC = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="3" width="20" height="14" rx="2" />
-    <line x1="8" y1="21" x2="16" y2="21" />
-    <line x1="12" y1="17" x2="12" y2="21" />
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
   </svg>
 );
 
@@ -129,10 +129,7 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings, isOpen
   const isAdmin = user?.role === UserRole.ADMIN_MANAGER;
   const isInbound =
     user?.role === UserRole.ADMIN_MANAGER || user?.role === UserRole.INBOUND_OPERATOR;
-  const canUseTerminal =
-    user?.role === UserRole.PICKER ||
-    user?.role === UserRole.PACKER_DISPATCHER ||
-    user?.role === UserRole.ADMIN_MANAGER;
+  const showMyShift = isFloorRole(user?.role) || isAdmin;
 
   const isTabActive = (itemId: string): boolean => {
     if (activeTab === itemId) return true;
@@ -148,6 +145,9 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings, isOpen
     {
       label: t('sidebar.operations'),
       items: [
+        ...(showMyShift
+          ? [{ id: 'my-shift', label: t('sidebar.myShift'), Icon: MyShiftIcon }]
+          : []),
         ...(isAdmin
           ? [
               { id: 'dashboard', label: t('sidebar.dashboard'), Icon: DashboardIcon },
@@ -159,7 +159,6 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings, isOpen
             ]
           : []),
         ...(isInbound ? [{ id: 'inbound', label: t('sidebar.inbound'), Icon: InboundIcon }] : []),
-        ...(canUseTerminal ? [{ id: 'terminal', label: t('sidebar.terminal'), Icon: TerminalIcon }] : []),
       ],
     },
     ...(isAdmin
