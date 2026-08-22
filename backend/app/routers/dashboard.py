@@ -16,12 +16,20 @@ class SimulationToggleRequest(BaseModel):
 
 router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
 
+@router.get("/simulation")
+async def get_simulation(
+    _: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
+):
+    return {"simulation_active": simulation_service.get_simulation_state()}
+
+
 @router.post("/simulation/toggle")
 async def toggle_simulation(
     req: SimulationToggleRequest,
+    db: AsyncSession = Depends(get_db),
     _: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
 ):
-    simulation_service.set_simulation_state(req.active)
+    await simulation_service.persist_simulation_state(db, req.active)
     return {"status": "success", "simulation_active": req.active}
 
 

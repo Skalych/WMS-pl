@@ -10,7 +10,7 @@ from sqlalchemy.orm import joinedload
 from app.models.users import User
 from app.models.waves import Wave, MicroTask, MicroTaskItem, WaveOrder
 from app.models.enums import WorkerStatus, WaveStatus, TaskStatus, OrderStatus, UserRole
-from app.services import inventory_service, user_service
+from app.services import app_settings_service, inventory_service, user_service
 
 logger = logging.getLogger(__name__)
 
@@ -19,9 +19,22 @@ SIMULATION_ACTIVE = True
 BASE_ITEMS_PER_TICK = 2
 
 
-def set_simulation_state(active: bool):
+def get_simulation_state() -> bool:
+    return SIMULATION_ACTIVE
+
+
+async def init_simulation_state(session: AsyncSession) -> None:
+    global SIMULATION_ACTIVE
+    SIMULATION_ACTIVE = await app_settings_service.get_simulation_active(session)
+    logger.info("Simulation state loaded: %s", SIMULATION_ACTIVE)
+
+
+async def persist_simulation_state(session: AsyncSession, active: bool) -> None:
     global SIMULATION_ACTIVE
     SIMULATION_ACTIVE = active
+    await app_settings_service.set_simulation_active(session, active)
+    await session.commit()
+    logger.info("Simulation state saved: %s", active)
 
 
 async def perform_simulation_tick(session: AsyncSession):

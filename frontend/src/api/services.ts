@@ -46,7 +46,11 @@ export const dashboardService = {
   toggleSimulation: async (active: boolean): Promise<{status: string, simulation_active: boolean}> => {
     const response = await apiClient.post('/dashboard/simulation/toggle', { active });
     return response.data;
-  }
+  },
+  getSimulationStatus: async (): Promise<{ simulation_active: boolean }> => {
+    const response = await apiClient.get('/dashboard/simulation');
+    return response.data;
+  },
 };
 
 // Users / Employees Services

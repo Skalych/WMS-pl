@@ -5,10 +5,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.database import AsyncSessionLocal
 from app.routers import auth, users, inventory, orders, waves, inbound, dashboard, terminal, shift_ws
+from app.services import simulation_service
 from app.services.simulation_service import warehouse_simulation
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    async with AsyncSessionLocal() as session:
+        await simulation_service.init_simulation_state(session)
     # Start the simulation task
     sim_task = asyncio.create_task(warehouse_simulation(AsyncSessionLocal))
     yield

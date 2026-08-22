@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { dashboardService } from '../api/services';
 import { UserRole } from '../types';
 import { isFloorRole } from '../utils/homePath';
 
@@ -107,23 +106,11 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings, isOpen
   const { t } = useTranslation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [isSimulationActive, setIsSimulationActive] = useState(true);
 
   const handleTabClick = (tabId: string) => {
     onTabChange(tabId);
     onNavigate?.();
     navigate(`/${tabId === 'dashboard' ? '' : tabId}`);
-  };
-
-  const handleToggleSimulation = async () => {
-    const newState = !isSimulationActive;
-    setIsSimulationActive(newState);
-    try {
-      await dashboardService.toggleSimulation(newState);
-    } catch (e) {
-      console.error('Failed to toggle simulation', e);
-      setIsSimulationActive(!newState);
-    }
   };
 
   const isAdmin = user?.role === UserRole.ADMIN_MANAGER;
@@ -217,23 +204,6 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings, isOpen
       </nav>
 
       <div className="sidebar-bottom" style={{ marginTop: 'auto', paddingTop: '1rem' }}>
-        {user?.role === UserRole.ADMIN_MANAGER && (
-          <div className="sidebar-autopilot">
-            <span className="sidebar-autopilot-label">
-              <span className={`sidebar-autopilot-dot ${isSimulationActive ? 'on' : ''}`} />
-              {t('sidebar.simulation')}
-            </span>
-            <button
-              type="button"
-              className={`sidebar-autopilot-btn ${isSimulationActive ? 'on' : ''}`}
-              onClick={handleToggleSimulation}
-              aria-pressed={isSimulationActive}
-            >
-              {isSimulationActive ? t('common.on') : t('common.off')}
-            </button>
-          </div>
-        )}
-
         <div
           className="sidebar-nav-item"
           onClick={onOpenSettings}

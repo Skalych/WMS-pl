@@ -19,6 +19,7 @@ from app.models.inbound import InboundShipment, InboundItem
 from app.models.orders import Order, OrderItem
 from app.models.waves import Wave, WaveOrder, MicroTask, MicroTaskItem
 from app.models.sorting import SortingStation, SortingBin
+from app.models.settings import AppSetting
 
 __all__ = [
     "Base",
@@ -50,4 +51,5 @@ __all__ = [
     "MicroTaskItem",
     "SortingStation",
     "SortingBin",
+    "AppSetting",
 ]
