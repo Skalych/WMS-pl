@@ -1,11 +1,13 @@
 """Tests for shift and user management."""
 import pytest
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from app.models.enums import ShiftEventType, UserRole, WorkerStatus
-from app.models.users import Shift
+from app.models.users import Shift, ShiftEvent
 from app.services import user_service
+from app.services.user_service import BREAK_LIMIT_MINUTES, compute_break_summary
 
 
 async def _get_shift_with_events(db_session, user_id):
@@ -93,3 +95,58 @@ async def test_count_online_users(seeded_db, db_session):
     assert await user_service.count_online_users(db_session) == 0
     await user_service.start_shift(db_session, seeded_db["picker"].id)
     assert await user_service.count_online_users(db_session) == 1
+
+
+def _event(event_type: ShiftEventType, at: datetime) -> ShiftEvent:
+    return ShiftEvent(id=__import__("uuid").uuid4(), shift_id=__import__("uuid").uuid4(), event_type=event_type, timestamp=at)
+
+
+def test_compute_break_summary_no_breaks():
+    now = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
+    summary = compute_break_summary([], now=now)
+    assert summary.break_count == 0
+    assert summary.break_minutes == 0
+    assert summary.over_limit is False
+    assert summary.current_break_started_at is None
+
+
+def test_compute_break_summary_completed_session():
+    start = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
+    end = start + timedelta(minutes=10)
+    events = [_event(ShiftEventType.BREAK_START, start), _event(ShiftEventType.BREAK_END, end)]
+    summary = compute_break_summary(events, now=end)
+    assert summary.break_count == 1
+    assert summary.break_minutes == 10
+    assert summary.over_limit is False
+    assert summary.sessions[0].duration_seconds == 600
+
+
+def test_compute_break_summary_active_break():
+    start = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
+    now = start + timedelta(minutes=5, seconds=30)
+    events = [_event(ShiftEventType.BREAK_START, start)]
+    summary = compute_break_summary(events, now=now)
+    assert summary.break_count == 1
+    assert summary.break_minutes == 5
+    assert summary.current_break_started_at == start
+    assert summary.sessions[0].ended_at is None
+
+
+def test_compute_break_summary_over_limit():
+    start = datetime(2026, 1, 1, 12, 0, tzinfo=timezone.utc)
+    end = start + timedelta(minutes=BREAK_LIMIT_MINUTES)
+    events = [_event(ShiftEventType.BREAK_START, start), _event(ShiftEventType.BREAK_END, end)]
+    summary = compute_break_summary(events, now=end)
+    assert summary.break_minutes == BREAK_LIMIT_MINUTES
+    assert summary.over_limit is True
+
+
+@pytest.mark.asyncio
+async def test_build_shift_response_includes_break_summary(seeded_db, db_session):
+    picker_id = seeded_db["picker"].id
+    await user_service.start_shift(db_session, picker_id)
+    await user_service.start_break(db_session, picker_id)
+    shift = await _get_shift_with_events(db_session, picker_id)
+    response = user_service.build_shift_response(shift)
+    assert response.break_summary.break_count == 1
+    assert response.break_summary.current_break_started_at is not None

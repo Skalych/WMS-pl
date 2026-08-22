@@ -56,6 +56,10 @@ export interface Employee {
   shiftTime: string;
   totalPicked: number;
   efficiency: number;
+  currentCartItems?: number;
+  cartCapacityItems?: number;
+  hasActiveShift?: boolean;
+  breakSummary?: BreakSummary | null;
 }
 
 export enum ShiftEventType {
@@ -73,6 +77,20 @@ export interface ShiftEvent {
   timestamp: string;
 }
 
+export interface BreakSession {
+  startedAt: string;
+  endedAt: string | null;
+  durationSeconds: number;
+}
+
+export interface BreakSummary {
+  breakCount: number;
+  breakMinutes: number;
+  overLimit: boolean;
+  currentBreakStartedAt: string | null;
+  sessions: BreakSession[];
+}
+
 export interface Shift {
   id: string;
   user_id: string;
@@ -85,6 +103,7 @@ export interface Shift {
   error_count: number;
   total_units_received?: number;
   events?: ShiftEvent[];
+  break_summary: BreakSummary;
 }
 
 export interface MyShiftTaskProgress {
@@ -102,6 +121,8 @@ export interface MyShiftSnapshot {
   startTime: string | null;
   elapsedMinutes: number;
   breakMinutes: number;
+  breakCount: number;
+  currentBreakStartedAt: string | null;
   onBreak: boolean;
   totalItemsPicked: number;
   totalUnitsReceived: number;

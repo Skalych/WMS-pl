@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { userService } from '../api/services';
-import { X, Clock, Activity, Play, Coffee } from 'lucide-react';
-import { Shift } from '../types';
+import { X, Clock, Activity, Play, Coffee, AlertTriangle } from 'lucide-react';
+import { BreakSession, Shift } from '../types';
 
 interface ProfileEmployee {
   id: string;
@@ -80,6 +80,67 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
     const mins = diffMins % 60;
     return `${hours}h ${mins}m`;
   };
+
+  const formatBreakDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins >= 60) {
+      const h = Math.floor(mins / 60);
+      const m = mins % 60;
+      return `${h}h ${m}m`;
+    }
+    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+  };
+
+  const renderBreakSummary = (summary: Shift['break_summary']) => (
+    <div className="data-panel">
+      <div className="data-panel-header">
+        <h3 className="data-panel-title">
+          <Coffee size={16} className="text-warning" />
+          Break log
+          {summary.overLimit && (
+            <span className="badge badge-warning" style={{ marginLeft: 8 }}>
+              <AlertTriangle size={12} style={{ marginRight: 4 }} />
+              Over limit (23 min)
+            </span>
+          )}
+        </h3>
+        <span className="text-muted" style={{ fontSize: '0.875rem' }}>
+          {summary.breakCount} breaks · {summary.breakMinutes} min total
+        </span>
+      </div>
+      <div className="data-panel-body">
+        {summary.sessions.length > 0 ? (
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.sessions.map((session: BreakSession, idx) => (
+                  <tr key={`${session.startedAt}-${idx}`}>
+                    <td className="text-mono">{new Date(session.startedAt).toLocaleTimeString()}</td>
+                    <td className="text-mono">
+                      {session.endedAt
+                        ? new Date(session.endedAt).toLocaleTimeString()
+                        : '— ongoing'}
+                    </td>
+                    <td className="text-mono">{formatBreakDuration(session.durationSeconds)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="panel-empty">No breaks recorded.</div>
+        )}
+      </div>
+    </div>
+  );
 
   if (!employee) return null;
 
@@ -191,6 +252,8 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
                     </button>
                   </div>
 
+                  {renderBreakSummary(currentShift.break_summary)}
+
                   <div className="data-panel">
                     <div className="data-panel-header">
                       <h3 className="data-panel-title">
@@ -247,6 +310,7 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
                     <tr>
                       <th>Date</th>
                       <th>Duration</th>
+                      <th>Breaks</th>
                       <th>Items</th>
                       <th>Volume (m³)</th>
                       <th>Orders</th>
@@ -262,13 +326,24 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
                           </div>
                         </td>
                         <td className="text-mono">{formatDuration(shift.start_time, shift.end_time)}</td>
+                        <td className="text-mono">
+                          {shift.break_summary.breakCount} · {shift.break_summary.breakMinutes}m
+                          {shift.break_summary.overLimit && (
+                            <AlertTriangle
+                              size={14}
+                              className="text-warning"
+                              style={{ marginLeft: 6, verticalAlign: 'middle' }}
+                              aria-label="Over break limit"
+                            />
+                          )}
+                        </td>
                         <td>{shift.total_items_picked}</td>
                         <td className="text-accent text-mono">{(shift.total_volume_cm3 / 1000000).toFixed(4)}</td>
                         <td className="text-info text-mono">{shift.total_orders_completed}</td>
                       </tr>
                     )) : (
                       <tr>
-                        <td colSpan={5} className="panel-empty">No past shifts found.</td>
+                        <td colSpan={6} className="panel-empty">No past shifts found.</td>
                       </tr>
                     )}
                   </tbody>

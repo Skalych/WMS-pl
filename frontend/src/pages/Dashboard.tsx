@@ -207,15 +207,6 @@ export default function Dashboard() {
               <Activity size={16} />
               {t('dashboard.shiftBoard')}
             </button>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              style={{ width: '100%' }}
-              onClick={() => navigate('/my-shift')}
-            >
-              <Package size={16} />
-              {t('dashboard.myShift')}
-            </button>
           </div>
         </div>
       </div>

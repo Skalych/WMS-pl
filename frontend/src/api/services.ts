@@ -2,7 +2,7 @@ import { apiClient } from './client';
 import { 
   UserRole, WorkerStatus, Employee, DashboardStats, 
   Order, Wave, InventoryItem, MacroOrder, InboundShipment, InventoryTransaction,
-  TerminalTask, TerminalScanResult, MyShiftSnapshot,
+  TerminalTask, TerminalScanResult, MyShiftSnapshot, Shift, BreakSummary,
 } from '../types';
 
 // Auth Services
@@ -61,39 +61,45 @@ export const userService = {
     const response = await apiClient.get(url);
     
     // Мапинг полів бекенду на інтерфейс фронтенду
-    return response.data.map((u: any) => ({
-      id: u.id,
-      fullName: u.full_name,
-      role: u.role,
-      status: u.status,
-      currentLocation: u.current_location_code || 'N/A',
+    return response.data.map((u: Record<string, unknown>) => ({
+      id: String(u.id),
+      fullName: String(u.full_name),
+      role: u.role as UserRole,
+      status: u.status as WorkerStatus,
+      currentLocation: String(u.current_location_code || 'N/A'),
       currentTaskNumber: null,
       currentWaveNumber: null,
       pickingProgress: 0,
       shiftTime: '00:00',
-      totalPicked: u.items_picked || 0,
-      efficiency: u.efficiency || 1.0
+      totalPicked: Number(u.items_picked || 0),
+      efficiency: Number(u.efficiency || 1.0),
+      currentCartItems: Number(u.current_cart_items ?? 0),
+      cartCapacityItems: Number(u.cart_capacity_items ?? 15),
+      hasActiveShift: Boolean(u.has_active_shift),
+      breakSummary: u.break_summary
+        ? mapBreakSummaryBrief(u.break_summary as Record<string, unknown>)
+        : null,
     }));
   },
   
-  getCurrentShift: async (userId: string): Promise<any> => {
+  getCurrentShift: async (userId: string): Promise<Shift> => {
     const response = await apiClient.get(`/users/${userId}/shift/current`);
-    return response.data;
+    return mapShift(response.data);
   },
   
-  getPastShifts: async (userId: string): Promise<any[]> => {
+  getPastShifts: async (userId: string): Promise<Shift[]> => {
     const response = await apiClient.get(`/users/${userId}/shifts`);
-    return response.data;
+    return response.data.map(mapShift);
   },
 
-  startBreak: async (userId: string): Promise<any> => {
+  startBreak: async (userId: string): Promise<Shift> => {
     const response = await apiClient.post(`/users/${userId}/break/start`);
-    return response.data;
+    return mapShift(response.data);
   },
 
-  endBreak: async (userId: string): Promise<any> => {
+  endBreak: async (userId: string): Promise<Shift> => {
     const response = await apiClient.post(`/users/${userId}/break/end`);
-    return response.data;
+    return mapShift(response.data);
   },
 
   updateStatus: async (userId: string, status: WorkerStatus, efficiency?: number, locationId?: string) => {
@@ -248,6 +254,48 @@ export const orderService = {
   }
 };
 
+function mapBreakSummary(raw: Record<string, unknown>): BreakSummary {
+  const sessions = (raw.sessions as Record<string, unknown>[] | undefined) ?? [];
+  return {
+    breakCount: Number(raw.break_count ?? 0),
+    breakMinutes: Number(raw.break_minutes ?? 0),
+    overLimit: Boolean(raw.over_limit),
+    currentBreakStartedAt: (raw.current_break_started_at as string) || null,
+    sessions: sessions.map((s) => ({
+      startedAt: String(s.started_at),
+      endedAt: (s.ended_at as string) || null,
+      durationSeconds: Number(s.duration_seconds ?? 0),
+    })),
+  };
+}
+
+function mapBreakSummaryBrief(raw: Record<string, unknown>): BreakSummary {
+  return {
+    breakCount: Number(raw.break_count ?? 0),
+    breakMinutes: Number(raw.break_minutes ?? 0),
+    overLimit: Boolean(raw.over_limit),
+    currentBreakStartedAt: (raw.current_break_started_at as string) || null,
+    sessions: [],
+  };
+}
+
+function mapShift(d: Record<string, unknown>): Shift {
+  return {
+    id: String(d.id),
+    user_id: String(d.user_id),
+    start_time: String(d.start_time),
+    end_time: (d.end_time as string) || null,
+    total_tasks_completed: Number(d.total_tasks_completed ?? 0),
+    total_items_picked: Number(d.total_items_picked ?? 0),
+    total_volume_cm3: Number(d.total_volume_cm3 ?? 0),
+    total_orders_completed: Number(d.total_orders_completed ?? 0),
+    error_count: Number(d.error_count ?? 0),
+    total_units_received: Number(d.total_units_received ?? 0),
+    events: d.events as Shift['events'],
+    break_summary: mapBreakSummary((d.break_summary as Record<string, unknown>) || {}),
+  };
+}
+
 function mapMyShift(d: Record<string, unknown>): MyShiftSnapshot {
   const task = d.current_task as Record<string, unknown> | null | undefined;
   return {
@@ -258,6 +306,8 @@ function mapMyShift(d: Record<string, unknown>): MyShiftSnapshot {
     startTime: (d.start_time as string) || null,
     elapsedMinutes: Number(d.elapsed_minutes || 0),
     breakMinutes: Number(d.break_minutes || 0),
+    breakCount: Number(d.break_count || 0),
+    currentBreakStartedAt: (d.current_break_started_at as string) || null,
     onBreak: Boolean(d.on_break),
     totalItemsPicked: Number(d.total_items_picked || 0),
     totalUnitsReceived: Number(d.total_units_received || 0),

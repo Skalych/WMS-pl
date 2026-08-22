@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -11,7 +12,34 @@ from app.models.users import User, Shift, ShiftEvent
 from app.models.enums import UserRole, WorkerStatus, ShiftEventType, TaskStatus
 from app.models.waves import MicroTask
 from app.core.security import hash_password, verify_password
-from app.schemas.users import MyShiftResponse, MyShiftTaskProgress
+from app.schemas.users import (
+    BreakSessionResponse,
+    BreakSummaryBrief,
+    BreakSummaryResponse,
+    MyShiftResponse,
+    MyShiftTaskProgress,
+    ShiftEventResponse,
+    ShiftResponse,
+    TeamMemberResponse,
+)
+
+BREAK_LIMIT_MINUTES = 23
+
+
+@dataclass
+class BreakSessionSummary:
+    started_at: datetime
+    ended_at: Optional[datetime]
+    duration_seconds: int
+
+
+@dataclass
+class BreakSummary:
+    break_count: int
+    break_minutes: int
+    over_limit: bool
+    current_break_started_at: Optional[datetime]
+    sessions: list[BreakSessionSummary]
 
 
 async def get_users(db: AsyncSession, role: Optional[UserRole] = None, status: Optional[WorkerStatus] = None):
@@ -23,6 +51,67 @@ async def get_users(db: AsyncSession, role: Optional[UserRole] = None, status: O
     result = await db.execute(query.order_by(User.full_name))
     users = result.scalars().all()
     return [enrich_user(user) for user in users]
+
+
+def _break_summary_brief(summary: BreakSummary) -> BreakSummaryBrief:
+    return BreakSummaryBrief(
+        break_count=summary.break_count,
+        break_minutes=summary.break_minutes,
+        over_limit=summary.over_limit,
+        current_break_started_at=summary.current_break_started_at,
+    )
+
+
+async def get_team_members(
+    db: AsyncSession,
+    role: Optional[UserRole] = None,
+    status: Optional[WorkerStatus] = None,
+) -> list[TeamMemberResponse]:
+    query = select(User).options(joinedload(User.current_location))
+    if role:
+        query = query.where(User.role == role)
+    if status:
+        query = query.where(User.status == status)
+    result = await db.execute(query.order_by(User.full_name))
+    users = result.scalars().all()
+    if not users:
+        return []
+
+    user_ids = [u.id for u in users]
+    now = datetime.now(timezone.utc)
+    shift_result = await db.execute(
+        select(Shift)
+        .options(joinedload(Shift.events))
+        .where(Shift.user_id.in_(user_ids), Shift.end_time.is_(None))
+    )
+    shifts_by_user = {s.user_id: s for s in shift_result.unique().scalars().all()}
+
+    members: list[TeamMemberResponse] = []
+    for user in users:
+        enriched = enrich_user(user)
+        shift = shifts_by_user.get(user.id)
+        break_summary = None
+        has_active_shift = shift is not None
+        if shift:
+            summary = compute_break_summary(list(shift.events or []), now=now)
+            break_summary = _break_summary_brief(summary)
+        members.append(
+            TeamMemberResponse(
+                id=enriched.id,
+                email=enriched.email,
+                full_name=enriched.full_name,
+                role=enriched.role,
+                status=enriched.status,
+                efficiency=enriched.efficiency,
+                current_location_id=enriched.current_location_id,
+                current_location_code=enriched.current_location_code,
+                current_cart_items=enriched.current_cart_items,
+                cart_capacity_items=enriched.cart_capacity_items,
+                has_active_shift=has_active_shift,
+                break_summary=break_summary,
+            )
+        )
+    return members
 
 
 def enrich_user(user: User) -> User:
@@ -247,19 +336,77 @@ def _as_utc(dt: datetime) -> datetime:
     return dt.astimezone(timezone.utc)
 
 
-def compute_break_minutes(events: list[ShiftEvent], *, now: Optional[datetime] = None) -> int:
-    now = now or datetime.now(timezone.utc)
-    total = 0.0
-    break_start: Optional[datetime] = None
+def compute_break_summary(events: list[ShiftEvent], *, now: Optional[datetime] = None) -> BreakSummary:
+    now = _as_utc(now or datetime.now(timezone.utc))
+    sessions: list[BreakSessionSummary] = []
+    open_start: Optional[datetime] = None
+
     for event in sorted(events, key=lambda e: e.timestamp):
         if event.event_type == ShiftEventType.BREAK_START:
-            break_start = _as_utc(event.timestamp)
-        elif event.event_type == ShiftEventType.BREAK_END and break_start is not None:
-            total += (_as_utc(event.timestamp) - break_start).total_seconds()
-            break_start = None
-    if break_start is not None:
-        total += (_as_utc(now) - break_start).total_seconds()
-    return int(total // 60)
+            open_start = _as_utc(event.timestamp)
+        elif event.event_type == ShiftEventType.BREAK_END and open_start is not None:
+            ended = _as_utc(event.timestamp)
+            duration = max(0, int((ended - open_start).total_seconds()))
+            sessions.append(BreakSessionSummary(open_start, ended, duration))
+            open_start = None
+
+    current_break_started_at: Optional[datetime] = None
+    if open_start is not None:
+        current_break_started_at = open_start
+        duration = max(0, int((now - open_start).total_seconds()))
+        sessions.append(BreakSessionSummary(open_start, None, duration))
+
+    total_seconds = sum(s.duration_seconds for s in sessions)
+    break_minutes = int(total_seconds // 60)
+    return BreakSummary(
+        break_count=len(sessions),
+        break_minutes=break_minutes,
+        over_limit=break_minutes >= BREAK_LIMIT_MINUTES,
+        current_break_started_at=current_break_started_at,
+        sessions=sessions,
+    )
+
+
+def compute_break_minutes(events: list[ShiftEvent], *, now: Optional[datetime] = None) -> int:
+    return compute_break_summary(events, now=now).break_minutes
+
+
+def _break_summary_response(summary: BreakSummary) -> BreakSummaryResponse:
+    return BreakSummaryResponse(
+        break_count=summary.break_count,
+        break_minutes=summary.break_minutes,
+        over_limit=summary.over_limit,
+        current_break_started_at=summary.current_break_started_at,
+        sessions=[
+            BreakSessionResponse(
+                started_at=s.started_at,
+                ended_at=s.ended_at,
+                duration_seconds=s.duration_seconds,
+            )
+            for s in summary.sessions
+        ],
+    )
+
+
+def build_shift_response(shift: Shift, *, now: Optional[datetime] = None) -> ShiftResponse:
+    effective_now = now or datetime.now(timezone.utc)
+    if shift.end_time is not None:
+        effective_now = min(_as_utc(effective_now), _as_utc(shift.end_time))
+    summary = compute_break_summary(list(shift.events or []), now=effective_now)
+    return ShiftResponse(
+        id=shift.id,
+        user_id=shift.user_id,
+        start_time=shift.start_time,
+        end_time=shift.end_time,
+        total_tasks_completed=shift.total_tasks_completed,
+        total_items_picked=shift.total_items_picked,
+        total_volume_cm3=shift.total_volume_cm3,
+        total_orders_completed=shift.total_orders_completed,
+        error_count=shift.error_count,
+        total_units_received=getattr(shift, "total_units_received", 0) or 0,
+        events=[ShiftEventResponse.model_validate(e) for e in (shift.events or [])],
+        break_summary=_break_summary_response(summary),
+    )
 
 
 async def get_active_task_progress(db: AsyncSession, user_id: uuid.UUID) -> Optional[MyShiftTaskProgress]:
@@ -297,8 +444,8 @@ async def build_my_shift_snapshot(db: AsyncSession, user: User) -> MyShiftRespon
     now = datetime.now(timezone.utc)
     start = _as_utc(shift.start_time)
     elapsed_minutes = max(0, int((now - start).total_seconds() // 60))
-    break_minutes = compute_break_minutes(list(shift.events or []), now=now)
-    worked_hours = max((elapsed_minutes - break_minutes) / 60.0, 1 / 60.0)
+    break_summary = compute_break_summary(list(shift.events or []), now=now)
+    worked_hours = max((elapsed_minutes - break_summary.break_minutes) / 60.0, 1 / 60.0)
     pick_rate = round(shift.total_items_picked / worked_hours, 1)
     current_task = await get_active_task_progress(db, user.id)
 
@@ -309,7 +456,9 @@ async def build_my_shift_snapshot(db: AsyncSession, user: User) -> MyShiftRespon
         shift_id=shift.id,
         start_time=shift.start_time,
         elapsed_minutes=elapsed_minutes,
-        break_minutes=break_minutes,
+        break_minutes=break_summary.break_minutes,
+        break_count=break_summary.break_count,
+        current_break_started_at=break_summary.current_break_started_at,
         on_break=on_break,
         total_items_picked=shift.total_items_picked,
         total_units_received=getattr(shift, "total_units_received", 0) or 0,

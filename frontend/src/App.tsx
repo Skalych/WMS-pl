@@ -57,7 +57,7 @@ const InboundRoute = () => {
 const MyShiftRoute = () => {
   const { user, isLoading } = useAuth();
   if (isLoading) return <AppLoading />;
-  if (!isFloorRole(user?.role) && user?.role !== UserRole.ADMIN_MANAGER) {
+  if (!isFloorRole(user?.role)) {
     return <Navigate to={homePathForRole(user?.role)} replace />;
   }
   return <Outlet />;

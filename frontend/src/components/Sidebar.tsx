@@ -129,7 +129,7 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings, isOpen
   const isAdmin = user?.role === UserRole.ADMIN_MANAGER;
   const isInbound =
     user?.role === UserRole.ADMIN_MANAGER || user?.role === UserRole.INBOUND_OPERATOR;
-  const showMyShift = isFloorRole(user?.role) || isAdmin;
+  const showMyShift = isFloorRole(user?.role);
 
   const isTabActive = (itemId: string): boolean => {
     if (activeTab === itemId) return true;

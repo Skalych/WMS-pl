@@ -2820,14 +2820,59 @@ select:focus:not(:focus-visible) {
   }
 }
 
-/* My shift — floor home */
+/* My shift — floor home (mobile-first) */
 .my-shift-page {
-  max-width: 720px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.my-shift-header {
+  margin-bottom: var(--spacing-md);
 }
 
 .my-shift-hero {
-  padding: 28px 24px;
-  margin-bottom: var(--spacing-lg);
+  padding: 32px 24px;
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+  border-radius: var(--radius-lg, 12px);
+}
+
+.my-shift-hero--work {
+  border: 1px solid var(--border-subtle);
+}
+
+.my-shift-hero--break {
+  border: 1px solid color-mix(in srgb, var(--color-warning) 55%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--color-warning) 12%, transparent);
+}
+
+.my-shift-mode-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.my-shift-hero--break .my-shift-mode-label {
+  color: var(--color-warning);
+}
+
+.my-shift-break-timer {
+  font-family: var(--font-mono);
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-warning);
+  margin-bottom: 12px;
+}
+
+.my-shift-break-total {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
 }
 
 .my-shift-label {
@@ -2836,18 +2881,20 @@ select:focus:not(:focus-visible) {
   font-size: 0.8rem;
   font-weight: 500;
   margin-bottom: 8px;
+  width: 100%;
+  text-align: left;
 }
 
 .my-shift-task-progress {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 12px 20px;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .my-shift-big {
   font-family: var(--font-mono);
-  font-size: 2.75rem;
+  font-size: 3rem;
   font-weight: 700;
   color: var(--accent-primary);
   line-height: 1.1;
@@ -2868,18 +2915,49 @@ select:focus:not(:focus-visible) {
 
 .my-shift-no-task {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.35rem;
   color: var(--text-muted);
 }
 
-.my-shift-stats {
-  margin-bottom: var(--spacing-lg);
+.my-shift-metrics-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: var(--spacing-md);
+}
+
+.my-shift-metric {
+  padding: 14px 16px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised, rgba(255, 255, 255, 0.02));
+}
+
+.my-shift-metric-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.my-shift-metric-value {
+  font-family: var(--font-mono);
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.my-shift-metric-value.accent {
+  color: var(--accent-primary);
 }
 
 .my-shift-unit {
   display: inline-block;
-  margin-left: 6px;
-  font-size: 0.85rem;
+  margin-left: 4px;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--text-muted);
 }
@@ -2894,8 +2972,9 @@ select:focus:not(:focus-visible) {
 .my-shift-cta {
   width: 100%;
   justify-content: center;
-  min-height: 48px;
+  min-height: 52px;
   gap: 8px;
+  font-size: 1rem;
 }
 
 .my-shift-cta:disabled {
@@ -2921,4 +3000,148 @@ select:focus:not(:focus-visible) {
 .my-shift-error {
   color: var(--color-danger, #f87171);
   margin: 0 0 12px;
+}
+
+/* Team — Live view + clickable stat cards */
+.stat-card--clickable {
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+}
+
+.stat-card--clickable.stat-card--active {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-primary) 40%, transparent);
+}
+
+.team-view-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-raised, rgba(255, 255, 255, 0.02));
+}
+
+.team-view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.team-view-tab.active {
+  background: var(--bg-card);
+  color: var(--text-main);
+  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.team-live-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.worker-live-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  font: inherit;
+  color: inherit;
+  width: 100%;
+}
+
+.worker-live-card:hover {
+  border-color: var(--border-accent-hover);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.worker-live-card--break {
+  border-color: color-mix(in srgb, var(--color-warning) 45%, transparent);
+}
+
+.worker-live-card--over-limit {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-warning) 30%, transparent);
+}
+
+.worker-live-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.worker-live-card-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.worker-live-card-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.worker-live-card-role {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.worker-live-card-break-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-warning);
+}
+
+.worker-live-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.worker-live-card-breaks {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.worker-live-card-breaks.is-over-limit {
+  color: var(--color-warning);
+}
+
+.worker-live-card-progress {
+  margin-top: 2px;
+}
+
+.worker-live-card-idle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
 }

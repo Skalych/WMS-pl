@@ -36,3 +36,17 @@ async def test_my_shift_break_flow(picker_client, admin_client, seeded_db):
     end = await picker_client.post("/api/v1/users/me/break/end")
     assert end.status_code == 200
     assert end.json()["on_break"] is False
+
+
+@pytest.mark.asyncio
+async def test_my_shift_includes_break_fields(picker_client, admin_client, seeded_db):
+    picker_id = str(seeded_db["picker"].id)
+    await admin_client.post("/api/v1/users/shift/start", json={"user_ids": [picker_id]})
+    await picker_client.post("/api/v1/users/me/break/start")
+
+    snap = await picker_client.get("/api/v1/users/me/shift")
+    assert snap.status_code == 200
+    data = snap.json()
+    assert data["break_count"] == 1
+    assert data["current_break_started_at"] is not None
+    assert data["break_minutes"] >= 0

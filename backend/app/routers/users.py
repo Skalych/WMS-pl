@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_roles
-from app.schemas.users import UserResponse, UserStatusUpdate, BulkShiftUpdate, ShiftResponse, MyShiftResponse
+from app.schemas.users import UserResponse, UserStatusUpdate, BulkShiftUpdate, ShiftResponse, MyShiftResponse, TeamMemberResponse
 from app.services import user_service
 from app.models.enums import UserRole, WorkerStatus
 from app.models.users import User
@@ -55,14 +55,14 @@ async def end_my_break(
     return await user_service.build_my_shift_snapshot(db, user)
 
 
-@router.get("", response_model=list[UserResponse])
+@router.get("", response_model=list[TeamMemberResponse])
 async def list_users(
     role: Optional[UserRole] = Query(None),
     status: Optional[WorkerStatus] = Query(None),
     db: AsyncSession = Depends(get_db),
     _: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
 ):
-    return await user_service.get_users(db, role=role, status=status)
+    return await user_service.get_team_members(db, role=role, status=status)
 
 
 @router.get("/{user_id}", response_model=UserResponse)
@@ -125,7 +125,7 @@ async def get_current_shift(
     shift = await user_service.get_current_shift_with_events(db, user_id)
     if not shift:
         raise HTTPException(status_code=404, detail="No active shift found")
-    return shift
+    return user_service.build_shift_response(shift)
 
 
 @router.get("/{user_id}/shifts", response_model=list[ShiftResponse])
@@ -134,7 +134,8 @@ async def get_past_shifts(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
 ):
-    return await user_service.get_past_shifts(db, user_id)
+    shifts = await user_service.get_past_shifts(db, user_id)
+    return [user_service.build_shift_response(shift) for shift in shifts]
 
 
 @router.post("/{user_id}/break/start", response_model=ShiftResponse)
@@ -146,7 +147,7 @@ async def start_break(
     shift = await user_service.start_break(db, user_id)
     if not shift:
         raise HTTPException(status_code=404, detail="No active shift found")
-    return shift
+    return user_service.build_shift_response(shift)
 
 
 @router.post("/{user_id}/break/end", response_model=ShiftResponse)
@@ -158,4 +159,4 @@ async def end_break(
     shift = await user_service.end_break(db, user_id)
     if not shift:
         raise HTTPException(status_code=404, detail="No active shift found")
-    return shift
+    return user_service.build_shift_response(shift)
