@@ -86,7 +86,8 @@ Tests use in-memory SQLite — PostgreSQL is not required for the test suite.
 | `POSTGRES_PASSWORD` | `postgres` | DB password |
 | `POSTGRES_DB` | `wms_db` | Database name |
 | `SECRET_KEY` | **required** (no default) | JWT signing key; set in `backend/.env` (`openssl rand -hex 32`) |
-| `VITE_API_URL` | `http://127.0.0.1:8000/api/v1` | Frontend API base URL |
+| `CORS_ORIGINS` | localhost/127.0.0.1 `:3000`/`:5173` | Allowed browser origins (JSON array), e.g. `["http://localhost:3000","http://127.0.0.1:3000"]` |
+| `VITE_API_URL` | `http://127.0.0.1:8000/api/v1` | Frontend API base URL (optional in dev — Vite proxies `/api`) |
 
 ## API Auth
 
