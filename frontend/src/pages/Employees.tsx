@@ -15,6 +15,7 @@ import {
 import { BreakSummary, WorkerStatus } from '../types';
 import EmployeeProfileModal from '../components/EmployeeProfileModal';
 import WorkerLiveCard from '../components/WorkerLiveCard';
+import { rowStaggerStyle } from '../utils/rowStagger';
 
 export interface EmployeeView {
   id: string;
@@ -352,9 +353,15 @@ export default function Employees() {
             ) : sortedLiveEmployees.length === 0 ? (
               <div className="panel-empty">{t('employees.liveEmpty')}</div>
             ) : (
-              <div className="team-live-grid">
-                {sortedLiveEmployees.map((emp) => (
-                  <WorkerLiveCard key={emp.id} employee={emp} onOpen={setProfileModalEmployee} />
+              <div className="team-live-grid data-list-wrap is-ready">
+                {sortedLiveEmployees.map((emp, rowIndex) => (
+                  <WorkerLiveCard
+                    key={emp.id}
+                    employee={emp}
+                    onOpen={setProfileModalEmployee}
+                    className="data-list-row"
+                    style={rowStaggerStyle(rowIndex)}
+                  />
                 ))}
               </div>
             )}
@@ -401,13 +408,13 @@ export default function Employees() {
           )}
 
           <div className="data-panel-body">
-            <div className="employee-list">
-              {isLoading ? (
-                <div className="panel-empty">{t('common.loading')}</div>
-              ) : sortedRosterEmployees.length === 0 ? (
-                <div className="panel-empty">{t('employees.rosterEmpty')}</div>
-              ) : (
-                sortedRosterEmployees.map((emp) => {
+            {isLoading ? (
+              <div className="panel-empty">{t('common.loading')}</div>
+            ) : sortedRosterEmployees.length === 0 ? (
+              <div className="panel-empty">{t('employees.rosterEmpty')}</div>
+            ) : (
+              <div className="employee-list data-list-wrap is-ready">
+                {sortedRosterEmployees.map((emp, rowIndex) => {
                   const hasProgress = emp.currentProgress !== null && emp.totalProgress !== null;
                   const pct = hasProgress ? Math.round((emp.currentProgress! / emp.totalProgress!) * 100) : 0;
                   const isExpanded = expandedCardId === emp.id;
@@ -415,7 +422,11 @@ export default function Employees() {
                   const cartFull = emp.currentCartItems >= emp.cartCapacityItems;
 
                   return (
-                    <div key={emp.id} className={`employee-card${isDropdownOpen ? ' is-dropdown-open' : ''}`}>
+                    <div
+                      key={emp.id}
+                      className={`employee-card data-list-row${isDropdownOpen ? ' is-dropdown-open' : ''}`}
+                      style={rowStaggerStyle(rowIndex)}
+                    >
                       <div
                         className="employee-card-main employee-card-main--full"
                         onClick={() => setExpandedCardId(isExpanded ? null : emp.id)}
@@ -502,9 +513,9 @@ export default function Employees() {
                       )}
                     </div>
                   );
-                })
-              )}
-            </div>
+                })}
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1,14 +1,17 @@
 import { AlertTriangle, Coffee } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import type { CSSProperties } from 'react';
 import { formatTimerSeconds, useLiveSeconds } from '../hooks/useLiveSeconds';
 import type { EmployeeView } from '../pages/Employees';
 
 interface Props {
   employee: EmployeeView;
   onOpen: (employee: EmployeeView) => void;
+  className?: string;
+  style?: CSSProperties;
 }
 
-export default function WorkerLiveCard({ employee, onOpen }: Props) {
+export default function WorkerLiveCard({ employee, onOpen, className, style }: Props) {
   const { t } = useTranslation();
   const onBreak = employee.status === 'BREAK';
   const breakSeconds = useLiveSeconds(
@@ -23,7 +26,8 @@ export default function WorkerLiveCard({ employee, onOpen }: Props) {
   return (
     <button
       type="button"
-      className={`worker-live-card${onBreak ? ' worker-live-card--break' : ''}${employee.breakSummary?.overLimit ? ' worker-live-card--over-limit' : ''}`}
+      className={`worker-live-card${onBreak ? ' worker-live-card--break' : ''}${employee.breakSummary?.overLimit ? ' worker-live-card--over-limit' : ''}${className ? ` ${className}` : ''}`}
+      style={style}
       onClick={() => onOpen(employee)}
     >
       <div className="worker-live-card-head">

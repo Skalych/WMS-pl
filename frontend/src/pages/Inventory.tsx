@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Package
 } from 'lucide-react';
+import { rowStaggerStyle } from '../utils/rowStagger';
 
 export default function Inventory() {
   const { t } = useTranslation();
@@ -157,7 +158,9 @@ export default function Inventory() {
           </div>
         </div>
 
-        <div className="table-scroll">
+        <div
+          className={`table-scroll data-table-wrap${!isLoading && filteredItems.length > 0 ? ' is-ready' : ''}`}
+        >
           <table className="data-table">
             <thead>
               <tr>
@@ -187,8 +190,12 @@ export default function Inventory() {
                 <tr>
                   <td colSpan={8} className="panel-empty">No inventory items found.</td>
                 </tr>
-              ) : filteredItems.map((item) => (
-                <tr key={item.id} className={selectedItems.includes(item.id) ? 'row-selected' : undefined}>
+              ) : filteredItems.map((item, rowIndex) => (
+                <tr
+                  key={item.id}
+                  className={selectedItems.includes(item.id) ? 'row-selected' : undefined}
+                  style={rowStaggerStyle(rowIndex)}
+                >
                   <td>
                     <input
                       type="checkbox"

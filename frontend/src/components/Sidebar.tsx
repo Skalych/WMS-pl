@@ -124,7 +124,7 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings, isOpen
     const lowerItem = itemId.toLowerCase();
     if (lowerActive === lowerItem) return true;
     if (lowerItem === 'employees' && (lowerActive === 'workers' || lowerActive === 'people')) return true;
-    if (lowerItem === 'shift-reports' && lowerActive === 'reports') return true;
+    if (lowerItem === 'reports' && (lowerActive === 'reports' || lowerActive.startsWith('reports/'))) return true;
     return false;
   };
 
@@ -152,7 +152,7 @@ export default function Sidebar({ activeTab, onTabChange, onOpenSettings, isOpen
       ? [
           {
             label: t('sidebar.reports'),
-            items: [{ id: 'shift/board', label: t('sidebar.shiftBoard'), Icon: ShiftReportsIcon }],
+            items: [{ id: 'reports', label: t('sidebar.shiftReports'), Icon: ShiftReportsIcon }],
           },
         ]
       : []),

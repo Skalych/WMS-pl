@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Activity } from 'lucide-react';
 import { orderService } from '../api/services';
 import { Wave, WaveStatus } from '../types';
+import { rowStaggerStyle } from '../utils/rowStagger';
 
 export default function Waves() {
   const { t } = useTranslation();
@@ -39,13 +40,13 @@ export default function Waves() {
         </div>
       </header>
 
-      <div className="wave-grid">
+      <div className={`wave-grid${!isLoading && waves.length > 0 ? ' data-list-wrap is-ready' : ''}`}>
         {isLoading && waves.length === 0 ? (
           <div className="panel-empty">{t('orders.loadingWaves')}</div>
         ) : waves.length === 0 ? (
           <div className="panel-empty">{t('orders.noWaves')}</div>
         ) : (
-          waves.map((wave) => {
+          waves.map((wave, rowIndex) => {
             const isCompleted = wave.status === WaveStatus.COMPLETED;
             const isSorting = wave.status === WaveStatus.SORTING;
             const isActive =
@@ -53,13 +54,13 @@ export default function Waves() {
               wave.status === WaveStatus.RELEASED ||
               wave.status === WaveStatus.PICKED;
 
-            let cardClass = 'wave-card';
+            let cardClass = 'wave-card data-list-row';
             if (isCompleted) cardClass += ' wave-card--done';
             else if (isSorting) cardClass += ' wave-card--sorting';
             else if (isActive) cardClass += ' wave-card--active';
 
             return (
-              <div key={wave.id} className={`data-panel ${cardClass}`}>
+              <div key={wave.id} className={`data-panel ${cardClass}`} style={rowStaggerStyle(rowIndex)}>
                 <div className="wave-card-body">
                   <div className="wave-card-header">
                     <div>

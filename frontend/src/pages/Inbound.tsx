@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { inboundService, inventoryService } from '../api/services';
 import { InboundShipment, InboundStatus, InventoryItem } from '../types';
 import { PackagePlus, Truck, CheckCircle, X, Plus } from 'lucide-react';
+import { rowStaggerStyle } from '../utils/rowStagger';
 
 function inboundStatusBadge(status: InboundStatus): string {
   switch (status) {
@@ -236,7 +237,7 @@ export default function Inbound() {
         ) : shipments.length === 0 ? (
           <div className="panel-empty">{t('inbound.noShipments')}</div>
         ) : (
-          <div className="table-scroll">
+          <div className="table-scroll data-table-wrap is-ready">
             <table className="data-table">
               <thead>
                 <tr>
@@ -250,8 +251,8 @@ export default function Inbound() {
                 </tr>
               </thead>
               <tbody>
-                {shipments.map((s) => (
-                  <tr key={s.id}>
+                {shipments.map((s, rowIndex) => (
+                  <tr key={s.id} style={rowStaggerStyle(rowIndex)}>
                     <td className="text-mono">{s.shipmentNumber}</td>
                     <td>{s.supplierName}</td>
                     <td className="text-muted">{s.dockNumber || '—'}</td>

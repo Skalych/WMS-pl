@@ -12,6 +12,8 @@ import Admin from './pages/Admin';
 import Inbound from './pages/Inbound';
 import Login from './pages/Login';
 import ShiftBoardPage from './pages/ShiftBoardPage';
+import ShiftReportsPage from './pages/ShiftReportsPage';
+import ShiftReportEditorPage from './pages/ShiftReportEditorPage';
 import MyShift from './pages/MyShift';
 import SettingsModal from './components/SettingsModal';
 import { SettingsProvider } from './context/SettingsContext';
@@ -135,6 +137,8 @@ export default function App() {
                   <Route path="/inventory" element={<Inventory />} />
                   <Route path="/orders" element={<Orders />} />
                   <Route path="/waves" element={<Waves />} />
+                  <Route path="/reports" element={<ShiftReportsPage />} />
+                  <Route path="/reports/:shiftId" element={<ShiftReportEditorPage />} />
                 </Route>
                 <Route element={<MyShiftRoute />}>
                   <Route path="/my-shift" element={<MyShift />} />
@@ -143,7 +147,7 @@ export default function App() {
                   <Route path="/inbound" element={<Inbound />} />
                 </Route>
               </Route>
-              <Route path="/shift-reports" element={<Navigate to="/shift/board" replace />} />
+              <Route path="/shift-reports" element={<Navigate to="/reports" replace />} />
               <Route path="/analytics" element={<Navigate to="/" replace />} />
               <Route path="/orders-waves" element={<Navigate to="/orders" replace />} />
               <Route path="/terminal" element={<Navigate to="/my-shift" replace />} />

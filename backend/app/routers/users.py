@@ -94,11 +94,13 @@ async def update_status(
 async def start_shift(
     data: BulkShiftUpdate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
+    current_user: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
 ):
     for uid in data.user_ids:
         await user_service.start_shift(db, uid)
+    from app.services import warehouse_shift_service
     from app.services.shift_live_service import publish_shift_live_update
+    await warehouse_shift_service.ensure_open_warehouse_shift(db, started_by=current_user.id)
     await publish_shift_live_update(db)
     return [await user_service.get_user_by_id(db, uid) for uid in data.user_ids]
 
@@ -107,11 +109,13 @@ async def start_shift(
 async def end_shift(
     data: BulkShiftUpdate,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
+    current_user: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
 ):
     for uid in data.user_ids:
         await user_service.end_shift(db, uid)
+    from app.services import warehouse_shift_service
     from app.services.shift_live_service import publish_shift_live_update
+    await warehouse_shift_service.maybe_close_warehouse_shift(db, ended_by=current_user.id)
     await publish_shift_live_update(db)
     return [await user_service.get_user_by_id(db, uid) for uid in data.user_ids]
 

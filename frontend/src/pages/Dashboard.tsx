@@ -6,6 +6,7 @@ import { DashboardStats, Wave } from '../types';
 import { Clock, Activity, CheckCircle, Package, Users, Zap, TrendingUp, Layers } from 'lucide-react';
 import ShiftPulseBoard from '../components/ShiftPulseBoard';
 import { useShiftLive } from '../hooks/useShiftLive';
+import { rowStaggerStyle } from '../utils/rowStagger';
 
 export default function Dashboard() {
   const { t } = useTranslation();
@@ -134,11 +135,11 @@ export default function Dashboard() {
                 {t('dashboard.noActiveWaves')}
               </p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {activeWaves.map((wave) => {
+              <div className="data-list-wrap is-ready" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {activeWaves.map((wave, rowIndex) => {
                   const isSorting = wave.status === 'SORTING';
                   return (
-                    <div key={wave.id} className="wave-row">
+                    <div key={wave.id} className="wave-row data-list-row" style={rowStaggerStyle(rowIndex)}>
                       <div className="wave-row-header">
                         <span className="text-mono" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
                           WAVE-{wave.id.substring(0, 8).toUpperCase()}

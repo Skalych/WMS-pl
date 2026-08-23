@@ -20,6 +20,7 @@ from app.models.orders import Order, OrderItem
 from app.models.waves import Wave, WaveOrder, MicroTask, MicroTaskItem
 from app.models.sorting import SortingStation, SortingBin
 from app.models.settings import AppSetting
+from app.models.warehouse_shifts import WarehouseShift, ShiftReportDraft
 
 __all__ = [
     "Base",
@@ -52,4 +53,6 @@ __all__ = [
     "SortingStation",
     "SortingBin",
     "AppSetting",
+    "WarehouseShift",
+    "ShiftReportDraft",
 ]

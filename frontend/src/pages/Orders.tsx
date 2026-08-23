@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Layers, CheckSquare, Square, ArrowRight } from 'lucide-react';
 import { orderService } from '../api/services';
 import { Order } from '../types';
+import { rowStaggerStyle } from '../utils/rowStagger';
 
 type OrderFilter = 'All' | 'Pending' | 'In Wave' | 'Shipped';
 
@@ -146,7 +147,9 @@ export default function Orders() {
         {isLoading && orders.length === 0 ? (
           <div className="panel-empty">{t('orders.loadingOrders')}</div>
         ) : (
-          <div className="table-scroll">
+          <div
+            className={`table-scroll data-table-wrap${!isLoading && filteredOrders.length > 0 ? ' is-ready' : ''}`}
+          >
             <table className="data-table">
               <thead>
                 <tr>
@@ -175,14 +178,18 @@ export default function Orders() {
                     </td>
                   </tr>
                 ) : (
-                  filteredOrders.map((order) => {
+                  filteredOrders.map((order, rowIndex) => {
                     const isSelected = selectedOrders.includes(order.id);
                     const isSelectable = order.status === 'PENDING';
                     return (
                       <tr
                         key={order.id}
                         className={isSelected ? 'row-selected' : undefined}
-                        style={{ cursor: isSelectable ? 'pointer' : 'default', opacity: isSelectable ? 1 : 0.65 }}
+                        style={{
+                          ...rowStaggerStyle(rowIndex),
+                          cursor: isSelectable ? 'pointer' : 'default',
+                          opacity: isSelectable ? 1 : 0.65,
+                        }}
                         onClick={(e) => isSelectable && toggleSelectOrder(order.id, e)}
                       >
                         <td onClick={(e) => e.stopPropagation()}>

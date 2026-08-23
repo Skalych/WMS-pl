@@ -367,3 +367,136 @@ export const terminalService = {
   },
 };
 
+export interface WarehouseShiftTopPicker {
+  userId: string;
+  name: string;
+  items: number;
+  pctOfLeader: number;
+}
+
+export interface WarehouseShiftBucket {
+  time: string;
+  picked: number;
+  inbound: number;
+}
+
+export interface WarehouseShiftSummary {
+  id: string;
+  startedAt: string;
+  endedAt: string | null;
+  isActive: boolean;
+  elapsedSeconds: number;
+  itemsPicked: number;
+  wavesCompleted: number;
+  ordersShipped: number;
+  inboundReceivedUnits: number;
+  pickRatePerHour: number;
+  topPickers: WarehouseShiftTopPicker[];
+  hourlyBuckets: WarehouseShiftBucket[];
+}
+
+export interface ShiftReportDraft {
+  id: string;
+  warehouseShiftId: string;
+  title: string;
+  contentJson: Record<string, unknown>;
+  updatedAt: string;
+}
+
+function mapTopPicker(p: Record<string, unknown>): WarehouseShiftTopPicker {
+  return {
+    userId: String(p.user_id ?? p.userId ?? ''),
+    name: String(p.name ?? ''),
+    items: Number(p.items ?? 0),
+    pctOfLeader: Number(p.pct_of_leader ?? p.pctOfLeader ?? 0),
+  };
+}
+
+function mapBucket(b: Record<string, unknown>): WarehouseShiftBucket {
+  return {
+    time: String(b.time ?? ''),
+    picked: Number(b.picked ?? 0),
+    inbound: Number(b.inbound ?? 0),
+  };
+}
+
+function mapWarehouseShift(raw: Record<string, unknown>): WarehouseShiftSummary {
+  const tops = Array.isArray(raw.top_pickers) ? raw.top_pickers : [];
+  const buckets = Array.isArray(raw.hourly_buckets) ? raw.hourly_buckets : [];
+  return {
+    id: String(raw.id),
+    startedAt: String(raw.started_at),
+    endedAt: raw.ended_at ? String(raw.ended_at) : null,
+    isActive: Boolean(raw.is_active),
+    elapsedSeconds: Number(raw.elapsed_seconds ?? 0),
+    itemsPicked: Number(raw.items_picked ?? 0),
+    wavesCompleted: Number(raw.waves_completed ?? 0),
+    ordersShipped: Number(raw.orders_shipped ?? 0),
+    inboundReceivedUnits: Number(raw.inbound_received_units ?? 0),
+    pickRatePerHour: Number(raw.pick_rate_per_hour ?? 0),
+    topPickers: tops.map((p) => mapTopPicker(p as Record<string, unknown>)),
+    hourlyBuckets: buckets.map((b) => mapBucket(b as Record<string, unknown>)),
+  };
+}
+
+function mapDraft(raw: Record<string, unknown>): ShiftReportDraft {
+  return {
+    id: String(raw.id),
+    warehouseShiftId: String(raw.warehouse_shift_id),
+    title: String(raw.title ?? ''),
+    contentJson: (raw.content_json as Record<string, unknown>) || { type: 'doc', content: [] },
+    updatedAt: String(raw.updated_at ?? ''),
+  };
+}
+
+export const warehouseShiftService = {
+  list: async (opts?: { from?: string; to?: string }): Promise<WarehouseShiftSummary[]> => {
+    const params = new URLSearchParams();
+    if (opts?.from) params.append('from', opts.from);
+    if (opts?.to) params.append('to', opts.to);
+    const qs = params.toString();
+    const response = await apiClient.get(`/warehouse-shifts${qs ? `?${qs}` : ''}`);
+    return (response.data as Record<string, unknown>[]).map(mapWarehouseShift);
+  },
+
+  get: async (id: string): Promise<WarehouseShiftSummary> => {
+    const response = await apiClient.get(`/warehouse-shifts/${id}`);
+    return mapWarehouseShift(response.data);
+  },
+
+  getReport: async (id: string): Promise<ShiftReportDraft> => {
+    const response = await apiClient.get(`/warehouse-shifts/${id}/report`);
+    return mapDraft(response.data);
+  },
+
+  saveReport: async (
+    id: string,
+    data: { title?: string; contentJson?: Record<string, unknown> }
+  ): Promise<ShiftReportDraft> => {
+    const response = await apiClient.put(`/warehouse-shifts/${id}/report`, {
+      title: data.title,
+      content_json: data.contentJson,
+    });
+    return mapDraft(response.data);
+  },
+
+  resetReport: async (id: string): Promise<ShiftReportDraft> => {
+    const response = await apiClient.post(`/warehouse-shifts/${id}/report/reset`);
+    return mapDraft(response.data);
+  },
+
+  exportReport: async (
+    id: string,
+    format: 'pdf' | 'docx' | 'html',
+    html: string,
+    title?: string
+  ): Promise<Blob> => {
+    const response = await apiClient.post(
+      `/warehouse-shifts/${id}/report/export`,
+      { format, html, title },
+      { responseType: 'blob' }
+    );
+    return response.data as Blob;
+  },
+};
+
