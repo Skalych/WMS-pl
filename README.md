@@ -85,7 +85,7 @@ Tests use in-memory SQLite — PostgreSQL is not required for the test suite.
 | `POSTGRES_USER` | `postgres` | DB user |
 | `POSTGRES_PASSWORD` | `postgres` | DB password |
 | `POSTGRES_DB` | `wms_db` | Database name |
-| `SECRET_KEY` | (see config) | JWT signing key |
+| `SECRET_KEY` | **required** (no default) | JWT signing key; set in `backend/.env` (`openssl rand -hex 32`) |
 | `VITE_API_URL` | `http://127.0.0.1:8000/api/v1` | Frontend API base URL |
 
 ## API Auth

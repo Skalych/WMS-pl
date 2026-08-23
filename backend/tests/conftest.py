@@ -1,6 +1,11 @@
 """Shared fixtures for WMS backend tests (in-memory SQLite)."""
 from __future__ import annotations
 
+import os
+
+# Settings() loads at import time; provide a test-only key if env/.env is missing.
+os.environ.setdefault("SECRET_KEY", "pytest-only-jwt-secret-not-for-production")
+
 import uuid
 from collections.abc import AsyncGenerator
 
