@@ -72,7 +72,7 @@ export default function ShiftReportEditorPage() {
   });
 
   const applyContentWithCharts = useCallback(
-    async (content: Record<string, unknown>, metricsShift: WarehouseShiftSummary) => {
+    async (content: Record<string, unknown>, metricsShift: WarehouseShiftSummary, refreshExisting = false) => {
       if (!editor) return content;
       let pace: string | null = null;
       let top: string | null = null;
@@ -86,7 +86,8 @@ export default function ShiftReportEditorPage() {
       } catch {
         /* charts optional */
       }
-      const enriched = injectChartImages(content, pace, top);
+      const hasPlaceholder = JSON.stringify(content).includes('[Діаграма');
+      const enriched = injectChartImages(content, pace, top, refreshExisting || !hasPlaceholder);
       skipSave.current = true;
       editor.commands.setContent(enriched);
       queueMicrotask(() => {
@@ -111,10 +112,11 @@ export default function ShiftReportEditorPage() {
         if (cancelled) return;
         setShift(s);
         setDraft(d);
-        const enriched = await applyContentWithCharts(d.contentJson, s);
+        const enriched = await applyContentWithCharts(d.contentJson, s, true);
         if (!cancelled) {
           const hasPlaceholder = JSON.stringify(d.contentJson).includes('[Діаграма');
-          if (hasPlaceholder) {
+          const bucketSum = s.hourlyBuckets.reduce((acc, b) => acc + b.picked + b.inbound, 0);
+          if (hasPlaceholder || bucketSum > 0) {
             const saved = await warehouseShiftService.saveReport(shiftId, {
               title: d.title,
               contentJson: enriched,
@@ -138,7 +140,7 @@ export default function ShiftReportEditorPage() {
     if (!shiftId || !shift || !editor) return;
     const d = await warehouseShiftService.resetReport(shiftId);
     setDraft(d);
-    const enriched = await applyContentWithCharts(d.contentJson, shift);
+    const enriched = await applyContentWithCharts(d.contentJson, shift, true);
     await warehouseShiftService.saveReport(shiftId, {
       title: d.title,
       contentJson: enriched,

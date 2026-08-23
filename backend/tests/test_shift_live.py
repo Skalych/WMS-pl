@@ -31,9 +31,10 @@ async def test_shift_live_rejects_non_admin(picker_client):
 
 @pytest.mark.asyncio
 async def test_hourly_buckets_cover_four_hours(db_session):
-    from app.services.shift_live_service import _hourly_buckets, CHART_BUCKET_MINUTES, CHART_WINDOW_HOURS
+    from datetime import datetime, timezone
+    from app.services.shift_metrics_service import _hourly_buckets, CHART_BUCKET_MINUTES, CHART_WINDOW_HOURS
 
-    buckets = await _hourly_buckets(db_session)
+    buckets = await _hourly_buckets(db_session, window_end=datetime.now(timezone.utc))
     expected = (CHART_WINDOW_HOURS * 60) // CHART_BUCKET_MINUTES
     assert len(buckets) == expected
 

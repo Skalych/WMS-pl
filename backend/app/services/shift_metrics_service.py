@@ -1,6 +1,7 @@
 """Compute warehouse shift metrics for a time window (live or historical)."""
 from __future__ import annotations
 
+import math
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
@@ -17,6 +18,7 @@ from app.services import order_service, wave_service
 
 CHART_WINDOW_HOURS = 4
 CHART_BUCKET_MINUTES = 15
+MAX_HISTORICAL_BUCKETS = 48
 
 
 def _utcnow() -> datetime:
@@ -164,30 +166,46 @@ async def _hourly_buckets(
     window_end: datetime,
     window_start: Optional[datetime] = None,
 ) -> list[dict]:
+    window_end = _ensure_utc(window_end)
     bucket_minutes = CHART_BUCKET_MINUTES
-    bucket_size = timedelta(minutes=bucket_minutes)
-    end_bucket = _floor_to_bucket(window_end, bucket_minutes)
 
     if window_start is None:
+        bucket_size = timedelta(minutes=bucket_minutes)
+        end_bucket = _floor_to_bucket(window_end, bucket_minutes)
         num_buckets = (CHART_WINDOW_HOURS * 60) // bucket_minutes
         slot_starts = [end_bucket - bucket_size * (num_buckets - 1 - i) for i in range(num_buckets)]
+        range_start = slot_starts[0]
+        range_end = window_end
     else:
+        window_start = _ensure_utc(window_start)
         start_bucket = _floor_to_bucket(window_start, bucket_minutes)
+        end_bucket = _floor_to_bucket(window_end, bucket_minutes)
         if start_bucket > end_bucket:
             start_bucket = end_bucket
+
+        span_minutes = max(int((end_bucket - start_bucket).total_seconds() // 60), bucket_minutes)
+        if span_minutes // bucket_minutes > MAX_HISTORICAL_BUCKETS:
+            bucket_minutes = max(
+                CHART_BUCKET_MINUTES,
+                int(math.ceil(span_minutes / MAX_HISTORICAL_BUCKETS / 15) * 15),
+            )
+
+        bucket_size = timedelta(minutes=bucket_minutes)
+        start_bucket = _floor_to_bucket(window_start, bucket_minutes)
+        end_bucket = _floor_to_bucket(window_end, bucket_minutes)
         slots: list[datetime] = []
         cur = start_bucket
-        while cur <= end_bucket and len(slots) < 48:
+        while cur <= end_bucket and len(slots) < MAX_HISTORICAL_BUCKETS:
             slots.append(cur)
             cur += bucket_size
         slot_starts = slots or [end_bucket]
+        range_start = window_start
+        range_end = window_end
 
     buckets: dict[str, dict] = {
         slot.isoformat(): {"time": slot.isoformat(), "picked": 0, "inbound": 0}
         for slot in slot_starts
     }
-    query_since = slot_starts[0]
-    query_until = end_bucket + bucket_size
 
     result = await db.execute(
         select(
@@ -195,8 +213,8 @@ async def _hourly_buckets(
             InventoryTransaction.quantity,
             InventoryTransaction.transaction_type,
         ).where(
-            InventoryTransaction.created_at >= query_since,
-            InventoryTransaction.created_at < query_until,
+            InventoryTransaction.created_at >= range_start,
+            InventoryTransaction.created_at <= range_end,
         )
     )
 
@@ -209,6 +227,24 @@ async def _hourly_buckets(
             buckets[key]["picked"] += quantity
         elif tx_type == TransactionType.RECEIPT:
             buckets[key]["inbound"] += quantity
+
+    picked_sum = sum(b["picked"] for b in buckets.values())
+    if window_start is not None and picked_sum == 0:
+        mt_result = await db.execute(
+            select(MicroTaskItem.quantity_picked, Wave.updated_at)
+            .join(MicroTask, MicroTaskItem.micro_task_id == MicroTask.id)
+            .join(Wave, MicroTask.wave_id == Wave.id)
+            .where(
+                MicroTaskItem.quantity_picked > 0,
+                Wave.updated_at >= range_start,
+                Wave.updated_at <= range_end,
+            )
+        )
+        for qty, updated_at in mt_result.all():
+            updated_at = _ensure_utc(updated_at)
+            key = _floor_to_bucket(updated_at, bucket_minutes).isoformat()
+            if key in buckets:
+                buckets[key]["picked"] += int(qty)
 
     return list(buckets.values())
 

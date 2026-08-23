@@ -39,9 +39,6 @@ export default function ShiftReportsPage() {
         from: from || undefined,
         to: to || undefined,
       });
-      // #region agent log
-      fetch('http://127.0.0.1:7561/ingest/68e178b3-64a6-4d12-b3fd-4d1696e0235a',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'b88893'},body:JSON.stringify({sessionId:'b88893',hypothesisId:'A',location:'ShiftReportsPage.tsx:load',message:'loaded shifts',data:{count:data.length,rows:data.map(s=>({id:s.id,isActive:s.isActive,items:s.itemsPicked,started:s.startedAt}))},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       setItems(data);
       setSelectedId((prev) => {
         if (prev && data.some((s) => s.id === prev)) return prev;

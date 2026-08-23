@@ -1,10 +1,8 @@
 """Warehouse shift lifecycle, listing, and report drafts."""
 from __future__ import annotations
 
-import json
 import uuid
 from datetime import datetime, date, time, timedelta, timezone
-from pathlib import Path
 from typing import Any, Optional
 
 from sqlalchemy import select, func
@@ -15,26 +13,6 @@ from app.models.users import Shift
 from app.models.warehouse_shifts import WarehouseShift, ShiftReportDraft
 from app.services.shift_metrics_service import compute_shift_metrics, metrics_to_snapshot
 from app.services.report_template import build_default_report_content
-
-_DEBUG_LOG = Path(__file__).resolve().parents[3] / ".cursor" / "debug-b88893.log"
-
-
-def _debug_log(hypothesis_id: str, location: str, message: str, data: dict) -> None:
-    # #region agent log
-    try:
-        payload = {
-            "sessionId": "b88893",
-            "hypothesisId": hypothesis_id,
-            "location": location,
-            "message": message,
-            "data": data,
-            "timestamp": int(datetime.now(timezone.utc).timestamp() * 1000),
-        }
-        with _DEBUG_LOG.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(payload, default=str) + "\n")
-    except Exception:
-        pass
-    # #endregion
 
 
 def _utcnow() -> datetime:
@@ -69,12 +47,6 @@ async def ensure_open_warehouse_shift(
 
     if existing:
         if earliest and earliest < _ensure_utc(existing.started_at):
-            _debug_log(
-                "B",
-                "warehouse_shift_service.ensure_open",
-                "sync started_at to earliest worker shift",
-                {"ws_id": str(existing.id), "old": str(existing.started_at), "new": str(earliest)},
-            )
             existing.started_at = earliest
             db.add(existing)
             await db.commit()
@@ -90,12 +62,6 @@ async def ensure_open_warehouse_shift(
     db.add(ws)
     await db.commit()
     await db.refresh(ws)
-    _debug_log(
-        "B",
-        "warehouse_shift_service.ensure_open",
-        "created warehouse shift",
-        {"ws_id": str(ws.id), "started_at": str(started_at), "from_worker": bool(earliest)},
-    )
     return ws
 
 
@@ -144,12 +110,14 @@ async def resolve_metrics_for_shift(db: AsyncSession, ws: WarehouseShift) -> dic
         snap.setdefault("pickers_online", 0)
         snap.setdefault("orders_shipped", snap.get("orders_shipped", 0))
         snap.setdefault("bucket_minutes", 15)
-        _debug_log(
-            "C",
-            "warehouse_shift_service.resolve_metrics",
-            "using frozen snapshot",
-            {"ws_id": str(ws.id), "items_picked": snap.get("items_picked", 0)},
-        )
+        bucket_picked = sum(int(b.get("picked") or 0) for b in snap.get("hourly_buckets") or [])
+        items_picked = int(snap.get("items_picked") or 0)
+        if items_picked > 0 and bucket_picked == 0:
+            recomputed = await compute_shift_metrics(
+                db, ws.started_at, end=ws.ended_at, live=False
+            )
+            snap["hourly_buckets"] = recomputed.get("hourly_buckets") or []
+            snap["bucket_minutes"] = recomputed.get("bucket_minutes", 15)
         return snap
 
     end = ws.ended_at or _utcnow()
@@ -160,18 +128,6 @@ async def resolve_metrics_for_shift(db: AsyncSession, ws: WarehouseShift) -> dic
             start = earliest
     metrics = await compute_shift_metrics(
         db, start, end=end, live=ws.ended_at is None
-    )
-    _debug_log(
-        "C",
-        "warehouse_shift_service.resolve_metrics",
-        "computed metrics",
-        {
-            "ws_id": str(ws.id),
-            "is_active": ws.ended_at is None,
-            "window_start": str(start),
-            "items_picked": metrics.get("items_picked", 0),
-            "waves_completed": metrics.get("waves_completed", 0),
-        },
     )
     return metrics_to_snapshot(metrics) if ws.ended_at else metrics_to_snapshot(
         {**metrics, "shift_active": True}
@@ -277,23 +233,6 @@ async def list_warehouse_shifts(
     for ws in shifts:
         metrics = await resolve_metrics_for_shift(db, ws)
         out.append(_summary_from_ws_and_metrics(ws, metrics))
-    _debug_log(
-        "A",
-        "warehouse_shift_service.list",
-        "listed warehouse shifts",
-        {
-            "count": len(out),
-            "rows": [
-                {
-                    "id": str(r["id"]),
-                    "is_active": r["is_active"],
-                    "items_picked": r["items_picked"],
-                    "started_at": str(r["started_at"]),
-                }
-                for r in out
-            ],
-        },
-    )
     return out
 
 
