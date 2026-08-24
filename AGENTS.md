@@ -13,3 +13,7 @@
 ### Domain docs
 
 Один CONTEXT.md у корені (single-context). Див. `docs/agents/domain.md`.
+
+### Deploy
+
+Перед деплоєм у production/staging — `docs/agents/deploy.md` (env, міграції, smoke test).
