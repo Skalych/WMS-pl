@@ -80,6 +80,10 @@ Tests use in-memory SQLite — PostgreSQL is not required for the test suite.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `APP_ENV` | `development` | Environment name; seed is blocked when set to `production` |
+| `ALLOW_SEED` | `false` | Must be `true`/`1` to run `python -m app.seed` (drops all tables) |
+| `RATE_LIMIT_ENABLED` | `true` | Enable login rate limiting (`false` in tests) |
+| `LOGIN_RATE_LIMIT` | `10` | Max login attempts per IP per minute |
 | `POSTGRES_SERVER` | `localhost` | DB host |
 | `POSTGRES_PORT` | `5432` | DB port |
 | `POSTGRES_USER` | `postgres` | DB user |

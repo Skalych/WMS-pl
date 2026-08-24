@@ -39,6 +39,11 @@ async def get_current_user(
     user = await user_service.get_user_by_id(db, user_uuid)
     if user is None:
         raise credentials_exception
+
+    token_version = payload.get("tv")
+    if token_version is None or token_version != user.token_version:
+        raise credentials_exception
+
     return user_service.enrich_user(user)
 
 

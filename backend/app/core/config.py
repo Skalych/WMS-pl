@@ -6,6 +6,12 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "WMS System (Warehouse Management)"
     API_V1_STR: str = "/api/v1"
 
+    APP_ENV: str = "development"
+    ALLOW_SEED: bool = False
+
+    RATE_LIMIT_ENABLED: bool = True
+    LOGIN_RATE_LIMIT: int = 10
+
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_USER: str = "postgres"

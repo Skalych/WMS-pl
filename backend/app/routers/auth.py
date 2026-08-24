@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_roles
+from app.core.rate_limit import enforce_login_rate_limit
 from app.core.security import verify_password, create_access_token
 from app.schemas.users import UserCreate, UserLogin, TokenResponse, UserResponse
 from app.services import user_service
@@ -25,9 +26,16 @@ async def register(
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
+async def login(
+    data: UserLogin,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    _: None = Depends(enforce_login_rate_limit),
+):
     user = await user_service.get_user_by_email(db, data.email)
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_access_token({"sub": str(user.id), "role": user.role.value})
+    token = create_access_token(
+        {"sub": str(user.id), "role": user.role.value, "tv": user.token_version}
+    )
     return {"access_token": token, "token_type": "bearer"}

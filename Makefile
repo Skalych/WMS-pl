@@ -6,7 +6,7 @@ seed:
 	docker compose up -d
 	@echo "Waiting for PostgreSQL..."
 	@sleep 3
-	cd backend && source .venv/bin/activate && python -m app.seed
+	cd backend && source .venv/bin/activate && ALLOW_SEED=1 python -m app.seed
 
 install:
 	cd backend && python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements.txt

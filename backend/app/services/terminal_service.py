@@ -24,7 +24,9 @@ async def terminal_login(db: AsyncSession, email: str, pin: str) -> dict:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if user.role not in TERMINAL_ROLES:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Role not allowed for terminal access")
-    token = create_access_token({"sub": str(user.id), "role": user.role.value})
+    token = create_access_token(
+        {"sub": str(user.id), "role": user.role.value, "tv": user.token_version}
+    )
     return {"access_token": token, "token_type": "bearer"}
 
 

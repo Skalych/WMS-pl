@@ -1,12 +1,14 @@
 """
 WMS Nexus — Seed Script
 Наповнює базу даних тестовими даними для розробки.
-Запуск: python -m app.seed
+Запуск: ALLOW_SEED=1 python -m app.seed
 """
 import asyncio
 import uuid
 from datetime import datetime, timezone, date, timedelta
 
+from app.core.config import settings
+from app.core.seed_guard import check_seed_allowed
 from app.core.database import engine, Base, AsyncSessionLocal
 from app.core.security import hash_password
 from app.models.enums import (
@@ -320,4 +322,5 @@ async def seed():
 
 
 if __name__ == "__main__":
+    check_seed_allowed(app_env=settings.APP_ENV, allow_seed=settings.ALLOW_SEED)
     asyncio.run(seed())

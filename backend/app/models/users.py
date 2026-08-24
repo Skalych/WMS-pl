@@ -19,6 +19,7 @@ class User(Base):
     cart_capacity_items: Mapped[int] = mapped_column(Integer, nullable=False, default=15, server_default="15")
     current_cart_items: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     current_location_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("locations.id", ondelete="SET NULL"), nullable=True)
+    token_version: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 

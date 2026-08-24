@@ -147,8 +147,21 @@ async def create_user(db: AsyncSession, email: str, password: str, full_name: st
         full_name=full_name,
         role=role,
         status=WorkerStatus.OFFLINE,
+        token_version=0,
     )
     db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def change_password(db: AsyncSession, user_id: uuid.UUID, new_password: str) -> Optional[User]:
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        return None
+    user.password_hash = hash_password(new_password)
+    user.token_version += 1
     await db.commit()
     await db.refresh(user)
     return user

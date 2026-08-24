@@ -26,7 +26,12 @@ async def _validate_ws_admin_token(token: Optional[str]) -> bool:
             return False
         async with AsyncSessionLocal() as db:
             user = await user_service.get_user_by_id(db, uuid.UUID(str(user_id)))
-            return user is not None and user.role == UserRole.ADMIN_MANAGER
+            if user is None:
+                return False
+            token_version = payload.get("tv")
+            if token_version is None or token_version != user.token_version:
+                return False
+            return user.role == UserRole.ADMIN_MANAGER
     except (JWTError, ValueError):
         return False
 

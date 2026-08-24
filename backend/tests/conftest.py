@@ -5,6 +5,7 @@ import os
 
 # Settings() loads at import time; provide a test-only key if env/.env is missing.
 os.environ.setdefault("SECRET_KEY", "pytest-only-jwt-secret-not-for-production")
+os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
 
 import uuid
 from collections.abc import AsyncGenerator
@@ -279,7 +280,9 @@ async def client(test_app, seeded_db) -> AsyncGenerator[AsyncClient, None]:
 
 
 def auth_headers_for(user: User) -> dict[str, str]:
-    token = create_access_token({"sub": str(user.id), "role": user.role.value})
+    token = create_access_token(
+        {"sub": str(user.id), "role": user.role.value, "tv": user.token_version}
+    )
     return {"Authorization": f"Bearer {token}"}
 
 

@@ -1,12 +1,13 @@
 import uuid
 from typing import Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import require_roles
+from app.core.rate_limit import enforce_login_rate_limit
 from app.models.enums import UserRole
 from app.models.users import User
 from app.schemas.users import TokenResponse
@@ -41,7 +42,12 @@ class ScanRequest(BaseModel):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def terminal_login(data: TerminalLogin, db: AsyncSession = Depends(get_db)):
+async def terminal_login(
+    data: TerminalLogin,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    _: None = Depends(enforce_login_rate_limit),
+):
     return await terminal_service.terminal_login(db, data.email, data.pin)
 
 
