@@ -1,0 +1,68 @@
+# WMS production stack: Postgres + backend (FastAPI) + frontend (nginx SPA).
+#
+# Usage:
+#   cp .env.prod.example .env.prod   # fill in secrets
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# NOTE: the dev-only docker-compose.yml (Postgres alone) is untouched.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: wms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wms_db}
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env.prod}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.prod}
+    volumes:
+      - wms_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # Not exposed to the host by default; uncomment if you need external access.
+    # ports:
+    #   - "127.0.0.1:5432:5432"
+
+  backend:
+    build: ./backend
+    container_name: wms-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_ENV: production
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env.prod (openssl rand -hex 32)}
+      POSTGRES_SERVER: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-wms_db}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Browser origins that call the API directly (nginx proxies same-origin,
+      # so this only matters if you expose :8000 or use a different domain).
+      CORS_ORIGINS: ${CORS_ORIGINS:-[]}
+      # Simulation stays OFF in production unless explicitly enabled.
+      SIMULATION_ENABLED: ${SIMULATION_ENABLED:-false}
+    expose:
+      - "8000"
+    # Direct API access without nginx (optional):
+    # ports:
+    #   - "127.0.0.1:8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /api/v1
+    container_name: wms-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${HTTP_PORT:-80}:80"
+
+volumes:
+  wms_pgdata:

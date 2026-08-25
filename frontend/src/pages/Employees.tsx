@@ -12,7 +12,7 @@ import {
   LayoutGrid,
   List,
 } from 'lucide-react';
-import { BreakSummary, WorkerStatus } from '../types';
+import { BreakSummary, UserRole, WorkerStatus } from '../types';
 import EmployeeProfileModal from '../components/EmployeeProfileModal';
 import WorkerLiveCard from '../components/WorkerLiveCard';
 import { rowStaggerStyle } from '../utils/rowStagger';
@@ -20,7 +20,7 @@ import { rowStaggerStyle } from '../utils/rowStagger';
 export interface EmployeeView {
   id: string;
   name: string;
-  role: 'PICKER' | 'INBOUND_OPERATOR' | 'PACKER_DISPATCHER';
+  role: UserRole;
   status: WorkerStatus;
   dotClass: 'dot-online' | 'dot-busy' | 'dot-offline';
   badgeClass: string;
@@ -41,12 +41,18 @@ type PageTab = 'live' | 'roster';
 type StatFilter = 'online' | 'active' | 'break' | 'offline';
 type SortKey = 'status' | 'name' | 'progress' | 'totalPicked';
 
-const ACTIVE_STATUSES: WorkerStatus[] = ['PICKING', 'PUTAWAY', 'SORTING', 'RECEIVING', 'DISPATCHING'];
+const ACTIVE_STATUSES: WorkerStatus[] = [
+  WorkerStatus.PICKING,
+  WorkerStatus.PUTAWAY,
+  WorkerStatus.SORTING,
+  WorkerStatus.RECEIVING,
+  WorkerStatus.DISPATCHING,
+];
 
 const mapEmployeeData = (emp: {
   id: string;
   fullName: string;
-  role: EmployeeView['role'];
+  role: UserRole;
   status: WorkerStatus;
   currentLocation?: string;
   currentWaveNumber?: string | null;
@@ -204,7 +210,16 @@ export default function Employees() {
     return [...employees].sort((a, b) => a.name.localeCompare(b.name));
   }, [employees]);
 
-  const statuses: WorkerStatus[] = ['PICKING', 'PUTAWAY', 'SORTING', 'RECEIVING', 'DISPATCHING', 'BREAK', 'IDLE', 'OFFLINE'];
+  const statuses: WorkerStatus[] = [
+    WorkerStatus.PICKING,
+    WorkerStatus.PUTAWAY,
+    WorkerStatus.SORTING,
+    WorkerStatus.RECEIVING,
+    WorkerStatus.DISPATCHING,
+    WorkerStatus.BREAK,
+    WorkerStatus.IDLE,
+    WorkerStatus.OFFLINE,
+  ];
 
   const onShiftCount = employees.filter((e) => e.status !== 'OFFLINE').length;
   const onlineCount = employees.filter((e) => e.status !== 'OFFLINE' && e.status !== 'IDLE').length;
