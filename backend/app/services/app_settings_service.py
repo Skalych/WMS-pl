@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.models.settings import AppSetting
 
 SIMULATION_ACTIVE_KEY = "simulation_active"
@@ -12,7 +13,9 @@ async def get_simulation_active(session: AsyncSession) -> bool:
     )
     setting = result.scalar_one_or_none()
     if setting is None:
-        return True
+        # No explicit DB state yet: fall back to environment-aware default
+        # (disabled in production unless SIMULATION_ENABLED=true).
+        return settings.SIMULATION_DEFAULT_ACTIVE
     return setting.value.lower() == "true"
 
 

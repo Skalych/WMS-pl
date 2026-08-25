@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
@@ -8,6 +10,13 @@ class Settings(BaseSettings):
 
     APP_ENV: str = "development"
     ALLOW_SEED: bool = False
+
+    # Warehouse demo simulation. Default depends on environment:
+    #   - unset  -> auto (enabled in development/staging, DISABLED in production)
+    #   - true   -> force enabled (including production)
+    #   - false  -> force disabled
+    # The runtime admin toggle (POST /dashboard/simulation/toggle) overrides this per-instance.
+    SIMULATION_ENABLED: Optional[bool] = None
 
     RATE_LIMIT_ENABLED: bool = True
     LOGIN_RATE_LIMIT: int = 10
@@ -34,6 +43,13 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ]
+
+    @property
+    def SIMULATION_DEFAULT_ACTIVE(self) -> bool:
+        """Default simulation state when no DB setting exists yet."""
+        if self.SIMULATION_ENABLED is not None:
+            return self.SIMULATION_ENABLED
+        return self.APP_ENV != "production"
 
     @property
     def ASYNC_DATABASE_URI(self) -> str:

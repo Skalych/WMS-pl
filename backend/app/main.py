@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,11 +9,19 @@ from app.routers import auth, users, inventory, orders, waves, inbound, dashboar
 from app.services import simulation_service
 from app.services.simulation_service import warehouse_simulation
 
+logger = logging.getLogger(__name__)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with AsyncSessionLocal() as session:
         await simulation_service.init_simulation_state(session)
-    # Start the simulation task
+    logger.info(
+        "Warehouse simulation is %s (APP_ENV=%s)",
+        "ENABLED" if simulation_service.get_simulation_state() else "DISABLED",
+        settings.APP_ENV,
+    )
+    # Start the simulation task (it no-ops per tick while the state is off,
+    # so the admin toggle can enable/disable it at runtime).
     sim_task = asyncio.create_task(warehouse_simulation(AsyncSessionLocal))
     yield
     # Stop the simulation task
