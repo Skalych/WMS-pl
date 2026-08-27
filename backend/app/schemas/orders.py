@@ -44,6 +44,8 @@ class OrderResponse(BaseModel):
     customer_name: str
     shipping_address: str
     item_count: int = 0
+    total_requested: int = 0
+    total_allocated: int = 0
     wave_number: Optional[str] = None
     macro_order_id: Optional[UUID] = None
     created_at: datetime

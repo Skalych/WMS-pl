@@ -1,7 +1,7 @@
 import { apiClient } from './client';
 import { 
   UserRole, WorkerStatus, Employee, DashboardStats, 
-  Order, Wave, InventoryItem, MacroOrder, InboundShipment, InventoryTransaction,
+  Order, Wave, WaveCreateResult, InventoryItem, MacroOrder, InboundShipment, InventoryTransaction,
   TerminalTask, TerminalScanResult, MyShiftSnapshot, Shift, BreakSummary,
 } from '../types';
 
@@ -195,15 +195,17 @@ export const inventoryService = {
 export const orderService = {
   getOrders: async (): Promise<Order[]> => {
     const response = await apiClient.get('/orders');
-    return response.data.map((o: any) => ({
-      id: o.id,
-      orderNumber: o.order_number,
-      customerName: o.customer_name || 'Customer',
-      itemCount: o.item_count || 0,
-      status: o.status,
-      priority: o.priority,
+    return response.data.map((o: Record<string, unknown>) => ({
+      id: String(o.id),
+      orderNumber: String(o.order_number),
+      customerName: String(o.customer_name || 'Customer'),
+      itemCount: Number(o.item_count || 0),
+      totalRequested: Number(o.total_requested || 0),
+      totalAllocated: Number(o.total_allocated || 0),
+      status: o.status as Order['status'],
+      priority: o.priority as Order['priority'],
       macroOrderId: o.macro_order_id,
-      createdAt: o.created_at
+      createdAt: String(o.created_at),
     }));
   },
   
@@ -244,16 +246,23 @@ export const orderService = {
     }));
   },
 
-  createWave: async (orderIds: string[]): Promise<Wave> => {
+  createWave: async (orderIds: string[]): Promise<WaveCreateResult> => {
     const response = await apiClient.post('/waves', { order_ids: orderIds });
     const w = response.data;
+    const summary = w.allocation_summary || {};
     return {
       id: w.id,
       waveNumber: w.wave_number,
       status: w.status,
       ordersCount: w.total_orders_count,
       progress: w.progress || 0,
-      zone: 'All'
+      zone: 'All',
+      allocationSummary: {
+        linesFullyAllocated: Number(summary.lines_fully_allocated || 0),
+        linesPartiallyAllocated: Number(summary.lines_partially_allocated || 0),
+        linesSkipped: Number(summary.lines_skipped || 0),
+        totalUnitsAllocated: Number(summary.total_units_allocated || 0),
+      },
     };
   }
 };

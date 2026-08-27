@@ -42,9 +42,16 @@ export default function Orders() {
   }, []);
 
   const filteredOrders = orders.filter((order) => {
-    if (activeOrderFilter === 'Pending') return order.status === 'PENDING';
+    if (activeOrderFilter === 'Pending') {
+      return order.status === 'PENDING' || order.status === 'PARTIALLY_IN_WAVE';
+    }
     if (activeOrderFilter === 'In Wave') {
-      return order.status === 'IN_WAVE' || order.status === 'PACKED' || order.status === 'SORTED';
+      return (
+        order.status === 'IN_WAVE'
+        || order.status === 'PARTIALLY_IN_WAVE'
+        || order.status === 'PACKED'
+        || order.status === 'SORTED'
+      );
     }
     if (activeOrderFilter === 'Shipped') return order.status === 'SHIPPED';
     return true;
@@ -72,6 +79,8 @@ export default function Orders() {
         return 'badge badge-info';
       case 'IN_WAVE':
         return 'badge badge-accent';
+      case 'PARTIALLY_IN_WAVE':
+        return 'badge badge-warning';
       default:
         return 'badge badge-muted';
     }
@@ -84,7 +93,9 @@ export default function Orders() {
     );
   };
 
-  const pendingInView = filteredOrders.filter((o) => o.status === 'PENDING');
+  const pendingInView = filteredOrders.filter(
+    (o) => o.status === 'PENDING' || o.status === 'PARTIALLY_IN_WAVE'
+  );
   const allPendingSelected =
     pendingInView.length > 0 && selectedOrders.length === pendingInView.length;
 
@@ -100,7 +111,16 @@ export default function Orders() {
     if (selectedOrders.length === 0) return;
     setIsCreatingWave(true);
     try {
-      await orderService.createWave(selectedOrders);
+      const result = await orderService.createWave(selectedOrders);
+      const s = result.allocationSummary;
+      alert(
+        t('orders.waveCreatedSummary', {
+          full: s.linesFullyAllocated,
+          partial: s.linesPartiallyAllocated,
+          skipped: s.linesSkipped,
+          units: s.totalUnitsAllocated,
+        })
+      );
       setSelectedOrders([]);
       navigate('/waves');
     } catch (error) {
@@ -166,6 +186,7 @@ export default function Orders() {
                   <th>Customer</th>
                   <th>Priority</th>
                   <th>Items</th>
+                  <th>{t('orders.allocatedColumn')}</th>
                   <th>Status</th>
                   <th>Created</th>
                 </tr>
@@ -173,14 +194,15 @@ export default function Orders() {
               <tbody>
                 {filteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="panel-empty">
+                    <td colSpan={8} className="panel-empty">
                       {t('orders.noOrders')}
                     </td>
                   </tr>
                 ) : (
                   filteredOrders.map((order, rowIndex) => {
                     const isSelected = selectedOrders.includes(order.id);
-                    const isSelectable = order.status === 'PENDING';
+                    const isSelectable =
+                      order.status === 'PENDING' || order.status === 'PARTIALLY_IN_WAVE';
                     return (
                       <tr
                         key={order.id}
@@ -215,6 +237,9 @@ export default function Orders() {
                           <span className={getPriorityBadgeClass(order.priority)}>{order.priority}</span>
                         </td>
                         <td className="text-mono">{order.itemCount}</td>
+                        <td className="text-mono">
+                          {order.totalAllocated}/{order.totalRequested}
+                        </td>
                         <td>
                           <span className={getOrderStatusBadgeClass(order.status)}>{order.status}</span>
                         </td>

@@ -49,6 +49,7 @@ class InboundStatus(str, enum.Enum):
 
 class OrderStatus(str, enum.Enum):
     PENDING = "PENDING"
+    PARTIALLY_IN_WAVE = "PARTIALLY_IN_WAVE"
     IN_WAVE = "IN_WAVE"
     PICKED_BATCH = "PICKED_BATCH"
     SORTED = "SORTED"

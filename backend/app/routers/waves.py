@@ -1,10 +1,12 @@
 import uuid
+from typing import Optional, Union
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_roles
-from app.schemas.waves import WaveCreate, WaveResponse
+from app.schemas.waves import WaveCreate, WaveResponse, WaveCreateResponse, WaveAllocationSummary
 from app.services import wave_service
+from app.services.wave_service import EmptyWaveError
 from app.models.users import User
 from app.models.enums import UserRole
 from app.models.waves import Wave
@@ -24,40 +26,49 @@ def calculate_wave_progress(wave: Wave) -> float:
 router = APIRouter(prefix="/waves", tags=["Waves"])
 
 
+def _wave_response(
+    wave: Wave, summary: Optional[WaveAllocationSummary] = None
+) -> Union[WaveResponse, WaveCreateResponse]:
+    base = {
+        "id": wave.id,
+        "wave_number": wave.wave_number,
+        "status": wave.status,
+        "total_orders_count": wave.total_orders_count,
+        "progress": calculate_wave_progress(wave),
+        "created_at": wave.created_at,
+    }
+    if summary is not None:
+        return WaveCreateResponse(**base, allocation_summary=summary)
+    return WaveResponse(**base)
+
+
 @router.get("", response_model=list[WaveResponse])
 async def list_waves(
     db: AsyncSession = Depends(get_db),
     _: User = Depends(get_current_user),
 ):
     waves = await wave_service.get_waves(db)
-    return [
-        WaveResponse(
-            id=w.id,
-            wave_number=w.wave_number,
-            status=w.status,
-            total_orders_count=w.total_orders_count,
-            progress=calculate_wave_progress(w),
-            created_at=w.created_at,
-        )
-        for w in waves
-    ]
+    return [_wave_response(w) for w in waves]
 
 
-@router.post("", response_model=WaveResponse, status_code=201)
+@router.post("", response_model=WaveCreateResponse, status_code=201)
 async def create_wave(
     data: WaveCreate,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
 ):
-    wave = await wave_service.create_wave(db, data.order_ids, current_user.id)
-    return WaveResponse(
-        id=wave.id,
-        wave_number=wave.wave_number,
-        status=wave.status,
-        total_orders_count=wave.total_orders_count,
-        progress=calculate_wave_progress(wave),
-        created_at=wave.created_at,
+    try:
+        result = await wave_service.create_wave(db, data.order_ids, current_user.id)
+    except EmptyWaveError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    summary = WaveAllocationSummary(
+        lines_fully_allocated=result.summary.lines_fully_allocated,
+        lines_partially_allocated=result.summary.lines_partially_allocated,
+        lines_skipped=result.summary.lines_skipped,
+        total_units_allocated=result.summary.total_units_allocated,
     )
+    return _wave_response(result.wave, summary=summary)
 
 
 @router.get("/{wave_id}", response_model=WaveResponse)
@@ -69,11 +80,4 @@ async def get_wave(
     wave = await wave_service.get_wave_by_id(db, wave_id)
     if not wave:
         raise HTTPException(status_code=404, detail="Wave not found")
-    return WaveResponse(
-        id=wave.id,
-        wave_number=wave.wave_number,
-        status=wave.status,
-        total_orders_count=wave.total_orders_count,
-        progress=calculate_wave_progress(wave),
-        created_at=wave.created_at,
-    )
+    return _wave_response(wave)

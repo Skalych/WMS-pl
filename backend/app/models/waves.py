@@ -56,6 +56,9 @@ class MicroTaskItem(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     micro_task_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("micro_tasks.id", ondelete="CASCADE"), nullable=False)
+    order_item_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("order_items.id", ondelete="SET NULL"), nullable=True
+    )
     product_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
     source_location_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("locations.id", ondelete="CASCADE"), nullable=False)
     target_location_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("locations.id", ondelete="CASCADE"), nullable=False)
@@ -64,6 +67,7 @@ class MicroTaskItem(Base):
     status: Mapped[TaskStatus] = mapped_column(Enum(TaskStatus), nullable=False, default=TaskStatus.PENDING)
 
     micro_task: Mapped["MicroTask"] = relationship("MicroTask", back_populates="items")
+    order_item: Mapped[Optional["OrderItem"]] = relationship("OrderItem")
     product: Mapped["Product"] = relationship("Product")
     source_location: Mapped["Location"] = relationship("Location", foreign_keys=[source_location_id])
     target_location: Mapped["Location"] = relationship("Location", foreign_keys=[target_location_id])

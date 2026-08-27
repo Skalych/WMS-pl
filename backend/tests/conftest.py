@@ -166,6 +166,7 @@ async def seeded_db(db_session: AsyncSession):
             product_id=product_small.id,
             location_id=storage_loc.id,
             quantity=100,
+            reserved_quantity=5,
         ),
         InventoryBalance(
             id=uuid.uuid4(),
@@ -192,6 +193,7 @@ async def seeded_db(db_session: AsyncSession):
     micro_task_item = MicroTaskItem(
         id=uuid.uuid4(),
         micro_task_id=micro_task.id,
+        order_item_id=order_items[0].id,
         product_id=product_small.id,
         source_location_id=storage_loc.id,
         target_location_id=staging_loc.id,

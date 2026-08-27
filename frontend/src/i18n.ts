@@ -127,6 +127,9 @@ const resources = {
         loadingWaves: 'Loading waves…',
         createWaveFailed: 'Failed to create wave.',
         selectAllPending: 'Select all pending',
+        allocatedColumn: 'In wave / need',
+        waveCreatedSummary:
+          'Wave created. Full lines: {{full}}, partial: {{partial}}, skipped (0 stock): {{skipped}}. Units allocated: {{units}}.',
       },
       inbound: {
         title: 'Inbound',
@@ -424,6 +427,9 @@ const resources = {
         loadingWaves: 'Завантаження хвиль…',
         createWaveFailed: 'Не вдалося створити хвилю.',
         selectAllPending: 'Обрати всі pending',
+        allocatedColumn: 'У хвилі / треба',
+        waveCreatedSummary:
+          'Хвилю створено. Повністю: {{full}}, частково: {{partial}}, пропущено (0 на складі): {{skipped}}. Одиниць у хвилі: {{units}}.',
       },
       inbound: {
         title: 'Приймання',

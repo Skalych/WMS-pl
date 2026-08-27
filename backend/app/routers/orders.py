@@ -12,6 +12,31 @@ from typing import Optional
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
 
+def _order_totals(order) -> tuple[int, int]:
+    items = order.items or []
+    total_requested = sum(i.requested_quantity for i in items)
+    total_allocated = sum(i.allocated_quantity for i in items)
+    return total_requested, total_allocated
+
+
+def _order_response(order) -> OrderResponse:
+    total_requested, total_allocated = _order_totals(order)
+    return OrderResponse(
+        id=order.id,
+        order_number=order.order_number,
+        status=order.status,
+        priority=order.priority,
+        customer_name=order.customer_name,
+        shipping_address=order.shipping_address,
+        item_count=len(order.items) if order.items else 0,
+        total_requested=total_requested,
+        total_allocated=total_allocated,
+        wave_number=order.wave_orders[0].wave.wave_number if getattr(order, "wave_orders", None) else None,
+        macro_order_id=order.macro_order_id,
+        created_at=order.created_at,
+    )
+
+
 @router.get("/macro", response_model=list[MacroOrderResponse])
 async def list_macro_orders(
     db: AsyncSession = Depends(get_db),
@@ -59,20 +84,7 @@ async def list_orders(
     _: User = Depends(get_current_user),
 ):
     orders = await order_service.get_orders(db, status=status)
-    return [
-        OrderResponse(
-            id=o.id,
-            order_number=o.order_number,
-            status=o.status,
-            priority=o.priority,
-            customer_name=o.customer_name,
-            shipping_address=o.shipping_address,
-            item_count=len(o.items) if o.items else 0,
-            wave_number=o.wave_orders[0].wave.wave_number if getattr(o, "wave_orders", None) else None,
-            created_at=o.created_at,
-        )
-        for o in orders
-    ]
+    return [_order_response(o) for o in orders]
 
 
 @router.post("", response_model=OrderResponse, status_code=201)
@@ -84,17 +96,7 @@ async def create_order(
     order = await order_service.create_order(
         db, data.customer_name, data.shipping_address, data.priority, data.items, data.macro_order_id
     )
-    return OrderResponse(
-        id=order.id,
-        order_number=order.order_number,
-        status=order.status,
-        priority=order.priority,
-        customer_name=order.customer_name,
-        shipping_address=order.shipping_address,
-        item_count=len(order.items) if getattr(order, "items", None) else 0,
-        wave_number=order.wave_orders[0].wave.wave_number if getattr(order, "wave_orders", None) else None,
-        created_at=order.created_at,
-    )
+    return _order_response(order)
 
 
 @router.get("/{order_id}", response_model=OrderResponse)
@@ -106,17 +108,7 @@ async def get_order(
     order = await order_service.get_order_by_id(db, order_id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
-    return OrderResponse(
-        id=order.id,
-        order_number=order.order_number,
-        status=order.status,
-        priority=order.priority,
-        customer_name=order.customer_name,
-        shipping_address=order.shipping_address,
-        item_count=len(order.items) if getattr(order, "items", None) else 0,
-        wave_number=order.wave_orders[0].wave.wave_number if getattr(order, "wave_orders", None) else None,
-        created_at=order.created_at,
-    )
+    return _order_response(order)
 
 
 @router.patch("/{order_id}/status", response_model=OrderResponse)
@@ -129,14 +121,4 @@ async def update_order_status(
     order = await order_service.update_order_status(db, order_id, data.status)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
-    return OrderResponse(
-        id=order.id,
-        order_number=order.order_number,
-        status=order.status,
-        priority=order.priority,
-        customer_name=order.customer_name,
-        shipping_address=order.shipping_address,
-        item_count=len(order.items) if getattr(order, "items", None) else 0,
-        wave_number=order.wave_orders[0].wave.wave_number if getattr(order, "wave_orders", None) else None,
-        created_at=order.created_at,
-    )
+    return _order_response(order)

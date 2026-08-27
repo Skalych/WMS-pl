@@ -92,6 +92,12 @@ async def perform_simulation_tick(session: AsyncSession):
             if task.status == TaskStatus.COMPLETED:
                 continue
 
+            if task.status == TaskStatus.PENDING:
+                worker = random.choice(picking_workers)
+                task.status = TaskStatus.IN_PROGRESS
+                task.assigned_user_id = worker.id
+                task.started_at = datetime.now(timezone.utc)
+
             task_all_items_completed = True
 
             for item in task.items:
@@ -116,14 +122,27 @@ async def perform_simulation_tick(session: AsyncSession):
                 items_picked_this_tick += pick_qty
                 worker.current_location_id = item.source_location_id
 
-                await inventory_service.commit_pick(
-                    session,
-                    product_id=item.product_id,
-                    location_id=item.source_location_id,
-                    quantity=pick_qty,
-                    reference_id=task.id,
-                    user_id=worker.id,
-                )
+                try:
+                    await inventory_service.commit_pick(
+                        session,
+                        product_id=item.product_id,
+                        location_id=item.source_location_id,
+                        quantity=pick_qty,
+                        reference_id=wave.id,
+                        user_id=worker.id,
+                    )
+                except (
+                    inventory_service.BalanceNotFoundError,
+                    inventory_service.InsufficientStockError,
+                    inventory_service.InsufficientReservedError,
+                ):
+                    item.quantity_picked -= pick_qty
+                    worker_capacity[worker.id] += pick_qty
+                    items_picked_this_tick -= pick_qty
+                    task_all_items_completed = False
+                    all_tasks_completed = False
+                    continue
+
                 await user_service.increment_shift_pick(session, worker.id, pick_qty)
 
                 if item.quantity_picked >= item.quantity_to_pick:
@@ -139,9 +158,6 @@ async def perform_simulation_tick(session: AsyncSession):
                 task.status = TaskStatus.COMPLETED
                 task.completed_at = datetime.now(timezone.utc)
             else:
-                if task.status == TaskStatus.PENDING:
-                    task.status = TaskStatus.IN_PROGRESS
-                    task.started_at = datetime.now(timezone.utc)
                 all_tasks_completed = False
 
         if all_tasks_completed and wave.micro_tasks:

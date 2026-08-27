@@ -18,6 +18,7 @@ export enum WorkerStatus {
 
 export enum OrderStatus {
   PENDING = 'PENDING',
+  PARTIALLY_IN_WAVE = 'PARTIALLY_IN_WAVE',
   IN_WAVE = 'IN_WAVE',
   PICKED_BATCH = 'PICKED_BATCH',
   SORTED = 'SORTED',
@@ -147,10 +148,23 @@ export interface Order {
   orderNumber: string;
   customerName: string;
   itemCount: number;
+  totalRequested: number;
+  totalAllocated: number;
   status: OrderStatus;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
   waveNumber?: string;
   createdAt: string;
+}
+
+export interface WaveAllocationSummary {
+  linesFullyAllocated: number;
+  linesPartiallyAllocated: number;
+  linesSkipped: number;
+  totalUnitsAllocated: number;
+}
+
+export interface WaveCreateResult extends Wave {
+  allocationSummary: WaveAllocationSummary;
 }
 
 export interface Wave {

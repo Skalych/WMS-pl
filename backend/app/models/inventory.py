@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, date
 from typing import Optional
-from sqlalchemy import String, Enum, Integer, Date, DateTime, ForeignKey, UniqueConstraint, func, UUID
+from sqlalchemy import String, Enum, Integer, Date, DateTime, ForeignKey, UniqueConstraint, CheckConstraint, func, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.models.enums import TransactionType
@@ -10,6 +10,9 @@ class InventoryBalance(Base):
     __tablename__ = "inventory_balances"
     __table_args__ = (
         UniqueConstraint("product_id", "location_id", "lot_number", name="uq_product_location_lot"),
+        CheckConstraint("quantity >= 0", name="ck_inventory_quantity_nonneg"),
+        CheckConstraint("reserved_quantity >= 0", name="ck_inventory_reserved_nonneg"),
+        CheckConstraint("reserved_quantity <= quantity", name="ck_inventory_reserved_lte_quantity"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

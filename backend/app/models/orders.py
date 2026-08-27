@@ -40,6 +40,7 @@ class OrderItem(Base):
     order_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("orders.id", ondelete="CASCADE"), nullable=False)
     product_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
     requested_quantity: Mapped[int] = mapped_column(Integer, nullable=False)
+    allocated_quantity: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     sorted_quantity: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
     order: Mapped["Order"] = relationship("Order", back_populates="items")

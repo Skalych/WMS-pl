@@ -4,7 +4,6 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import HTTPException
 from sqlalchemy import select, func, case
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
@@ -22,6 +21,23 @@ class InsufficientStockError(Exception):
         self.requested = requested
         self.available = available
         super().__init__(f"Insufficient stock for product {product_id}: need {requested}, available {available}")
+
+
+class BalanceNotFoundError(Exception):
+    def __init__(self, product_id: uuid.UUID, location_id: uuid.UUID):
+        self.product_id = product_id
+        self.location_id = location_id
+        super().__init__(f"No inventory balance for product {product_id} at location {location_id}")
+
+
+class InsufficientReservedError(Exception):
+    def __init__(self, product_id: uuid.UUID, requested: int, reserved: int):
+        self.product_id = product_id
+        self.requested = requested
+        self.reserved = reserved
+        super().__init__(
+            f"Insufficient reserved stock for product {product_id}: need {requested}, reserved {reserved}"
+        )
 
 
 async def record_transaction(
@@ -63,6 +79,20 @@ async def get_balance_at_location(
     return result.scalar_one_or_none()
 
 
+async def get_balance_at_location_for_update(
+    db: AsyncSession, product_id: uuid.UUID, location_id: uuid.UUID
+) -> Optional[InventoryBalance]:
+    result = await db.execute(
+        select(InventoryBalance)
+        .where(
+            InventoryBalance.product_id == product_id,
+            InventoryBalance.location_id == location_id,
+        )
+        .with_for_update()
+    )
+    return result.scalar_one_or_none()
+
+
 async def reserve_stock(
     db: AsyncSession,
     product_id: uuid.UUID,
@@ -71,7 +101,7 @@ async def reserve_stock(
     reference_id: uuid.UUID,
     user_id: uuid.UUID,
 ) -> InventoryBalance:
-    balance = await get_balance_at_location(db, product_id, location_id)
+    balance = await get_balance_at_location_for_update(db, product_id, location_id)
     if not balance:
         raise InsufficientStockError(product_id, quantity, 0)
     available = balance.quantity - balance.reserved_quantity
@@ -89,11 +119,17 @@ async def commit_pick(
     reference_id: uuid.UUID,
     user_id: uuid.UUID,
 ) -> None:
-    balance = await get_balance_at_location(db, product_id, location_id)
+    balance = await get_balance_at_location_for_update(db, product_id, location_id)
     if not balance:
-        return
-    balance.quantity = max(0, balance.quantity - quantity)
-    balance.reserved_quantity = max(0, balance.reserved_quantity - quantity)
+        raise BalanceNotFoundError(product_id, location_id)
+    if balance.quantity < quantity:
+        raise InsufficientStockError(
+            product_id, quantity, balance.quantity - balance.reserved_quantity
+        )
+    if balance.reserved_quantity < quantity:
+        raise InsufficientReservedError(product_id, quantity, balance.reserved_quantity)
+    balance.quantity -= quantity
+    balance.reserved_quantity -= quantity
     await record_transaction(
         db,
         product_id=product_id,
@@ -113,7 +149,7 @@ async def receive_stock(
     reference_id: uuid.UUID,
     user_id: uuid.UUID,
 ) -> InventoryBalance:
-    balance = await get_balance_at_location(db, product_id, location_id)
+    balance = await get_balance_at_location_for_update(db, product_id, location_id)
     if balance:
         balance.quantity += quantity
     else:
@@ -153,7 +189,19 @@ async def get_transactions(db: AsyncSession, skip: int = 0, limit: int = 50):
     return result.unique().scalars().all(), count or 0
 
 
-async def find_best_balance(balances: list[InventoryBalance], quantity: int) -> Optional[InventoryBalance]:
+async def find_best_balance(
+    db: AsyncSession,
+    product_id: uuid.UUID,
+    quantity: int,
+) -> Optional[InventoryBalance]:
+    """Pick a balance row with enough available stock, locked for update."""
+    result = await db.execute(
+        select(InventoryBalance)
+        .where(InventoryBalance.product_id == product_id)
+        .order_by((InventoryBalance.quantity - InventoryBalance.reserved_quantity).desc())
+        .with_for_update()
+    )
+    balances = result.scalars().all()
     for balance in balances:
         available = balance.quantity - balance.reserved_quantity
         if available >= quantity:
@@ -161,65 +209,7 @@ async def find_best_balance(balances: list[InventoryBalance], quantity: int) -> 
     for balance in balances:
         if balance.quantity - balance.reserved_quantity > 0:
             return balance
-    return balances[0] if balances else None
-
-
-async def get_inventory_items(
-    db: AsyncSession, 
-    skip: int = 0, 
-    limit: int = 50, 
-    search: Optional[str] = None,
-    category: Optional[str] = None,
-    status: Optional[str] = None,
-    sort_by: Optional[str] = None
-):
-    query = (
-        select(InventoryBalance)
-        .options(
-            joinedload(InventoryBalance.product).joinedload(Product.category),
-            joinedload(InventoryBalance.location),
-        )
-    )
-    
-    # Needs join for search or category filtering
-    if search or category:
-        query = query.join(InventoryBalance.product)
-        if category:
-            query = query.join(Product.category).where(Category.name == category)
-        if search:
-            query = query.where(
-                Product.sku.ilike(f"%{search}%") | Product.name.ilike(f"%{search}%")
-            )
-            
-    if status:
-        available_expr = InventoryBalance.quantity - InventoryBalance.reserved_quantity
-        if status == 'out_of_stock':
-            query = query.where(available_expr <= 0)
-        elif status == 'low_stock':
-            query = query.where((available_expr > 0) & (available_expr <= LOW_STOCK_THRESHOLD))
-        elif status == 'in_stock':
-            query = query.where(available_expr > LOW_STOCK_THRESHOLD)
-        
-    # Get total count first
-    count_query = select(func.count()).select_from(query.subquery())
-    total_count = await db.scalar(count_query)
-    # Handle sorting
-    order_clause = [InventoryBalance.updated_at.desc(), InventoryBalance.id.asc()]
-    if sort_by == 'qty_desc':
-        order_clause = [InventoryBalance.quantity.desc(), InventoryBalance.id.asc()]
-    elif sort_by == 'qty_asc':
-        order_clause = [InventoryBalance.quantity.asc(), InventoryBalance.id.asc()]
-    elif sort_by == 'sku_asc':
-        order_clause = [Product.sku.asc(), InventoryBalance.id.asc()]
-
-    # Get paginated items
-    result = await db.execute(
-        query.order_by(*order_clause)
-        .offset(skip).limit(limit)
-    )
-    items = result.unique().scalars().all()
-    
-    return items, total_count
+    return None
 
 
 def compute_stock_status(quantity: int, reserved: int) -> str:
@@ -231,35 +221,89 @@ def compute_stock_status(quantity: int, reserved: int) -> str:
     return "in_stock"
 
 
+async def get_inventory_items(
+    db: AsyncSession,
+    skip: int = 0,
+    limit: int = 50,
+    search: Optional[str] = None,
+    category: Optional[str] = None,
+    status: Optional[str] = None,
+    sort_by: Optional[str] = None,
+):
+    query = (
+        select(InventoryBalance)
+        .options(
+            joinedload(InventoryBalance.product).joinedload(Product.category),
+            joinedload(InventoryBalance.location),
+        )
+    )
+
+    if search or category:
+        query = query.join(InventoryBalance.product)
+        if category:
+            query = query.join(Product.category).where(Category.name == category)
+        if search:
+            query = query.where(
+                Product.sku.ilike(f"%{search}%") | Product.name.ilike(f"%{search}%")
+            )
+
+    if status:
+        available_expr = InventoryBalance.quantity - InventoryBalance.reserved_quantity
+        if status == "out_of_stock":
+            query = query.where(available_expr <= 0)
+        elif status == "low_stock":
+            query = query.where((available_expr > 0) & (available_expr <= LOW_STOCK_THRESHOLD))
+        elif status == "in_stock":
+            query = query.where(available_expr > LOW_STOCK_THRESHOLD)
+
+    count_query = select(func.count()).select_from(query.subquery())
+    total_count = await db.scalar(count_query)
+    order_clause = [InventoryBalance.updated_at.desc(), InventoryBalance.id.asc()]
+    if sort_by == "qty_desc":
+        order_clause = [InventoryBalance.quantity.desc(), InventoryBalance.id.asc()]
+    elif sort_by == "qty_asc":
+        order_clause = [InventoryBalance.quantity.asc(), InventoryBalance.id.asc()]
+    elif sort_by == "sku_asc":
+        order_clause = [Product.sku.asc(), InventoryBalance.id.asc()]
+
+    result = await db.execute(query.order_by(*order_clause).offset(skip).limit(limit))
+    items = result.unique().scalars().all()
+
+    return items, total_count
+
+
 async def get_inventory_stats(db: AsyncSession):
-    # Optimized SQL aggregation so we don't pull all inventory rows into Python memory
     query = select(
         func.count(InventoryBalance.id).label("total"),
         func.sum(
             case(
                 (InventoryBalance.quantity - InventoryBalance.reserved_quantity > LOW_STOCK_THRESHOLD, 1),
-                else_=0
+                else_=0,
             )
         ).label("in_stock"),
         func.sum(
             case(
-                ((InventoryBalance.quantity - InventoryBalance.reserved_quantity <= LOW_STOCK_THRESHOLD) & (InventoryBalance.quantity - InventoryBalance.reserved_quantity > 0), 1),
-                else_=0
+                (
+                    (InventoryBalance.quantity - InventoryBalance.reserved_quantity <= LOW_STOCK_THRESHOLD)
+                    & (InventoryBalance.quantity - InventoryBalance.reserved_quantity > 0),
+                    1,
+                ),
+                else_=0,
             )
         ).label("low_stock"),
         func.sum(
             case(
                 (InventoryBalance.quantity - InventoryBalance.reserved_quantity <= 0, 1),
-                else_=0
+                else_=0,
             )
-        ).label("out_of_stock")
+        ).label("out_of_stock"),
     )
     result = await db.execute(query)
     row = result.fetchone()
-    
+
     return {
         "total_skus": row.total or 0 if row else 0,
         "in_stock": row.in_stock or 0 if row else 0,
         "low_stock": row.low_stock or 0 if row else 0,
-        "out_of_stock": row.out_of_stock or 0 if row else 0
+        "out_of_stock": row.out_of_stock or 0 if row else 0,
     }
