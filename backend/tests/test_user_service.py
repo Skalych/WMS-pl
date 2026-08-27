@@ -142,6 +142,19 @@ def test_compute_break_summary_over_limit():
 
 
 @pytest.mark.asyncio
+async def test_start_shift_sets_role_floor_status(seeded_db, db_session):
+    inbound_id = seeded_db["inbound_op"].id
+    await user_service.start_shift(db_session, inbound_id)
+    inbound = await user_service.get_user_by_id(db_session, inbound_id)
+    assert inbound.status == WorkerStatus.RECEIVING
+
+    await user_service.start_break(db_session, inbound_id)
+    await user_service.end_break(db_session, inbound_id)
+    inbound_after_break = await user_service.get_user_by_id(db_session, inbound_id)
+    assert inbound_after_break.status == WorkerStatus.RECEIVING
+
+
+@pytest.mark.asyncio
 async def test_build_shift_response_includes_break_summary(seeded_db, db_session):
     picker_id = seeded_db["picker"].id
     await user_service.start_shift(db_session, picker_id)

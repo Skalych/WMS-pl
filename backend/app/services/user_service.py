@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.users import User, Shift, ShiftEvent
 from app.models.enums import UserRole, WorkerStatus, ShiftEventType, TaskStatus
 from app.models.waves import MicroTask
+from app.core.config import settings
 from app.core.security import hash_password, verify_password
 from app.schemas.users import (
     BreakSessionResponse,
@@ -23,7 +24,36 @@ from app.schemas.users import (
     TeamMemberResponse,
 )
 
-BREAK_LIMIT_MINUTES = 23
+BREAK_LIMIT_MINUTES = settings.BREAK_LIMIT_MINUTES
+
+
+def floor_status_for_role(role: UserRole) -> WorkerStatus:
+    """Worker floor status after shift start or break end."""
+    if role == UserRole.INBOUND_OPERATOR:
+        return WorkerStatus.RECEIVING
+    if role == UserRole.PACKER_DISPATCHER:
+        return WorkerStatus.SORTING
+    return WorkerStatus.IDLE
+
+
+async def _get_user_row(db: AsyncSession, user_id: uuid.UUID) -> Optional[User]:
+    result = await db.execute(select(User).where(User.id == user_id))
+    return result.scalar_one_or_none()
+
+
+def _apply_user_fields(
+    user: User,
+    *,
+    status: Optional[WorkerStatus] = None,
+    location_id: Optional[uuid.UUID] = None,
+    efficiency: Optional[float] = None,
+) -> None:
+    if status is not None:
+        user.status = status
+    if efficiency is not None:
+        user.efficiency = efficiency
+    if location_id is not None:
+        user.current_location_id = location_id
 
 
 @dataclass
@@ -171,12 +201,7 @@ async def update_user_status(db: AsyncSession, user_id: uuid.UUID, status: Optio
     user = await get_user_by_id(db, user_id)
     if not user:
         return None
-    if status is not None:
-        user.status = status
-    if efficiency is not None:
-        user.efficiency = efficiency
-    if location_id is not None:
-        user.current_location_id = location_id
+    _apply_user_fields(user, status=status, location_id=location_id, efficiency=efficiency)
     await db.commit()
     await db.refresh(user)
     return user
@@ -187,14 +212,8 @@ async def bulk_update_status(db: AsyncSession, user_ids: list[uuid.UUID], status
     result = await db.execute(query)
     users = result.scalars().all()
     for user in users:
-        # If requested to set to IDLE (starting shift), map it based on user role
         if status == WorkerStatus.IDLE and user.status == WorkerStatus.OFFLINE:
-            if user.role == UserRole.INBOUND_OPERATOR:
-                user.status = WorkerStatus.RECEIVING
-            elif user.role == UserRole.PACKER_DISPATCHER:
-                user.status = WorkerStatus.SORTING
-            else:
-                user.status = WorkerStatus.IDLE
+            user.status = floor_status_for_role(user.role)
         else:
             user.status = status
 
@@ -240,42 +259,38 @@ async def get_current_shift_with_events(db: AsyncSession, user_id: uuid.UUID) ->
     return result.unique().scalars().first()
 
 async def start_shift(db: AsyncSession, user_id: uuid.UUID) -> Shift:
-    # Close any existing open shifts
+    now = datetime.now(timezone.utc)
     existing_shift = await get_current_shift(db, user_id)
     if existing_shift:
-        existing_shift.end_time = func.now()
+        existing_shift.end_time = now
         db.add(ShiftEvent(id=uuid.uuid4(), shift_id=existing_shift.id, event_type=ShiftEventType.LOGOUT))
-    
-    # Create new shift
+
     new_shift = Shift(id=uuid.uuid4(), user_id=user_id)
     db.add(new_shift)
-    await db.flush() # to get ID
-    
-    login_event = ShiftEvent(id=uuid.uuid4(), shift_id=new_shift.id, event_type=ShiftEventType.LOGIN)
-    db.add(login_event)
-    
-    user = await get_user_by_id(db, user_id)
-    target_status = WorkerStatus.IDLE
+    await db.flush()
+
+    db.add(ShiftEvent(id=uuid.uuid4(), shift_id=new_shift.id, event_type=ShiftEventType.LOGIN))
+
+    user = await _get_user_row(db, user_id)
     if user:
-        if user.role == UserRole.INBOUND_OPERATOR:
-            target_status = WorkerStatus.RECEIVING
-        elif user.role == UserRole.PACKER_DISPATCHER:
-            target_status = WorkerStatus.SORTING
-            
+        _apply_user_fields(user, status=floor_status_for_role(user.role))
         user.current_cart_items = 0
 
-    await update_user_status(db, user_id, status=target_status)
     await db.commit()
     await db.refresh(new_shift)
     return new_shift
 
 async def end_shift(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
+    now = datetime.now(timezone.utc)
     shift = await get_current_shift(db, user_id)
     if shift:
-        shift.end_time = func.now()
+        shift.end_time = now
         db.add(ShiftEvent(id=uuid.uuid4(), shift_id=shift.id, event_type=ShiftEventType.LOGOUT))
-        
-    await update_user_status(db, user_id, status=WorkerStatus.OFFLINE)
+
+    user = await _get_user_row(db, user_id)
+    if user:
+        _apply_user_fields(user, status=WorkerStatus.OFFLINE)
+
     await db.commit()
     return shift
 
@@ -283,37 +298,33 @@ async def start_break(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
     shift = await get_current_shift(db, user_id)
     if not shift:
         return None
-        
-    user = await get_user_by_id(db, user_id)
+
+    user = await _get_user_row(db, user_id)
     if user and user.status == WorkerStatus.BREAK:
         return shift
-        
+
     db.add(ShiftEvent(id=uuid.uuid4(), shift_id=shift.id, event_type=ShiftEventType.BREAK_START))
-    await update_user_status(db, user_id, status=WorkerStatus.BREAK)
+    if user:
+        _apply_user_fields(user, status=WorkerStatus.BREAK)
+
     await db.commit()
-    return await get_current_shift(db, user_id)
+    return await get_current_shift_with_events(db, user_id)
 
 async def end_break(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
     shift = await get_current_shift(db, user_id)
     if not shift:
         return None
-        
-    user = await get_user_by_id(db, user_id)
+
+    user = await _get_user_row(db, user_id)
     if user and user.status != WorkerStatus.BREAK:
         return shift
-        
+
     db.add(ShiftEvent(id=uuid.uuid4(), shift_id=shift.id, event_type=ShiftEventType.BREAK_END))
-    
-    target_status = WorkerStatus.IDLE
     if user:
-        if user.role == UserRole.INBOUND_OPERATOR:
-            target_status = WorkerStatus.RECEIVING
-        elif user.role == UserRole.PACKER_DISPATCHER:
-            target_status = WorkerStatus.SORTING
-            
-    await update_user_status(db, user_id, status=target_status)
+        _apply_user_fields(user, status=floor_status_for_role(user.role))
+
     await db.commit()
-    return await get_current_shift(db, user_id)
+    return await get_current_shift_with_events(db, user_id)
 
 
 async def increment_shift_pick(

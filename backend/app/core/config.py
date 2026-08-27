@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 1 day
 
+    BREAK_LIMIT_MINUTES: int = 23
+
     # Dev defaults; override via env JSON array, e.g. CORS_ORIGINS=["https://app.example.com"]
     CORS_ORIGINS: list[str] = [
         "http://localhost:3000",
