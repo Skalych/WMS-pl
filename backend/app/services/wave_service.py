@@ -13,6 +13,7 @@ from sqlalchemy.orm import selectinload, joinedload
 from app.models.waves import Wave, WaveOrder, MicroTask, MicroTaskItem
 from app.models.orders import Order, OrderItem
 from app.models.topology import Location
+from app.models.users import User
 from app.models.enums import WaveStatus, OrderStatus, LocationType, TaskType, TaskStatus
 from app.services import inventory_service
 
@@ -248,3 +249,82 @@ async def count_active_waves(db: AsyncSession) -> int:
         )
     )
     return result.scalar_one()
+
+
+def _recompute_order_status(order: Order) -> None:
+    if all(item.allocated_quantity <= 0 for item in order.items):
+        order.status = OrderStatus.PENDING
+    elif all(item.allocated_quantity >= item.requested_quantity for item in order.items):
+        order.status = OrderStatus.IN_WAVE
+    else:
+        order.status = OrderStatus.PARTIALLY_IN_WAVE
+
+
+async def cancel_wave(
+    db: AsyncSession,
+    wave_id: uuid.UUID,
+) -> Wave:
+    wave = await get_wave_by_id(db, wave_id)
+    if not wave:
+        raise HTTPException(status_code=404, detail="Wave not found")
+    if wave.status == WaveStatus.CANCELLED:
+        raise HTTPException(status_code=400, detail="Wave is already cancelled")
+    if wave.status == WaveStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="Cannot cancel a completed wave")
+    if wave.status in (WaveStatus.PICKED, WaveStatus.SORTING):
+        raise HTTPException(status_code=400, detail="Cannot cancel wave after picking finished")
+
+    from app.models.pick_sessions import PickSession
+    from app.models.enums import PickStep, WorkerStatus
+
+    session_result = await db.execute(
+        select(PickSession)
+        .join(MicroTask, PickSession.micro_task_id == MicroTask.id)
+        .where(MicroTask.wave_id == wave_id, PickSession.step != PickStep.COMPLETED)
+    )
+    for session in session_result.scalars().all():
+        session.step = PickStep.COMPLETED
+
+    order_ids = [wo.order_id for wo in wave.wave_orders]
+
+    for task in wave.micro_tasks:
+        if task.assigned_user_id:
+            picker = await db.get(User, task.assigned_user_id)
+            if picker and picker.status == WorkerStatus.PICKING:
+                picker.status = WorkerStatus.IDLE
+        task.status = TaskStatus.CANCELLED
+        task.assigned_user_id = None
+        for item in task.items:
+            unpicked = int(float(item.quantity_to_pick) - float(item.quantity_picked))
+            if unpicked > 0:
+                try:
+                    await inventory_service.release_reserved_stock(
+                        db,
+                        item.product_id,
+                        item.source_location_id,
+                        unpicked,
+                    )
+                except inventory_service.BalanceNotFoundError:
+                    # Stale task line after re-seed or stock already moved
+                    pass
+                if item.order_item_id:
+                    order_item = await db.get(OrderItem, item.order_item_id)
+                    if order_item:
+                        order_item.allocated_quantity = max(0, order_item.allocated_quantity - unpicked)
+            item.status = TaskStatus.CANCELLED
+
+    wave.status = WaveStatus.CANCELLED
+
+    if order_ids:
+        orders_result = await db.execute(
+            select(Order)
+            .options(joinedload(Order.items))
+            .where(Order.id.in_(order_ids))
+        )
+        for order in orders_result.unique().scalars().all():
+            _recompute_order_status(order)
+
+    await db.commit()
+    loaded = await get_wave_by_id(db, wave_id)
+    assert loaded is not None
+    return loaded

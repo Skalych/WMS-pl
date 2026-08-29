@@ -118,6 +118,18 @@ async def create_wave(
     return _wave_response(result.wave, summary=summary)
 
 
+@router.post("/{wave_id}/cancel", response_model=WaveResponse)
+async def cancel_wave(
+    wave_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
+):
+    wave = await wave_service.cancel_wave(db, wave_id)
+    from app.services.shift_live_service import publish_shift_live_update
+    await publish_shift_live_update(db)
+    return _wave_response(wave)
+
+
 @router.get("/{wave_id}", response_model=WaveResponse)
 async def get_wave(
     wave_id: uuid.UUID,

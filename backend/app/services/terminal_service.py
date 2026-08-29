@@ -106,7 +106,7 @@ async def get_next_task(db: AsyncSession, user: User) -> Optional[dict]:
         "task_type": task.type.value,
         "location_code": first_item.source_location.code if first_item.source_location else "",
         "product_sku": first_item.product.sku if first_item.product else "",
-        "quantity_required": first_item.quantity_to_pick - first_item.quantity_picked,
+        "quantity_required": float(first_item.quantity_to_pick - first_item.quantity_picked),
         "cart_id": None,
     }
 
@@ -133,15 +133,15 @@ async def process_scan(db: AsyncSession, task_id: uuid.UUID, barcode: str, quant
         raise HTTPException(status_code=400, detail="Barcode does not match expected product or location")
 
     remaining = active_item.quantity_to_pick - active_item.quantity_picked
-    pick_qty = min(quantity, remaining)
-    active_item.quantity_picked += pick_qty
+    pick_qty = min(float(quantity), float(remaining))
+    active_item.quantity_picked = float(active_item.quantity_picked) + pick_qty
 
     try:
         await inventory_service.commit_pick(
             db,
             product_id=active_item.product_id,
             location_id=active_item.source_location_id,
-            quantity=pick_qty,
+            quantity=int(pick_qty),
             reference_id=task.wave_id or task_id,
             user_id=user.id,
         )
@@ -157,7 +157,7 @@ async def process_scan(db: AsyncSession, task_id: uuid.UUID, barcode: str, quant
         active_item.status = TaskStatus.COMPLETED
 
     all_done = all(i.quantity_picked >= i.quantity_to_pick for i in task.items)
-    await user_service.increment_shift_pick(db, user.id, pick_qty, tasks=1 if all_done else 0)
+    await user_service.increment_shift_pick(db, user.id, int(pick_qty), tasks=1 if all_done else 0)
     if all_done:
         task.status = TaskStatus.COMPLETED
         user.status = WorkerStatus.IDLE

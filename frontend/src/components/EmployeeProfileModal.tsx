@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { userService } from '../api/services';
 import { X, Clock, Activity, Play, Coffee, AlertTriangle } from 'lucide-react';
-import { BreakSession, Shift } from '../types';
+import { BreakSession, Shift, ShiftEventType } from '../types';
 
 interface ProfileEmployee {
   id: string;
@@ -91,6 +91,31 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
     }
     return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
   };
+
+  const formatEventType = (type: ShiftEventType | string) => {
+    switch (type) {
+      case ShiftEventType.SHIFT_CLOCK_IN:
+        return 'Terminal shift start';
+      case ShiftEventType.SHIFT_CLOCK_OUT:
+        return 'Terminal shift end';
+      case ShiftEventType.BREAK_START:
+        return 'Break start';
+      case ShiftEventType.BREAK_END:
+        return 'Break end';
+      case ShiftEventType.LOGIN:
+        return 'Shift login';
+      case ShiftEventType.LOGOUT:
+        return 'Shift logout';
+      default:
+        return String(type);
+    }
+  };
+
+  const shiftClockEvents = (currentShift?.events ?? []).filter(
+    (e) =>
+      e.event_type === ShiftEventType.SHIFT_CLOCK_IN ||
+      e.event_type === ShiftEventType.SHIFT_CLOCK_OUT,
+  );
 
   const renderBreakSummary = (summary: Shift['break_summary']) => (
     <div className="data-panel">
@@ -252,6 +277,31 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
                     </button>
                   </div>
 
+                  {shiftClockEvents.length > 0 && (
+                    <div className="data-panel">
+                      <div className="data-panel-header">
+                        <h3 className="data-panel-title">
+                          <Clock size={16} className="text-accent" />
+                          Terminal shift clock
+                        </h3>
+                      </div>
+                      <div className="data-panel-body">
+                        <div className="timeline-list">
+                          {shiftClockEvents
+                            .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+                            .map((event) => (
+                              <div key={event.id} className="timeline-item">
+                                <div className="timeline-content">
+                                  <div className="timeline-event">{formatEventType(event.event_type)}</div>
+                                  <div className="timeline-time">{new Date(event.timestamp).toLocaleString()}</div>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {renderBreakSummary(currentShift.break_summary)}
 
                   <div className="data-panel">
@@ -272,6 +322,7 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
                                   <div
                                     className={`timeline-dot ${
                                       event.event_type.includes('BREAK') ? 'timeline-dot--warning' :
+                                      event.event_type.includes('SHIFT_CLOCK') ? 'timeline-dot--success' :
                                       event.event_type.includes('LOGIN') ? 'timeline-dot--success' :
                                       'timeline-dot--info'
                                     }`}
@@ -281,7 +332,7 @@ export default function EmployeeProfileModal({ employee, onClose }: Props) {
                                   )}
                                 </div>
                                 <div className="timeline-content">
-                                  <div className="timeline-event">{event.event_type}</div>
+                                  <div className="timeline-event">{formatEventType(event.event_type)}</div>
                                   <div className="timeline-time">{new Date(event.timestamp).toLocaleString()}</div>
                                 </div>
                               </div>

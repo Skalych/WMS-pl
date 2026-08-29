@@ -49,15 +49,18 @@ async def seed():
 
         # ── Locations ──────────────────────────────────────────
         locations = {}
-        # Storage locations in Zone A
-        # 50 Aisles, 60 Sections (Racks), 5 Shelves
-        for aisle in range(1, 51):
-            for rack in range(1, 61):
-                for shelf in range(1, 6):
-                    code = f"{aisle:02d}-{rack:02d}-{shelf}"
+        # Storage grid: X (aisle 1–50) × Y (floor 10/20/30/40/50) × Z (shelf 1–5)
+        # Y: 10 = 1st floor, 20 = 2nd, … 50 = 5th
+        storage_aisles = range(1, 51)
+        storage_floors = [10, 20, 30, 40, 50]
+        storage_shelves = range(1, 6)
+        for aisle in storage_aisles:
+            for floor_y in storage_floors:
+                for shelf in storage_shelves:
+                    code = f"{aisle:02d}-{floor_y}-{shelf}"
                     loc = Location(
                         id=uuid.uuid4(), zone_id=zones["ZONE-A"].id,
-                        code=code, aisle=aisle, rack=rack, shelf=shelf, position=1,
+                        code=code, aisle=aisle, rack=floor_y, shelf=shelf, position=1,
                         type=LocationType.STORAGE, max_weight_kg=200.0, max_volume_m3=1.5,
                     )
                     db.add(loc)
@@ -84,6 +87,26 @@ async def seed():
             )
             db.add(loc)
             locations[code] = loc
+
+        # Picking buffers (acc = accumulation)
+        for i in range(1, 4):
+            code = f"b-{i}-acc"
+            loc = Location(
+                id=uuid.uuid4(), zone_id=zones["ZONE-STG"].id,
+                code=code, aisle=0, rack=i, shelf=0, position=1,
+                type=LocationType.STAGING_SORTING,
+            )
+            db.add(loc)
+            locations[code] = loc
+
+        # Demo storage location with verification barcode 90101025 (10-10-25)
+        demo_loc = Location(
+            id=uuid.uuid4(), zone_id=zones["ZONE-A"].id,
+            code="10-10-25", aisle=10, rack=10, shelf=25, position=1,
+            type=LocationType.STORAGE, max_weight_kg=200.0, max_volume_m3=1.5,
+        )
+        db.add(demo_loc)
+        locations["10-10-25"] = demo_loc
 
         # Shipping ramps
         for i in range(1, 3):
@@ -159,15 +182,15 @@ async def seed():
 
         # ── Users ──────────────────────────────────────────────
         users_data = [
-            ("admin@wms.local", "Admin Nexus", UserRole.ADMIN_MANAGER, WorkerStatus.IDLE),
-            ("ivan.p@wms.local", "Іван Петренко", UserRole.PICKER, WorkerStatus.PICKING),
-            ("maria.k@wms.local", "Марія Ковальчук", UserRole.PICKER, WorkerStatus.PICKING),
-            ("oleg.d@wms.local", "Олег Демченко", UserRole.INBOUND_OPERATOR, WorkerStatus.PUTAWAY),
-            ("anna.s@wms.local", "Анна Шевченко", UserRole.PACKER_DISPATCHER, WorkerStatus.SORTING),
-            ("dmytro.b@wms.local", "Дмитро Бондаренко", UserRole.INBOUND_OPERATOR, WorkerStatus.RECEIVING),
-            ("viktor.t@wms.local", "Віктор Ткаченко", UserRole.PACKER_DISPATCHER, WorkerStatus.DISPATCHING),
-            ("olena.kr@wms.local", "Олена Кравчук", UserRole.PICKER, WorkerStatus.BREAK),
-            ("serhiy.m@wms.local", "Сергій Мороз", UserRole.PICKER, WorkerStatus.IDLE),
+            ("admin@wms.local", "Admin Nexus", UserRole.ADMIN_MANAGER, WorkerStatus.OFFLINE),
+            ("ivan.p@wms.local", "Іван Петренко", UserRole.PICKER, WorkerStatus.OFFLINE),
+            ("maria.k@wms.local", "Марія Ковальчук", UserRole.PICKER, WorkerStatus.OFFLINE),
+            ("oleg.d@wms.local", "Олег Демченко", UserRole.INBOUND_OPERATOR, WorkerStatus.OFFLINE),
+            ("anna.s@wms.local", "Анна Шевченко", UserRole.PACKER_DISPATCHER, WorkerStatus.OFFLINE),
+            ("dmytro.b@wms.local", "Дмитро Бондаренко", UserRole.INBOUND_OPERATOR, WorkerStatus.OFFLINE),
+            ("viktor.t@wms.local", "Віктор Ткаченко", UserRole.PACKER_DISPATCHER, WorkerStatus.OFFLINE),
+            ("olena.kr@wms.local", "Олена Кравчук", UserRole.PICKER, WorkerStatus.OFFLINE),
+            ("serhiy.m@wms.local", "Сергій Мороз", UserRole.PICKER, WorkerStatus.OFFLINE),
             ("natalia.v@wms.local", "Наталія Власенко", UserRole.ADMIN_MANAGER, WorkerStatus.OFFLINE),
         ]
         users = {}
@@ -246,7 +269,7 @@ async def seed():
         task_item = MicroTaskItem(
             id=uuid.uuid4(), micro_task_id=task.id,
             product_id=products["SKU-APP-001"].id,
-            source_location_id=locations["01-01-1"].id,
+            source_location_id=locations["01-10-1"].id,
             target_location_id=locations["PUT-WALL-01"].id,
             quantity_to_pick=3, quantity_picked=2,
             status=TaskStatus.IN_PROGRESS,
@@ -305,16 +328,7 @@ async def seed():
                 )
                 db.add(sbin)
 
-        # ── Shifts ─────────────────────────────────────────────
-        for email in ["ivan.p@wms.local", "maria.k@wms.local", "anna.s@wms.local"]:
-            shift = Shift(
-                id=uuid.uuid4(), user_id=users[email].id,
-                start_time=datetime.now(timezone.utc) - timedelta(hours=6),
-                total_tasks_completed=12, total_items_picked=247,
-            )
-            db.add(shift)
-
-        # ── Historical warehouse shifts (demo reports, past week) ──
+        # ── Shifts (historical only — no open worker shifts after seed) ──
         for days_ago in range(1, 8):
             day_start = (datetime.now(timezone.utc) - timedelta(days=days_ago)).replace(
                 hour=8, minute=0, second=0, microsecond=0

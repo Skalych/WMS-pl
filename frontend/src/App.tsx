@@ -14,6 +14,7 @@ import Login from './pages/Login';
 import ShiftReportsPage from './pages/ShiftReportsPage';
 import ShiftReportEditorPage from './pages/ShiftReportEditorPage';
 import MyShift from './pages/MyShift';
+import PackerLabels from './pages/PackerLabels';
 import SettingsModal from './components/SettingsModal';
 import { SettingsProvider } from './context/SettingsContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -61,6 +62,14 @@ const MyShiftRoute = () => {
   if (!isFloorRole(user?.role)) {
     return <Navigate to={homePathForRole(user?.role)} replace />;
   }
+  return <Outlet />;
+};
+
+const PackerRoute = () => {
+  const { user, isLoading } = useAuth();
+  if (isLoading) return <AppLoading />;
+  const allowed = user?.role === UserRole.ADMIN_MANAGER || user?.role === UserRole.PACKER_DISPATCHER;
+  if (!allowed) return <Navigate to={homePathForRole(user?.role)} replace />;
   return <Outlet />;
 };
 
@@ -141,6 +150,9 @@ export default function App() {
                 </Route>
                 <Route element={<InboundRoute />}>
                   <Route path="/inbound" element={<Inbound />} />
+                </Route>
+                <Route element={<PackerRoute />}>
+                  <Route path="/packer/labels" element={<PackerLabels />} />
                 </Route>
               </Route>
               <Route path="/shift-reports" element={<Navigate to="/reports" replace />} />

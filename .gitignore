@@ -11,3 +11,4 @@ venv/
 .wms/
 *.log
 backend/wms.db
+LOCAL-ACCOUNTS.md
