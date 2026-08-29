@@ -1,6 +1,6 @@
 # 2. Baza danych
 
-> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: _[TODO]_
+> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: **2026-08-29**
 
 ## 2.1. SGBD i ORM
 
@@ -25,15 +25,28 @@
 
 ## 2.3. Typy enum
 
-Zob. `backend/app/models/enums.py`: UserRole, WorkerStatus, LocationType, TransactionType, InboundStatus, OrderStatus, OrderPriority, WaveStatus, TaskStatus, TaskType.
+Zob. `backend/app/models/enums.py`: UserRole, WorkerStatus, ShiftEventType, LocationType, TransactionType, InboundStatus, OrderStatus (w tym `PARTIALLY_IN_WAVE`), OrderPriority, WaveStatus, TaskStatus, TaskType.
 
 ## 2.4. Relacje między encjami
 
-_[TODO: diagram ER lub tabela powiązań FK]_
+| Encja A | Encja B | Typ | Opis |
+|---------|---------|-----|------|
+| Order | OrderItem | 1:N | Pozycje zamówienia; `allocated_quantity` śledzi alokację do fali |
+| Order | WaveOrder | N:M | Zamówienie w wielu falach (przez `wave_orders`) |
+| Wave | MicroTask | 1:N | Zadania kompletacji w ramach fali |
+| MicroTaskItem | OrderItem | N:1 | Powiązanie pozycji zadania z linią zamówienia (`order_item_id`) |
+| InventoryBalance | Product, Location | N:1 | Stan magazynowy; `reserved_quantity` ≤ `quantity` (CHECK) |
+| WarehouseShift | ShiftReportDraft | 1:1 | Raport zmiany magazynowej (JSON w `content_json`) |
+| User | Shift | 1:N | Zmiany pracownika; `ShiftEvent` rejestruje przerwy |
 
 ## 2.5. Migracje
 
-| Wersja | Plik | Zawartość |
-|--------|------|-----------|
-| initial | `a15babe6d3ee_initial_migration.py` | Schemat początkowy |
-| _[TODO]_ | _pozostałe pliki w `alembic/versions/`_ | _opisać kluczowe zmiany_ |
+| Rewizja | Plik | Zawartość |
+|---------|------|-----------|
+| `a15babe6d3ee` | `initial_migration.py` | Schemat początkowy |
+| `e1f2a3b4c5d6` | `add_app_settings.py` | Tabela `app_settings` (klucz `simulation_active`) |
+| `f7a1b2c3d4e5` | `add_warehouse_shifts.py` | `warehouse_shifts`, `shift_report_drafts` (JSONB) |
+| `a3b4c5d6e7f8` | `add_user_token_version.py` | Kolumna `users.token_version` (unieważnianie JWT) |
+| `b1c2d3e4f5a6` | `floor_ops_inventory_and_partial_waves.py` | `PARTIALLY_IN_WAVE`, `order_items.allocated_quantity`, `micro_task_items.order_item_id`, constrainty rezerwacji stanów |
+
+Łańcuch migracji: `a15babe6d3ee` → … → `b1c2d3e4f5a6` (head).

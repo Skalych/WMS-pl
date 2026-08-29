@@ -18,6 +18,15 @@ Krótkie wpisy do rozdziału «Postęp prac» / «Implementacja». Nowe wpisy do
 
 ## Wpisy
 
+### 2026-08-29 — Synchronizacja dokumentacji po tygodniu zmian
+
+- **Bezpieczeństwo:** `SECRET_KEY` wymagany z env, rate limiting logowania, CORS allowlist, `token_version` w JWT, seed guard.
+- **WMS floor ops:** częściowe fale (`PARTIALLY_IN_WAVE`), rezerwacja stanów (`reserved_quantity`), FIFO claim zadań terminalowych.
+- **Raporty zmian:** modele `warehouse_shifts` / `shift_report_drafts`, eksport PDF, frontend `ShiftReportsPage`.
+- **Infrastruktura:** `docker-compose.prod.yml`, Dockerfile backend/frontend, nginx reverse proxy (API + WebSocket).
+- **Ustawienia:** tabela `app_settings`, symulacja wyłączona domyślnie w production.
+- Zaktualizowano: `01_architecture.md`, `02_database.md`, `03_modules_logic.md`, `04_security_roles.md`.
+
 ### 2026-08-29 — Aktywacja Cursor Automation (Generate docs)
 
 - Włączono automatyzację aktualizacji dokumentacji po pushu do `main`.

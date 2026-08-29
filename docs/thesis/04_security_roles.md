@@ -1,12 +1,14 @@
 # 4. Bezpieczeństwo i role (RBAC)
 
-> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: _[TODO]_
+> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: **2026-08-29**
 
 ## 4.1. Model autoryzacji
 
-- **Tokeny JWT** — wydawane przy logowaniu (`routers/auth.py`).
+- **Tokeny JWT** — wydawane przy logowaniu (`routers/auth.py`, `routers/terminal.py`).
 - **Bearer token** — przekazywany w nagłówku `Authorization`.
-- **token_version** — unieważnianie sesji przy zmianie hasła/roli.
+- **Claims** — `sub` (user ID), `role`, `tv` (token_version).
+- **token_version** — pole `users.token_version`; inkrementowane przy `change_password`; token z nieaktualnym `tv` jest odrzucany w `get_current_user` i WebSocket.
+- **SECRET_KEY** — wymagany w zmiennych środowiskowych (brak domyślnej wartości); używany do podpisu JWT (`core/config.py`).
 
 ## 4.2. Role użytkowników (UserRole)
 
@@ -29,10 +31,11 @@ Zob. `backend/app/models/enums.py` oraz `backend/app/core/deps.py` (`require_rol
 
 | Mechanizm | Plik | Opis |
 |-----------|------|------|
-| Rate limiting | `core/rate_limit.py` | Ograniczenie częstotliwości żądań |
-| CORS | `main.py` | Polityka cross-origin |
-| Seed guard | `core/seed_guard.py` | Ochrona demo-seed w produkcji |
+| Rate limiting | `core/rate_limit.py` | Limit logowań: `LOGIN_RATE_LIMIT` (domyślnie 10/min/IP); wyłączalny przez `RATE_LIMIT_ENABLED` |
+| CORS | `main.py`, `core/config.py` | Allowlista `CORS_ORIGINS` (JSON w env); w prod domyślnie `[]` (same-origin przez nginx) |
+| Seed guard | `core/seed_guard.py` | Blokada `seed.py` bez `ALLOW_SEED=1`; odmowa przy `APP_ENV=production` |
+| Nagłówki HTTP | `frontend/nginx.conf` | `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` |
 
 ## 4.5. WebSocket
 
-`shift_ws.py` — weryfikacja roli ADMIN_MANAGER przed połączeniem z live-boardem.
+`shift_ws.py` — token JWT w query param `token`; weryfikacja roli `ADMIN_MANAGER` oraz zgodności `tv` z `users.token_version` przed połączeniem z live-boardem.
