@@ -1,19 +1,19 @@
-# Технічна документація для дипломної роботи (WMS Nexus)
+# Dokumentacja techniczna pracy dyplomowej (WMS Nexus)
 
-Ці файли — джерело для розділів диплому про архітектуру, БД, модулі та безпеку.
+Te pliki są źródłem rozdziałów pracy dyplomowej o architekturze, bazie danych, modułach i bezpieczeństwie.
 
-| Файл | Зміст |
-|------|--------|
-| `01_architecture.md` | Архітектура, стек, патерни, взаємодія компонентів |
-| `02_database.md` | Схема БД, сутності, зв'язки, міграції |
-| `03_modules_logic.md` | Ключові модулі, бізнес-логіка, ендпоінти |
-| `04_security_roles.md` | RBAC, авторизація, сесії/токени |
-| `changelog_thesis.md` | Щотижневий звіт змін для реферату |
+| Plik | Zawartość |
+|------|-----------|
+| `01_architecture.md` | Architektura, stos technologiczny, wzorce, interakcja komponentów |
+| `02_database.md` | Schemat BD, encje, relacje, migracje |
+| `03_modules_logic.md` | Kluczowe moduły, logika biznesowa, endpointy |
+| `04_security_roles.md` | RBAC, autoryzacja, sesje/tokeny |
+| `changelog_thesis.md` | Cotygodniowy raport zmian do referatu |
 
-## Правила оновлення (для агента)
+## Zasady aktualizacji (dla agenta)
 
-- Пиши **українською**, технічно але зрозуміло для дипломної роботи.
-- Оновлюй лише ті розділи, які стосуються змін у коді; не переписуй усе без потреби.
-- Додавай посилання на конкретні шляхи в репозиторії (`backend/…`, `frontend/…`).
-- У `changelog_thesis.md` додавай запис з датою та коротким описом змін (для розділу «Хід роботи»).
-- Якщо інформації в коді недостатньо — познач `[TODO: уточнити]` замість вигадування.
+- Pisz **po polsku**, technicznie ale zrozumiale dla pracy dyplomowej.
+- Aktualizuj tylko te sekcje, które dotyczą zmian w kodzie; nie przepisuj wszystkiego bez potrzeby.
+- Dodawaj odniesienia do konkretnych ścieżek w repozytorium (`backend/…`, `frontend/…`).
+- W `changelog_thesis.md` dodawaj wpis z datą i krótkim opisem zmian (dla rozdziału «Postęp prac»).
+- Jeśli w kodzie brakuje informacji — oznacz `[TODO: doprecyzować]` zamiast wymyślać.

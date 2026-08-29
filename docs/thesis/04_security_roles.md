@@ -1,38 +1,38 @@
-# 4. Безпека та ролі (RBAC)
+# 4. Bezpieczeństwo i role (RBAC)
 
-> Автоматично підтримуваний розділ. Останнє оновлення: _[TODO]_
+> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: _[TODO]_
 
-## 4.1. Модель авторизації
+## 4.1. Model autoryzacji
 
-- **JWT-токени** — видаються при логіні (`routers/auth.py`).
-- **Bearer token** — передається в заголовку `Authorization`.
-- **token_version** — інвалідація сесій при зміні пароля/ролі.
+- **Tokeny JWT** — wydawane przy logowaniu (`routers/auth.py`).
+- **Bearer token** — przekazywany w nagłówku `Authorization`.
+- **token_version** — unieważnianie sesji przy zmianie hasła/roli.
 
-## 4.2. Ролі користувачів (UserRole)
+## 4.2. Role użytkowników (UserRole)
 
-| Роль | Enum | Типовий доступ |
-|------|------|----------------|
-| Admin Manager | `ADMIN_MANAGER` | Повний доступ, адмін-панель |
-| Picker | `PICKER` | Термінал комплектування |
-| Inbound Operator | `INBOUND_OPERATOR` | Приймання, inventory |
-| Packer / Dispatcher | `PACKER_DISPATCHER` | Упаковка, dispatch |
+| Rola | Enum | Typowy dostęp |
+|------|------|---------------|
+| Admin Manager | `ADMIN_MANAGER` | Pełny dostęp, panel administracyjny |
+| Picker | `PICKER` | Terminal kompletacji |
+| Inbound Operator | `INBOUND_OPERATOR` | Przyjęcia, inventory |
+| Packer / Dispatcher | `PACKER_DISPATCHER` | Pakowanie, dispatch |
 
-Див. `backend/app/models/enums.py` та `backend/app/core/deps.py` (`require_roles`).
+Zob. `backend/app/models/enums.py` oraz `backend/app/core/deps.py` (`require_roles`).
 
-## 4.3. Перевірка прав
+## 4.3. Weryfikacja uprawnień
 
-- `get_current_user` — автентифікація за JWT.
-- `require_roles(...)` — обмеження ендпоінтів за ролями.
-- Приклад: `terminal.py` — доступ для PICKER, PACKER_DISPATCHER, ADMIN_MANAGER.
+- `get_current_user` — uwierzytelnianie na podstawie JWT.
+- `require_roles(...)` — ograniczenie endpointów według ról.
+- Przykład: `terminal.py` — dostęp dla PICKER, PACKER_DISPATCHER, ADMIN_MANAGER.
 
-## 4.4. Додаткові заходи
+## 4.4. Dodatkowe mechanizmy
 
-| Механізм | Файл | Опис |
-|----------|------|------|
-| Rate limiting | `core/rate_limit.py` | Обмеження частоти запитів |
-| CORS | `main.py` | Політика cross-origin |
-| Seed guard | `core/seed_guard.py` | Захист demo-seed у production |
+| Mechanizm | Plik | Opis |
+|-----------|------|------|
+| Rate limiting | `core/rate_limit.py` | Ograniczenie częstotliwości żądań |
+| CORS | `main.py` | Polityka cross-origin |
+| Seed guard | `core/seed_guard.py` | Ochrona demo-seed w produkcji |
 
 ## 4.5. WebSocket
 
-`shift_ws.py` — перевірка ролі ADMIN_MANAGER для підключення до live-борду.
+`shift_ws.py` — weryfikacja roli ADMIN_MANAGER przed połączeniem z live-boardem.

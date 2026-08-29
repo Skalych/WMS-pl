@@ -1,24 +1,29 @@
-# Звіт змін для дипломної роботи
+# Raport zmian dla pracy dyplomowej
 
-Короткі записи для розділу «Хід роботи» / «Реалізація». Нові записи додаються **зверху**.
+Krótkie wpisy do rozdziału «Postęp prac» / «Implementacja». Nowe wpisy dodawane są **na górze**.
 
 ---
 
-## Формат запису
+## Format wpisu
 
 ```markdown
-### YYYY-MM-DD — короткий заголовок
+### YYYY-MM-DD — krótki tytuł
 
-- Що зроблено
-- Які файли/модулі зачеплено
-- Що оновлено в docs/thesis/ (якщо є)
+- Co zrobiono
+- Jakie pliki/moduły dotknięto
+- Co zaktualizowano w docs/thesis/ (jeśli dotyczy)
 ```
 
 ---
 
-## Записи
+## Wpisy
 
-### 2026-08-29 — Підключено структуру технічної документації
+### 2026-08-29 — Przełączenie dokumentacji na język polski
 
-- Створено каталог `docs/thesis/` з розділами: архітектура, БД, модулі, безпека, changelog.
-- Підготовлено шаблони для автоматичного оновлення через Cursor Automation.
+- Przetłumaczono szablony w `docs/thesis/` z ukraińskiego na polski.
+- Zaktualizowano zasady dla agenta w `README.md` (język: polski).
+
+### 2026-08-29 — Utworzono strukturę dokumentacji technicznej
+
+- Utworzono katalog `docs/thesis/` z rozdziałami: architektura, BD, moduły, bezpieczeństwo, changelog.
+- Przygotowano szablony do automatycznej aktualizacji przez Cursor Automation.

@@ -1,39 +1,39 @@
-# 2. База даних
+# 2. Baza danych
 
-> Автоматично підтримуваний розділ. Останнє оновлення: _[TODO]_
+> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: _[TODO]_
 
-## 2.1. СУБД та ORM
+## 2.1. SGBD i ORM
 
-- **PostgreSQL 16** — основне сховище.
-- **SQLAlchemy 2.0 (async)** — ORM у `backend/app/models/`.
-- **Alembic** — міграції у `backend/alembic/versions/`.
+- **PostgreSQL 16** — główne magazyn danych.
+- **SQLAlchemy 2.0 (async)** — ORM w `backend/app/models/`.
+- **Alembic** — migracje w `backend/alembic/versions/`.
 
-## 2.2. Основні сутності
+## 2.2. Główne encje
 
-| Модель | Файл | Опис |
-|--------|------|------|
-| User, Shift | `models/users.py` | Користувачі та зміни працівників |
-| Zone, Location | `models/topology.py` | Топологія складу |
-| Category, Product | `models/catalog.py` | Каталог товарів |
-| InventoryBalance, InventoryTransaction | `models/inventory.py` | Залишки та рух |
-| InboundShipment, InboundItem | `models/inbound.py` | Приймання |
-| Order, OrderItem | `models/orders.py` | Замовлення |
-| Wave, WaveOrder, MicroTask, MicroTaskItem | `models/waves.py` | Хвилі комплектування |
-| SortingStation, SortingBin | `models/sorting.py` | Сортування |
-| WarehouseShift, ShiftReportDraft | `models/warehouse_shifts.py` | Складські зміни та звіти |
-| AppSetting | `models/settings.py` | Налаштування додатку |
+| Model | Plik | Opis |
+|-------|------|------|
+| User, Shift | `models/users.py` | Użytkownicy i zmiany pracowników |
+| Zone, Location | `models/topology.py` | Topologia magazynu |
+| Category, Product | `models/catalog.py` | Katalog produktów |
+| InventoryBalance, InventoryTransaction | `models/inventory.py` | Stany magazynowe i ruch |
+| InboundShipment, InboundItem | `models/inbound.py` | Przyjęcia towaru |
+| Order, OrderItem | `models/orders.py` | Zamówienia |
+| Wave, WaveOrder, MicroTask, MicroTaskItem | `models/waves.py` | Fale kompletacji |
+| SortingStation, SortingBin | `models/sorting.py` | Sortowanie |
+| WarehouseShift, ShiftReportDraft | `models/warehouse_shifts.py` | Zmiany magazynowe i raporty |
+| AppSetting | `models/settings.py` | Ustawienia aplikacji |
 
-## 2.3. Перелік enum-типів
+## 2.3. Typy enum
 
-Див. `backend/app/models/enums.py`: UserRole, WorkerStatus, LocationType, TransactionType, InboundStatus, OrderStatus, OrderPriority, WaveStatus, TaskStatus, TaskType.
+Zob. `backend/app/models/enums.py`: UserRole, WorkerStatus, LocationType, TransactionType, InboundStatus, OrderStatus, OrderPriority, WaveStatus, TaskStatus, TaskType.
 
-## 2.4. Зв'язки між сутностями
+## 2.4. Relacje między encjami
 
-_[TODO: ER-діаграма або таблиця FK-зв'язків]_
+_[TODO: diagram ER lub tabela powiązań FK]_
 
-## 2.5. Міграції
+## 2.5. Migracje
 
-| Версія | Файл | Зміст |
-|--------|------|-------|
-| initial | `a15babe6d3ee_initial_migration.py` | Початкова схема |
-| _[TODO]_ | _інші файли в `alembic/versions/`_ | _описати ключові зміни_ |
+| Wersja | Plik | Zawartość |
+|--------|------|-----------|
+| initial | `a15babe6d3ee_initial_migration.py` | Schemat początkowy |
+| _[TODO]_ | _pozostałe pliki w `alembic/versions/`_ | _opisać kluczowe zmiany_ |

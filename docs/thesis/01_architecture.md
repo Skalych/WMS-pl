@@ -1,48 +1,48 @@
-# 1. Архітектура системи WMS Nexus
+# 1. Architektura systemu WMS Nexus
 
-> Автоматично підтримуваний розділ. Останнє оновлення: _[TODO]_
+> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: _[TODO]_
 
-## 1.1. Призначення системи
+## 1.1. Przeznaczenie systemu
 
-WMS Nexus — система управління складом з хвильовим комплектуванням (wave batch picking), моніторингом працівників у реальному часі, обліком залишків та симуляцією складських операцій.
+WMS Nexus — system zarządzania magazynem z kompletacją falową (wave batch picking), monitoringiem pracowników w czasie rzeczywistym, ewidencją stanów magazynowych i symulacją operacji magazynowych.
 
-## 1.2. Технологічний стек
+## 1.2. Stos technologiczny
 
-| Шар | Технології |
-|-----|------------|
+| Warstwa | Technologie |
+|---------|-------------|
 | Frontend | React 18, TypeScript, Vite, vanilla CSS |
 | Backend | FastAPI, SQLAlchemy 2.0 (async), Alembic |
-| База даних | PostgreSQL 16 |
-| Авторизація | JWT + RBAC |
-| Інфраструктура | Docker Compose, nginx (production frontend) |
+| Baza danych | PostgreSQL 16 |
+| Autoryzacja | JWT + RBAC |
+| Infrastruktura | Docker Compose, nginx (frontend produkcyjny) |
 
-## 1.3. Високорівнева архітектура
+## 1.3. Architektura wysokiego poziomu
 
 ```
-[Браузер / термінал] → [Frontend Vite] → [FastAPI REST + WebSocket]
-                                              ↓
-                                        [PostgreSQL]
+[Przeglądarka / terminal] → [Frontend Vite] → [FastAPI REST + WebSocket]
+                                                      ↓
+                                                [PostgreSQL]
 ```
 
-## 1.4. Структура репозиторію
+## 1.4. Struktura repozytorium
 
-| Каталог | Призначення |
-|---------|-------------|
-| `backend/app/routers/` | HTTP та WebSocket маршрути |
-| `backend/app/services/` | Бізнес-логіка |
-| `backend/app/models/` | ORM-моделі SQLAlchemy |
-| `backend/app/schemas/` | Pydantic-схеми запитів/відповідей |
-| `backend/alembic/` | Міграції БД |
-| `frontend/src/pages/` | Сторінки UI |
-| `frontend/src/api/` | Клієнт API |
+| Katalog | Przeznaczenie |
+|---------|---------------|
+| `backend/app/routers/` | Trasy HTTP i WebSocket |
+| `backend/app/services/` | Logika biznesowa |
+| `backend/app/models/` | Modele ORM SQLAlchemy |
+| `backend/app/schemas/` | Schematy Pydantic żądań/odpowiedzi |
+| `backend/alembic/` | Migracje BD |
+| `frontend/src/pages/` | Strony UI |
+| `frontend/src/api/` | Klient API |
 
-## 1.5. Архітектурні патерни
+## 1.5. Wzorce architektoniczne
 
-- **Router → Service → Model** — розділення HTTP-шару та бізнес-логіки.
-- **Async SQLAlchemy** — неблокуючі запити до PostgreSQL.
-- **WebSocket** — live-оновлення зміни (`shift_ws`).
-- **Alembic** — версіонування схеми БД.
+- **Router → Service → Model** — rozdzielenie warstwy HTTP i logiki biznesowej.
+- **Async SQLAlchemy** — nieblokujące zapytania do PostgreSQL.
+- **WebSocket** — aktualizacje zmiany na żywo (`shift_ws`).
+- **Alembic** — wersjonowanie schematu BD.
 
-## 1.6. Взаємодія компонентів
+## 1.6. Interakcja komponentów
 
-_[TODO: додати діаграму потоків для inbound → inventory → waves → terminal]_
+_[TODO: dodać diagram przepływów dla inbound → inventory → waves → terminal]_
