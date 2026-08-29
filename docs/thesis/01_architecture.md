@@ -1,6 +1,6 @@
 # 1. Architektura systemu WMS Nexus
 
-> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: _[TODO]_
+> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: 2026-08-29
 
 ## 1.1. Przeznaczenie systemu
 
@@ -14,7 +14,8 @@ WMS Nexus — system zarządzania magazynem z kompletacją falową (wave batch p
 | Backend | FastAPI, SQLAlchemy 2.0 (async), Alembic |
 | Baza danych | PostgreSQL 16 |
 | Autoryzacja | JWT + RBAC |
-| Infrastruktura | Docker Compose, nginx (frontend produkcyjny) |
+| Infrastruktura | Docker Compose (dev: Postgres; prod: `docker-compose.prod.yml`), nginx (SPA + proxy API), skrypt `wms.command` |
+| CI | GitHub Actions — pytest, typecheck/build, docker build |
 
 ## 1.3. Architektura wysokiego poziomu
 
@@ -45,4 +46,14 @@ WMS Nexus — system zarządzania magazynem z kompletacją falową (wave batch p
 
 ## 1.6. Interakcja komponentów
 
-_[TODO: dodać diagram przepływów dla inbound → inventory → waves → terminal]_
+Przepływ operacyjny:
+
+1. **Inbound** — przyjęcie towaru (`inbound_service`) → zapis w `inventory_balances`.
+2. **Orders / Waves** — alokacja pozycji zamówień do fali (`wave_service`), rezerwacja stanów (`inventory_service.reserve_stock`).
+3. **Terminal** — kompletacja przez pickera (`terminal_service`), skan → `commit_pick`.
+4. **Shift live** — WebSocket (`shift_ws`) publikuje status pracowników po operacjach terminala.
+5. **Warehouse shifts & reports** — okno zmiany magazynowej (`warehouse_shift_service`), metryki (`shift_metrics_service`), eksport PDF/DOCX/HTML (`report_export_service`).
+
+Skrypt `wms.command` uruchamia stack dev/prod (Postgres, backend, frontend) bez Makefile.
+
+_[TODO: doprecyzować diagram przepływów inbound → inventory → waves → terminal]_
