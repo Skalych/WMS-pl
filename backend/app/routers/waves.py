@@ -8,8 +8,9 @@ from app.schemas.waves import WaveCreate, WaveResponse, WaveCreateResponse, Wave
 from app.services import wave_service
 from app.services.wave_service import EmptyWaveError
 from app.models.users import User
-from app.models.enums import UserRole
-from app.models.waves import Wave
+from app.models.enums import UserRole, TaskStatus
+from app.models.waves import Wave, MicroTask
+from app.schemas.waves import MicroTaskResponse
 
 def calculate_wave_progress(wave: Wave) -> float:
     total_qty = 0
@@ -23,18 +24,64 @@ def calculate_wave_progress(wave: Wave) -> float:
         return 0.0
     return round((picked_qty / total_qty) * 100, 2)
 
+
+def calculate_micro_task_progress(task: MicroTask) -> float:
+    total_qty = 0
+    picked_qty = 0
+    for item in getattr(task, "items", []):
+        total_qty += item.quantity_to_pick
+        picked_qty += item.quantity_picked
+    if total_qty == 0:
+        return 0.0
+    return round((picked_qty / total_qty) * 100, 2)
+
+
+_MICRO_TASK_STATUS_ORDER = {
+    TaskStatus.IN_PROGRESS: 0,
+    TaskStatus.ASSIGNED: 1,
+    TaskStatus.PENDING: 2,
+    TaskStatus.EXCEPTION: 3,
+    TaskStatus.CANCELLED: 4,
+    TaskStatus.COMPLETED: 5,
+}
+
+
+def _sort_micro_tasks(tasks: list[MicroTask]) -> list[MicroTask]:
+    return sorted(
+        tasks,
+        key=lambda t: (_MICRO_TASK_STATUS_ORDER.get(t.status, 99), t.task_number),
+    )
+
+
+def _micro_task_response(task: MicroTask) -> MicroTaskResponse:
+    user = getattr(task, "assigned_user", None)
+    return MicroTaskResponse(
+        id=task.id,
+        task_number=task.task_number,
+        status=task.status,
+        progress=calculate_micro_task_progress(task),
+        items_count=len(getattr(task, "items", [])),
+        assigned_user_name=user.full_name if user else None,
+    )
+
+
 router = APIRouter(prefix="/waves", tags=["Waves"])
 
 
 def _wave_response(
     wave: Wave, summary: Optional[WaveAllocationSummary] = None
 ) -> Union[WaveResponse, WaveCreateResponse]:
+    micro_tasks_raw = getattr(wave, "micro_tasks", [])
+    micro_tasks = [_micro_task_response(t) for t in _sort_micro_tasks(micro_tasks_raw)]
     base = {
         "id": wave.id,
         "wave_number": wave.wave_number,
         "status": wave.status,
         "total_orders_count": wave.total_orders_count,
         "progress": calculate_wave_progress(wave),
+        "micro_tasks": micro_tasks,
+        "micro_tasks_completed": sum(1 for t in micro_tasks_raw if t.status == TaskStatus.COMPLETED),
+        "micro_tasks_total": len(micro_tasks_raw),
         "created_at": wave.created_at,
     }
     if summary is not None:

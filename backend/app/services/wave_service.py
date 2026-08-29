@@ -44,6 +44,7 @@ async def get_waves(db: AsyncSession, limit: int = 50):
         select(Wave)
         .options(
             selectinload(Wave.micro_tasks).selectinload(MicroTask.items),
+            selectinload(Wave.micro_tasks).selectinload(MicroTask.assigned_user),
             selectinload(Wave.wave_orders).selectinload(WaveOrder.order),
         )
         .order_by(Wave.created_at.desc())
@@ -58,6 +59,7 @@ async def get_wave_by_id(db: AsyncSession, wave_id: uuid.UUID):
         .options(
             joinedload(Wave.wave_orders),
             joinedload(Wave.micro_tasks).joinedload(MicroTask.items),
+            joinedload(Wave.micro_tasks).joinedload(MicroTask.assigned_user),
         )
         .where(Wave.id == wave_id)
     )

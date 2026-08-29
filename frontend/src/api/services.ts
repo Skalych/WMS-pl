@@ -1,9 +1,35 @@
 import { apiClient } from './client';
 import { 
   UserRole, WorkerStatus, Employee, DashboardStats, 
-  Order, Wave, WaveCreateResult, InventoryItem, MacroOrder, InboundShipment, InventoryTransaction,
+  Order, Wave, WaveCreateResult, MicroTask, InventoryItem, MacroOrder, InboundShipment, InventoryTransaction,
   TerminalTask, TerminalScanResult, MyShiftSnapshot, Shift, BreakSummary,
 } from '../types';
+
+function mapMicroTask(m: Record<string, unknown>): MicroTask {
+  return {
+    id: String(m.id),
+    taskNumber: String(m.task_number),
+    status: String(m.status),
+    progress: Number(m.progress ?? 0),
+    itemsCount: Number(m.items_count ?? 0),
+    assignedUserName: (m.assigned_user_name as string) || null,
+  };
+}
+
+function mapWave(w: Record<string, unknown>): Wave {
+  const microTasks = ((w.micro_tasks as Record<string, unknown>[]) || []).map(mapMicroTask);
+  return {
+    id: String(w.id),
+    waveNumber: String(w.wave_number),
+    status: w.status as Wave['status'],
+    ordersCount: Number(w.total_orders_count ?? 0),
+    progress: Number(w.progress ?? 0),
+    zone: 'All',
+    microTasks,
+    microTasksCompleted: Number(w.micro_tasks_completed ?? 0),
+    microTasksTotal: Number(w.micro_tasks_total ?? microTasks.length),
+  };
+}
 
 // Auth Services
 export const authService = {
@@ -241,14 +267,7 @@ export const orderService = {
   
   getWaves: async (): Promise<Wave[]> => {
     const response = await apiClient.get('/waves');
-    return response.data.map((w: any) => ({
-      id: w.id,
-      waveNumber: w.wave_number,
-      status: w.status,
-      ordersCount: w.total_orders_count,
-      progress: w.progress || 0,
-      zone: 'All'
-    }));
+    return response.data.map((w: Record<string, unknown>) => mapWave(w));
   },
 
   createWave: async (orderIds: string[]): Promise<WaveCreateResult> => {
@@ -256,12 +275,7 @@ export const orderService = {
     const w = response.data;
     const summary = w.allocation_summary || {};
     return {
-      id: w.id,
-      waveNumber: w.wave_number,
-      status: w.status,
-      ordersCount: w.total_orders_count,
-      progress: w.progress || 0,
-      zone: 'All',
+      ...mapWave(w),
       allocationSummary: {
         linesFullyAllocated: Number(summary.lines_fully_allocated || 0),
         linesPartiallyAllocated: Number(summary.lines_partially_allocated || 0),

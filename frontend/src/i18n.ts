@@ -121,6 +121,11 @@ const resources = {
         allocatedColumn: 'In wave / need',
         waveCreatedSummary:
           'Wave created. Full lines: {{full}}, partial: {{partial}}, skipped (0 stock): {{skipped}}. Units allocated: {{units}}.',
+        microTasksTitle: 'Micro-tasks ({{count}})',
+        microTasksCount: '{{done}}/{{total}}',
+        microTaskLines: '{{count}} lines',
+        microTaskDone: 'Done',
+        microTaskWaiting: 'Waiting',
       },
       inbound: {
         title: 'Inbound',
@@ -409,6 +414,11 @@ const resources = {
         allocatedColumn: 'У хвилі / треба',
         waveCreatedSummary:
           'Хвилю створено. Повністю: {{full}}, частково: {{partial}}, пропущено (0 на складі): {{skipped}}. Одиниць у хвилі: {{units}}.',
+        microTasksTitle: 'Мікротаски ({{count}})',
+        microTasksCount: '{{done}}/{{total}}',
+        microTaskLines: '{{count}} рядків',
+        microTaskDone: 'Готово',
+        microTaskWaiting: 'Очікує',
       },
       inbound: {
         title: 'Приймання',
