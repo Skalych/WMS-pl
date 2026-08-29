@@ -167,6 +167,15 @@ export interface WaveCreateResult extends Wave {
   allocationSummary: WaveAllocationSummary;
 }
 
+export interface MicroTask {
+  id: string;
+  taskNumber: string;
+  status: string;
+  progress: number;
+  itemsCount: number;
+  assignedUserName: string | null;
+}
+
 export interface Wave {
   id: string;
   waveNumber: string;
@@ -174,6 +183,9 @@ export interface Wave {
   ordersCount: number;
   progress: number; // 0-100
   zone: string;
+  microTasks: MicroTask[];
+  microTasksCompleted: number;
+  microTasksTotal: number;
 }
 
 export interface DashboardStats {
