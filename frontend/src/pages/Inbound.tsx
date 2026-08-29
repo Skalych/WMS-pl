@@ -122,28 +122,26 @@ export default function Inbound() {
         </button>
       </header>
 
-      <div className="stats-grid inbound-stats">
-        <div className="stat-card">
-          <span className="stat-label">{t('inbound.totalShipments')}</span>
-          <span className="stat-value">{isLoading ? '…' : shipments.length}</span>
+      <div className="kpi-strip inbound-stats">
+        <div className="kpi-strip-item">
+          <span className="kpi-strip-label">{t('inbound.totalShipments')}</span>
+          <span className="kpi-strip-value">{isLoading ? '…' : shipments.length}</span>
         </div>
-        <div className="stat-card">
-          <span className="stat-label">{t('inbound.awaitingReceive')}</span>
-          <span className="stat-value accent">{isLoading ? '…' : pendingCount}</span>
+        <div className="kpi-strip-item">
+          <span className="kpi-strip-label">{t('inbound.awaitingReceive')}</span>
+          <span className="kpi-strip-value accent">{isLoading ? '…' : pendingCount}</span>
         </div>
-        <div className="stat-card">
-          <span className="stat-label">{t('inbound.productsCatalog')}</span>
-          <span className="stat-value">{isLoading ? '…' : products.length}</span>
+        <div className="kpi-strip-item">
+          <span className="kpi-strip-label">{t('inbound.productsCatalog')}</span>
+          <span className="kpi-strip-value">{isLoading ? '…' : products.length}</span>
         </div>
       </div>
 
       {error && <div className="alert alert-error">{error}</div>}
 
       {showForm && (
-        <div className="data-panel inbound-form-panel">
-          <div className="data-panel-header">
-            <h3 className="data-panel-title">{t('inbound.createTitle')}</h3>
-          </div>
+        <section className="page-section inbound-form-panel">
+          <h3 className="page-section-title">{t('inbound.createTitle')}</h3>
           <div className="inbound-form-body">
             <div className="form-row">
               <div className="form-field">
@@ -225,19 +223,19 @@ export default function Inbound() {
               {t('inbound.createShipment')}
             </button>
           </div>
-        </div>
+        </section>
       )}
 
-      <div className="data-panel">
-        <div className="data-panel-header">
-          <h3 className="data-panel-title">{t('inbound.shipments')}</h3>
+      <section className="page-section">
+        <div className="page-section-header">
+          <h3 className="page-section-title">{t('inbound.shipments')}</h3>
         </div>
         {isLoading ? (
           <div className="panel-empty">{t('inbound.loadingShipments')}</div>
         ) : shipments.length === 0 ? (
           <div className="panel-empty">{t('inbound.noShipments')}</div>
         ) : (
-          <div className="table-scroll data-table-wrap is-ready">
+          <div className="flat-table-wrap table-scroll data-table-wrap is-ready">
             <table className="data-table">
               <thead>
                 <tr>
@@ -282,7 +280,7 @@ export default function Inbound() {
             </table>
           </div>
         )}
-      </div>
+      </section>
 
       <p className="page-hint">
         <Truck size={16} />

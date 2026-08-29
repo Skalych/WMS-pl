@@ -99,35 +99,35 @@ export default function Inventory() {
         </div>
       </header>
 
-      <div className="dashboard-grid">
-        <div className="stat-card">
-          <span className="stat-label">Total SKUs</span>
-          <div className="stat-value">{isLoading ? '…' : totalItems}</div>
-          <p className="stat-card-footnote">Active catalog items</p>
+      <div className="kpi-strip">
+        <div className="kpi-strip-item">
+          <span className="kpi-strip-label">Total SKUs</span>
+          <span className="kpi-strip-value">{isLoading ? '…' : totalItems}</span>
+          <div className="kpi-strip-hint">Active catalog items</div>
         </div>
 
-        <div className="stat-card">
-          <span className="stat-label">In Stock</span>
-          <div className="stat-value text-success">{isLoading ? '…' : inStockCount}</div>
-          <p className="stat-card-footnote">Optimal stock levels</p>
+        <div className="kpi-strip-item">
+          <span className="kpi-strip-label">In Stock</span>
+          <span className="kpi-strip-value text-success">{isLoading ? '…' : inStockCount}</span>
+          <div className="kpi-strip-hint">Optimal stock levels</div>
         </div>
 
-        <div className="stat-card">
-          <span className="stat-label">Low Stock</span>
-          <div className="stat-value text-warning">{isLoading ? '…' : lowStockCount}</div>
-          <p className="stat-card-footnote">Reorder threshold reached</p>
+        <div className="kpi-strip-item">
+          <span className="kpi-strip-label">Low Stock</span>
+          <span className="kpi-strip-value text-warning">{isLoading ? '…' : lowStockCount}</span>
+          <div className="kpi-strip-hint">Reorder threshold reached</div>
         </div>
 
-        <div className="stat-card">
-          <span className="stat-label">Out of Stock</span>
-          <div className="stat-value text-danger">{isLoading ? '…' : outOfStockCount}</div>
-          <p className="stat-card-footnote">Requires immediate restock</p>
+        <div className="kpi-strip-item">
+          <span className="kpi-strip-label">Out of Stock</span>
+          <span className="kpi-strip-value text-danger">{isLoading ? '…' : outOfStockCount}</span>
+          <div className="kpi-strip-hint">Requires immediate restock</div>
         </div>
       </div>
 
-      <div className="data-panel">
-        <div className="data-panel-header">
-          <h3 className="data-panel-title">
+      <section className="page-section">
+        <div className="page-section-header">
+          <h3 className="page-section-title">
             <Package size={18} className="text-accent" />
             Stock Levels
           </h3>
@@ -159,7 +159,7 @@ export default function Inventory() {
         </div>
 
         <div
-          className={`table-scroll data-table-wrap${!isLoading && filteredItems.length > 0 ? ' is-ready' : ''}`}
+          className={`flat-table-wrap table-scroll data-table-wrap${!isLoading && filteredItems.length > 0 ? ' is-ready' : ''}`}
         >
           <table className="data-table">
             <thead>
@@ -268,7 +268,7 @@ export default function Inventory() {
             </button>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

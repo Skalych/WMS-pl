@@ -96,9 +96,46 @@ ensure_backend_deps() {
 
 ensure_frontend_deps() {
     cd "$ROOT/frontend"
+    local has_rollup=0
+    [ -d "node_modules/@rollup/rollup-darwin-arm64" ] && has_rollup=1
     if [ ! -d "node_modules" ]; then
         echo -e "${YELLOW}   Встановлюємо npm залежності...${NC}"
         npm install
+    elif [ "$has_rollup" -eq 0 ]; then
+        echo -e "${YELLOW}   Перевстановлюємо npm залежності (rollup)...${NC}"
+        rm -rf node_modules
+        npm install
+    fi
+    cd "$ROOT"
+}
+
+run_db_migrations() {
+    cd "$ROOT/backend"
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
+    echo -e "${CYAN}   Міграції БД (alembic upgrade head)...${NC}"
+    if ! alembic upgrade head; then
+        echo -e "${RED}   ✗ Міграції не вдались. Перевір backend/.env і Docker.${NC}"
+        cd "$ROOT"
+        return 1
+    fi
+    cd "$ROOT"
+}
+
+ensure_seed_data() {
+    local user_count
+    user_count=$(docker compose exec -T postgres psql -U postgres -d wms_db -tAc "SELECT count(*) FROM users;" 2>/dev/null | tr -d '[:space:]')
+    if [ "${user_count:-0}" -gt 0 ]; then
+        return 0
+    fi
+    echo -e "${YELLOW}   База без користувачів — наповнюємо demo-даними...${NC}"
+    cd "$ROOT/backend"
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
+    if ! ALLOW_SEED=1 python3 -m app.seed; then
+        echo -e "${RED}   ✗ Seed не вдався. Спробуй меню [2] Наповнити базу.${NC}"
+        cd "$ROOT"
+        return 1
     fi
     cd "$ROOT"
 }
@@ -180,10 +217,17 @@ seed_db() {
     wait_for_postgres || { echo -e "${YELLOW}Enter...${NC}"; read; return; }
 
     ensure_backend_deps
+    run_db_migrations || { echo -e "${YELLOW}Enter...${NC}"; read; return; }
     cd "$ROOT/backend"
     # shellcheck disable=SC1091
     source .venv/bin/activate
-    python3 -m app.seed
+    if ! ALLOW_SEED=1 python3 -m app.seed; then
+        echo -e "${RED}❌ Seed не вдався.${NC}"
+        cd "$ROOT"
+        echo -e "${YELLOW}Enter...${NC}"
+        read
+        return
+    fi
     cd "$ROOT"
 
     echo ""
@@ -236,8 +280,10 @@ start_system() {
     docker compose up -d
     wait_for_postgres || { echo -e "${YELLOW}Enter...${NC}"; read; return; }
 
-    echo -e "${CYAN}[2/4] Перевірка залежностей...${NC}"
+    echo -e "${CYAN}[2/4] Залежності та міграції БД...${NC}"
     ensure_backend_deps
+    run_db_migrations || { echo -e "${YELLOW}Enter...${NC}"; read; return; }
+    ensure_seed_data || { echo -e "${YELLOW}Enter...${NC}"; read; return; }
     ensure_frontend_deps
 
     echo -e "${CYAN}[3/4] Backend FastAPI (:8000, auto-reload)...${NC}"
@@ -259,8 +305,14 @@ start_system() {
 
     echo -e "${CYAN}   Перевірка health...${NC}"
     local ok=0
-    for _ in {1..20}; do
-        curl -sf http://127.0.0.1:8000/health >/dev/null 2>&1 && curl -sf http://127.0.0.1:3000/ >/dev/null 2>&1 && ok=1 && break
+    local i be_code fe_code
+    for i in {1..20}; do
+        be_code=$(curl --max-time 2 -sf -o /dev/null -w "%{http_code}" http://127.0.0.1:8000/health 2>/dev/null || echo "fail")
+        fe_code=$(curl --max-time 2 -sf -o /dev/null -w "%{http_code}" http://127.0.0.1:3000/ 2>/dev/null || echo "fail")
+        if [ "$be_code" = "200" ] && [ "$fe_code" = "200" ]; then
+            ok=1
+            break
+        fi
         sleep 1
     done
 

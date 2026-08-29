@@ -32,8 +32,19 @@ async def get_open_warehouse_shift(db: AsyncSession) -> Optional[WarehouseShift]
     return result.scalars().first()
 
 
+def _active_open_shift_cutoff() -> datetime:
+    """Ignore orphan open worker shifts older than this window."""
+    return _utcnow() - timedelta(hours=48)
+
+
 async def _earliest_open_worker_start(db: AsyncSession) -> Optional[datetime]:
-    earliest = await db.scalar(select(func.min(Shift.start_time)).where(Shift.end_time.is_(None)))
+    cutoff = _active_open_shift_cutoff()
+    earliest = await db.scalar(
+        select(func.min(Shift.start_time)).where(
+            Shift.end_time.is_(None),
+            Shift.start_time >= cutoff,
+        )
+    )
     if not earliest:
         return None
     return _ensure_utc(earliest)
@@ -66,8 +77,14 @@ async def ensure_open_warehouse_shift(
 
 
 async def count_open_worker_shifts(db: AsyncSession) -> int:
+    cutoff = _active_open_shift_cutoff()
     return int(
-        await db.scalar(select(func.count()).select_from(Shift).where(Shift.end_time.is_(None))) or 0
+        await db.scalar(
+            select(func.count()).select_from(Shift).where(
+                Shift.end_time.is_(None),
+                Shift.start_time >= cutoff,
+            )
+        ) or 0
     )
 
 
@@ -183,15 +200,26 @@ async def backfill_from_worker_shifts(db: AsyncSession) -> int:
         day = start_time.date()
         by_day.setdefault(day, []).append((start_time, end_time))
 
+    today = _utcnow().date()
     created = 0
     for day, spans in by_day.items():
         if day in covered_days:
             continue
-        # Skip days that still have open worker shifts (current day live window)
-        if any(end is None for _, end in spans):
-            continue
-        day_start = min(s for s, _ in spans)
-        day_end = max(e for _, e in spans if e is not None)
+
+        closed_spans = [(s, e) for s, e in spans if e is not None]
+        if day >= today:
+            # Live day: wait until all worker shifts are closed
+            if any(e is None for _, e in spans):
+                continue
+            use_spans = spans
+        else:
+            # Past day: build report from closed shifts; ignore orphan open records
+            if not closed_spans:
+                continue
+            use_spans = closed_spans
+
+        day_start = min(s for s, _ in use_spans)
+        day_end = max(e for _, e in use_spans if e is not None)
         metrics = await compute_shift_metrics(db, day_start, end=day_end, live=False)
         ws = WarehouseShift(
             id=uuid.uuid4(),

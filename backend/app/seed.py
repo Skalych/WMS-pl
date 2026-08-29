@@ -23,6 +23,7 @@ from app.models.inbound import InboundShipment, InboundItem
 from app.models.orders import Order, OrderItem, MacroOrder
 from app.models.waves import Wave, WaveOrder, MicroTask, MicroTaskItem
 from app.models.sorting import SortingStation, SortingBin
+from app.models.warehouse_shifts import WarehouseShift
 
 
 async def seed():
@@ -312,6 +313,39 @@ async def seed():
                 total_tasks_completed=12, total_items_picked=247,
             )
             db.add(shift)
+
+        # ── Historical warehouse shifts (demo reports, past week) ──
+        for days_ago in range(1, 8):
+            day_start = (datetime.now(timezone.utc) - timedelta(days=days_ago)).replace(
+                hour=8, minute=0, second=0, microsecond=0
+            )
+            day_end = day_start + timedelta(hours=8)
+            db.add(WarehouseShift(
+                id=uuid.uuid4(),
+                started_at=day_start,
+                ended_at=day_end,
+                metrics_snapshot={
+                    "elapsed_seconds": 8 * 3600,
+                    "items_picked": 220 - days_ago * 18,
+                    "waves_completed": max(1, 5 - days_ago // 2),
+                    "orders_shipped": max(1, 8 - days_ago),
+                    "inbound_received_units": 40 + days_ago * 3,
+                    "pick_rate_per_hour": round(28.0 - days_ago * 0.5, 1),
+                    "hourly_buckets": [],
+                    "top_pickers": [],
+                    "shift_active": False,
+                },
+            ))
+            # Closed worker shifts so employee history matches reports
+            picker = users["ivan.p@wms.local"]
+            db.add(Shift(
+                id=uuid.uuid4(),
+                user_id=picker.id,
+                start_time=day_start + timedelta(hours=1),
+                end_time=day_end - timedelta(minutes=30),
+                total_tasks_completed=10,
+                total_items_picked=180 - days_ago * 15,
+            ))
 
         await db.commit()
         print("✅ Seed data inserted successfully!")
