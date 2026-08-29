@@ -61,6 +61,11 @@ class UserStatusUpdate(BaseModel):
 class BulkShiftUpdate(BaseModel):
     user_ids: list[UUID]
 
+
+class EndAllShiftsResponse(BaseModel):
+    ended_count: int
+    user_ids: list[UUID]
+
 class ShiftEventResponse(BaseModel):
     id: UUID
     event_type: ShiftEventType

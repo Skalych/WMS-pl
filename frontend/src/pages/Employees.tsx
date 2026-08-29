@@ -11,6 +11,7 @@ import {
   ChevronDown,
   LayoutGrid,
   List,
+  LogOut,
 } from 'lucide-react';
 import { BreakSummary, UserRole, WorkerStatus } from '../types';
 import EmployeeProfileModal from '../components/EmployeeProfileModal';
@@ -122,6 +123,7 @@ export default function Employees() {
   const [openStatusDropdownId, setOpenStatusDropdownId] = useState<string | null>(null);
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
   const [profileModalEmployee, setProfileModalEmployee] = useState<EmployeeView | null>(null);
+  const [isEndingAllShifts, setIsEndingAllShifts] = useState(false);
 
   const fetchEmployees = async () => {
     try {
@@ -221,7 +223,7 @@ export default function Employees() {
     WorkerStatus.OFFLINE,
   ];
 
-  const onShiftCount = employees.filter((e) => e.status !== 'OFFLINE').length;
+  const onShiftCount = employees.filter((e) => e.hasActiveShift).length;
   const onlineCount = employees.filter((e) => e.status !== 'OFFLINE' && e.status !== 'IDLE').length;
   const activeCount = employees.filter((e) => ACTIVE_STATUSES.includes(e.status)).length;
   const breakCount = employees.filter((e) => e.status === 'BREAK').length;
@@ -263,8 +265,24 @@ export default function Employees() {
     }
   };
 
-  const statCardClass = (filter: StatFilter) =>
-    `stat-card stat-card--clickable${statFilter === filter && pageTab === 'live' ? ' stat-card--active' : ''}`;
+  const handleEndAllShifts = async () => {
+    if (onShiftCount === 0 || isEndingAllShifts) return;
+    if (!window.confirm(t('employees.endAllShiftsConfirm', { count: onShiftCount }))) return;
+
+    setIsEndingAllShifts(true);
+    try {
+      await userService.endAllShifts();
+      await fetchEmployees();
+      setSelectedEmployeeIds(new Set());
+    } catch (err) {
+      console.error('End all shifts error', err);
+    } finally {
+      setIsEndingAllShifts(false);
+    }
+  };
+
+  const kpiItemClass = (filter: StatFilter) =>
+    `kpi-strip-item kpi-strip-item--clickable${statFilter === filter && pageTab === 'live' ? ' kpi-strip-item--active' : ''}`;
 
   return (
     <div className="page-stack">
@@ -275,6 +293,18 @@ export default function Employees() {
         </div>
 
         <div className="header-actions">
+          {onShiftCount > 0 && (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={handleEndAllShifts}
+              disabled={isEndingAllShifts}
+            >
+              <LogOut size={16} />
+              {isEndingAllShifts ? t('employees.endingAllShifts') : t('employees.endAllShifts')}
+            </button>
+          )}
+
           <span className="badge badge-live">
             <span className="dot-pulse" />
             LIVE
@@ -301,48 +331,48 @@ export default function Employees() {
         </div>
       </header>
 
-      <div className="dashboard-grid">
-        <button type="button" className={statCardClass('online')} onClick={() => toggleStatFilter('online')}>
-          <div className="stat-card-row">
-            <span className="stat-label">{t('employees.statOnline')}</span>
+      <div className="kpi-strip">
+        <button type="button" className={kpiItemClass('online')} onClick={() => toggleStatFilter('online')}>
+          <div className="kpi-strip-head">
+            <span className="kpi-strip-label">{t('employees.statOnline')}</span>
             <Users size={18} className="text-success" />
           </div>
-          <div className="stat-value text-success">{isLoading ? '…' : onlineCount}</div>
-          <div className="stat-card-footnote">{t('employees.statOnlineHint')}</div>
+          <span className="kpi-strip-value text-success">{isLoading ? '…' : onlineCount}</span>
+          <div className="kpi-strip-hint">{t('employees.statOnlineHint')}</div>
         </button>
 
-        <button type="button" className={statCardClass('active')} onClick={() => toggleStatFilter('active')}>
-          <div className="stat-card-row">
-            <span className="stat-label">{t('employees.statActive')}</span>
+        <button type="button" className={kpiItemClass('active')} onClick={() => toggleStatFilter('active')}>
+          <div className="kpi-strip-head">
+            <span className="kpi-strip-label">{t('employees.statActive')}</span>
             <Activity size={18} className="text-accent" />
           </div>
-          <div className="stat-value accent">{isLoading ? '…' : activeCount}</div>
-          <div className="stat-card-footnote">{t('employees.statActiveHint')}</div>
+          <span className="kpi-strip-value accent">{isLoading ? '…' : activeCount}</span>
+          <div className="kpi-strip-hint">{t('employees.statActiveHint')}</div>
         </button>
 
-        <button type="button" className={statCardClass('break')} onClick={() => toggleStatFilter('break')}>
-          <div className="stat-card-row">
-            <span className="stat-label">{t('employees.statBreak')}</span>
+        <button type="button" className={kpiItemClass('break')} onClick={() => toggleStatFilter('break')}>
+          <div className="kpi-strip-head">
+            <span className="kpi-strip-label">{t('employees.statBreak')}</span>
             <Coffee size={18} className="text-warning" />
           </div>
-          <div className="stat-value text-warning">{isLoading ? '…' : breakCount}</div>
-          <div className="stat-card-footnote">{t('employees.statBreakHint')}</div>
+          <span className="kpi-strip-value text-warning">{isLoading ? '…' : breakCount}</span>
+          <div className="kpi-strip-hint">{t('employees.statBreakHint')}</div>
         </button>
 
-        <button type="button" className={statCardClass('offline')} onClick={() => toggleStatFilter('offline')}>
-          <div className="stat-card-row">
-            <span className="stat-label">{t('employees.statOffline')}</span>
+        <button type="button" className={kpiItemClass('offline')} onClick={() => toggleStatFilter('offline')}>
+          <div className="kpi-strip-head">
+            <span className="kpi-strip-label">{t('employees.statOffline')}</span>
             <UserX size={18} className="text-muted" />
           </div>
-          <div className="stat-value text-muted">{isLoading ? '…' : offlineCount}</div>
-          <div className="stat-card-footnote">{t('employees.statOfflineHint')}</div>
+          <span className="kpi-strip-value text-muted">{isLoading ? '…' : offlineCount}</span>
+          <div className="kpi-strip-hint">{t('employees.statOfflineHint')}</div>
         </button>
       </div>
 
       {pageTab === 'live' ? (
-        <div className="data-panel">
-          <div className="data-panel-header">
-            <h2 className="data-panel-title">
+        <section className="page-section">
+          <div className="page-section-header">
+            <h2 className="page-section-title">
               <Radio size={16} className="text-accent" />
               {t('employees.liveTitle', { count: onShiftCount })}
             </h2>
@@ -362,30 +392,43 @@ export default function Employees() {
               </select>
             </div>
           </div>
-          <div className="data-panel-body">
-            {isLoading ? (
-              <div className="panel-empty">{t('common.loading')}</div>
-            ) : sortedLiveEmployees.length === 0 ? (
-              <div className="panel-empty">{t('employees.liveEmpty')}</div>
-            ) : (
-              <div className="team-live-grid data-list-wrap is-ready">
-                {sortedLiveEmployees.map((emp, rowIndex) => (
-                  <WorkerLiveCard
-                    key={emp.id}
-                    employee={emp}
-                    onOpen={setProfileModalEmployee}
-                    className="data-list-row"
-                    style={rowStaggerStyle(rowIndex)}
-                  />
-                ))}
+          {isLoading ? (
+            <div className="panel-empty">{t('common.loading')}</div>
+          ) : sortedLiveEmployees.length === 0 ? (
+            <div className="panel-empty">{t('employees.liveEmpty')}</div>
+          ) : (
+            <div className={`flat-table-wrap data-table-wrap is-ready`}>
+              <div className="table-scroll">
+                <table className="team-live-table">
+                  <thead>
+                    <tr>
+                      <th>{t('employees.colEmployee')}</th>
+                      <th>{t('employees.colStatus')}</th>
+                      <th>{t('employees.colLocation')}</th>
+                      <th>Break</th>
+                      <th>{t('employees.colActivity')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="data-list-wrap is-ready">
+                    {sortedLiveEmployees.map((emp, rowIndex) => (
+                      <WorkerLiveCard
+                        key={emp.id}
+                        employee={emp}
+                        onOpen={setProfileModalEmployee}
+                        className="data-list-row"
+                        style={rowStaggerStyle(rowIndex)}
+                      />
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+        </section>
       ) : (
-        <div className="data-panel">
-          <div className="data-panel-header">
-            <h2 className="data-panel-title">
+        <section className="page-section">
+          <div className="page-section-header">
+            <h2 className="page-section-title">
               <List size={16} className="text-accent" />
               {t('employees.rosterTitle')}
             </h2>
@@ -422,13 +465,12 @@ export default function Employees() {
             </div>
           )}
 
-          <div className="data-panel-body">
-            {isLoading ? (
-              <div className="panel-empty">{t('common.loading')}</div>
-            ) : sortedRosterEmployees.length === 0 ? (
-              <div className="panel-empty">{t('employees.rosterEmpty')}</div>
-            ) : (
-              <div className="employee-list data-list-wrap is-ready">
+          {isLoading ? (
+            <div className="panel-empty">{t('common.loading')}</div>
+          ) : sortedRosterEmployees.length === 0 ? (
+            <div className="panel-empty">{t('employees.rosterEmpty')}</div>
+          ) : (
+            <div className="employee-list data-list-wrap is-ready">
                 {sortedRosterEmployees.map((emp, rowIndex) => {
                   const hasProgress = emp.currentProgress !== null && emp.totalProgress !== null;
                   const pct = hasProgress ? Math.round((emp.currentProgress! / emp.totalProgress!) * 100) : 0;
@@ -529,10 +571,9 @@ export default function Employees() {
                     </div>
                   );
                 })}
-              </div>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+        </section>
       )}
 
       {profileModalEmployee && (

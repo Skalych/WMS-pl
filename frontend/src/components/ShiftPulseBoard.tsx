@@ -1,13 +1,11 @@
 import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Activity, Maximize2, Radio, Package, Layers, Truck, Users, TrendingUp } from 'lucide-react';
+import { Activity, Radio, Package, Layers, Truck, Users, TrendingUp } from 'lucide-react';
 import { ShiftLiveSnapshot } from '../types';
 
 interface ShiftPulseBoardProps {
   data: ShiftLiveSnapshot | null;
   connected: boolean;
-  fullscreen?: boolean;
 }
 
 function formatElapsed(seconds: number): string {
@@ -24,7 +22,7 @@ function formatBucketLabel(iso: string): string {
   return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function ShiftPulseBoard({ data, connected, fullscreen = false }: ShiftPulseBoardProps) {
+export default function ShiftPulseBoard({ data, connected }: ShiftPulseBoardProps) {
   const { t } = useTranslation();
 
   const maxBucket = useMemo(() => {
@@ -44,7 +42,7 @@ export default function ShiftPulseBoard({ data, connected, fullscreen = false }:
 
   if (!data) {
     return (
-      <div className={`shift-pulse ${fullscreen ? 'shift-pulse--fullscreen' : ''}`}>
+      <div className="shift-pulse">
         <div className="shift-pulse-loading">{t('shiftPulse.loading')}</div>
       </div>
     );
@@ -60,10 +58,10 @@ export default function ShiftPulseBoard({ data, connected, fullscreen = false }:
   ];
 
   return (
-    <section className={`shift-pulse ${fullscreen ? 'shift-pulse--fullscreen' : ''}`}>
+    <section className="shift-pulse">
       <header className="shift-pulse-header">
         <div className="shift-pulse-title">
-          <Activity size={fullscreen ? 28 : 20} />
+          <Activity size={20} />
           <div>
             <h2>{t('shiftPulse.title')}</h2>
             <p>
@@ -83,12 +81,6 @@ export default function ShiftPulseBoard({ data, connected, fullscreen = false }:
             <Radio size={14} />
             {connected ? t('shiftPulse.live') : t('shiftPulse.polling')}
           </span>
-          {!fullscreen && (
-            <Link to="/shift/board" className="shift-board-link" title={t('shiftPulse.fullscreen')}>
-              <Maximize2 size={16} />
-              {t('shiftPulse.fullscreen')}
-            </Link>
-          )}
         </div>
       </header>
 

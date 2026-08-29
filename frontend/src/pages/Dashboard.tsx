@@ -1,16 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { dashboardService, orderService } from '../api/services';
 import { DashboardStats, Wave } from '../types';
-import { Clock, Activity, CheckCircle, Package, Users, Zap, TrendingUp, Layers } from 'lucide-react';
+import { Clock, Activity, CheckCircle, Package, Users, Zap, Layers } from 'lucide-react';
 import ShiftPulseBoard from '../components/ShiftPulseBoard';
 import { useShiftLive } from '../hooks/useShiftLive';
 import { rowStaggerStyle } from '../utils/rowStagger';
 
 export default function Dashboard() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { data: shiftLive, connected } = useShiftLive();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [activeWaves, setActiveWaves] = useState<Wave[]>([]);
@@ -76,141 +74,88 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="stats-grid">
-        <div className="stat-card" style={{ borderTop: '2px solid var(--color-success)' }}>
-          <div className="flex-between">
-            <span className="stat-label">{t('dashboard.shippedToday')}</span>
+      <div className="kpi-strip">
+        <div className="kpi-strip-item">
+          <div className="kpi-strip-head">
+            <span className="kpi-strip-label">{t('dashboard.shippedToday')}</span>
             <CheckCircle size={16} color="var(--color-success)" />
           </div>
-          <span className="stat-value">{isLoading ? '…' : stats?.ordersShippedToday ?? 0}</span>
-          <div className="stat-change positive">
-            <TrendingUp size={12} />
-            {t('dashboard.dailyThroughput')}
-          </div>
+          <span className="kpi-strip-value">{isLoading ? '…' : stats?.ordersShippedToday ?? 0}</span>
+          <div className="kpi-strip-hint">{t('dashboard.dailyThroughput')}</div>
         </div>
 
-        <div className="stat-card" style={{ borderTop: '2px solid var(--accent-primary)' }}>
-          <div className="flex-between">
-            <span className="stat-label">{t('dashboard.activeOrders')}</span>
+        <div className="kpi-strip-item">
+          <div className="kpi-strip-head">
+            <span className="kpi-strip-label">{t('dashboard.activeOrders')}</span>
             <Zap size={16} className="text-accent" />
           </div>
-          <span className="stat-value accent">{isLoading ? '…' : stats?.activeOrders ?? 0}</span>
-          <div className="stat-change text-muted">{t('dashboard.pendingFulfillment')}</div>
+          <span className="kpi-strip-value accent">{isLoading ? '…' : stats?.activeOrders ?? 0}</span>
+          <div className="kpi-strip-hint">{t('dashboard.pendingFulfillment')}</div>
         </div>
 
-        <div className="stat-card" style={{ borderTop: '2px solid var(--color-warning)' }}>
-          <div className="flex-between">
-            <span className="stat-label">{t('dashboard.inboundPending')}</span>
+        <div className="kpi-strip-item">
+          <div className="kpi-strip-head">
+            <span className="kpi-strip-label">{t('dashboard.inboundPending')}</span>
             <Package size={16} color="var(--color-warning)" />
           </div>
-          <span className="stat-value">{isLoading ? '…' : stats?.inboundPending ?? 0}</span>
-          <div className="stat-change text-muted">{t('dashboard.awaitingPutaway')}</div>
+          <span className="kpi-strip-value">{isLoading ? '…' : stats?.inboundPending ?? 0}</span>
+          <div className="kpi-strip-hint">{t('dashboard.awaitingPutaway')}</div>
         </div>
 
-        <div className="stat-card" style={{ borderTop: '2px solid var(--color-info)' }}>
-          <div className="flex-between">
-            <span className="stat-label">{t('dashboard.workforceOnline')}</span>
+        <div className="kpi-strip-item">
+          <div className="kpi-strip-head">
+            <span className="kpi-strip-label">{t('dashboard.workforceOnline')}</span>
             <Users size={16} color="var(--color-info)" />
           </div>
-          <span className="stat-value">
+          <span className="kpi-strip-value">
             {isLoading ? '…' : `${stats?.employeesOnline ?? 0} / ${stats?.totalEmployees ?? 0}`}
           </span>
-          <div className="stat-change text-muted">{t('dashboard.activeOnFloor')}</div>
+          <div className="kpi-strip-hint">{t('dashboard.activeOnFloor')}</div>
         </div>
       </div>
 
-      <div className="dashboard-split">
-        <div className="data-panel">
-          <div className="data-panel-header">
-            <h3 className="data-panel-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Layers size={18} className="text-accent" />
-              {t('dashboard.activeWavesTitle', { count: stats?.activeWaves ?? 0 })}
-            </h3>
-          </div>
-          <div style={{ padding: '20px' }}>
-            {isLoading ? (
-              <p className="text-muted">{t('dashboard.loadingWaves')}</p>
-            ) : activeWaves.length === 0 ? (
-              <p className="text-muted" style={{ textAlign: 'center', padding: '20px 0' }}>
-                {t('dashboard.noActiveWaves')}
-              </p>
-            ) : (
-              <div className="data-list-wrap is-ready" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {activeWaves.map((wave, rowIndex) => {
-                  const isSorting = wave.status === 'SORTING';
-                  return (
-                    <div key={wave.id} className="wave-row data-list-row" style={rowStaggerStyle(rowIndex)}>
-                      <div className="wave-row-header">
-                        <span className="text-mono" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
-                          WAVE-{wave.id.substring(0, 8).toUpperCase()}
-                        </span>
-                        <span className={`badge ${isSorting ? 'badge-info' : 'badge-accent'}`}>{wave.status}</span>
-                      </div>
-                      <div
-                        className="flex-between text-muted"
-                        style={{ fontSize: '0.75rem', marginBottom: '6px' }}
-                      >
-                        <span>{t('dashboard.ordersCount', { count: wave.ordersCount ?? 0 })}</span>
-                        <span>{wave.progress}%</span>
-                      </div>
-                      <div className="progress-bar">
-                        <div
-                          className={`progress-bar-fill ${isSorting ? 'cyan' : ''}`}
-                          style={{ width: `${wave.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+      <section className="page-section">
+        <div className="page-section-header">
+          <h3 className="page-section-title">
+            <Layers size={18} className="text-accent" />
+            {t('dashboard.activeWavesTitle', { count: stats?.activeWaves ?? 0 })}
+          </h3>
         </div>
-
-        <div className="data-panel">
-          <div className="data-panel-header">
-            <h3 className="data-panel-title">{t('dashboard.quickActions')}</h3>
+        {isLoading ? (
+          <p className="text-muted">{t('dashboard.loadingWaves')}</p>
+        ) : activeWaves.length === 0 ? (
+          <p className="text-muted">{t('dashboard.noActiveWaves')}</p>
+        ) : (
+          <div className="data-list-wrap is-ready">
+            {activeWaves.map((wave, rowIndex) => {
+              const isSorting = wave.status === 'SORTING';
+              return (
+                <div key={wave.id} className="wave-row data-list-row" style={rowStaggerStyle(rowIndex)}>
+                  <div className="wave-row-header">
+                    <span className="text-mono" style={{ fontSize: '0.85rem', fontWeight: 600 }}>
+                      WAVE-{wave.id.substring(0, 8).toUpperCase()}
+                    </span>
+                    <span className={`badge ${isSorting ? 'badge-info' : 'badge-accent'}`}>{wave.status}</span>
+                  </div>
+                  <div
+                    className="flex-between text-muted"
+                    style={{ fontSize: '0.75rem', marginBottom: '6px' }}
+                  >
+                    <span>{t('dashboard.ordersCount', { count: wave.ordersCount ?? 0 })}</span>
+                    <span>{wave.progress}%</span>
+                  </div>
+                  <div className="progress-bar">
+                    <div
+                      className={`progress-bar-fill ${isSorting ? 'cyan' : ''}`}
+                      style={{ width: `${wave.progress}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div className="quick-actions">
-            <button
-              type="button"
-              className="btn btn-primary"
-              style={{ width: '100%' }}
-              onClick={() => navigate('/orders')}
-            >
-              <Layers size={16} />
-              {t('dashboard.manageWaves')}
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              style={{ width: '100%' }}
-              onClick={() => navigate('/inventory')}
-            >
-              <Package size={16} />
-              {t('dashboard.checkInventory')}
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              style={{ width: '100%' }}
-              onClick={() => navigate('/employees')}
-            >
-              <Users size={16} />
-              {t('dashboard.viewTeam')}
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              style={{ width: '100%' }}
-              onClick={() => navigate('/shift/board')}
-            >
-              <Activity size={16} />
-              {t('dashboard.shiftBoard')}
-            </button>
-          </div>
-        </div>
-      </div>
+        )}
+      </section>
     </div>
   );
 }

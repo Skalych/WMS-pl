@@ -119,7 +119,12 @@ export const userService = {
   endShift: async (userIds: string[]) => {
     const response = await apiClient.post(`/users/shift/end`, { user_ids: userIds });
     return response.data;
-  }
+  },
+
+  endAllShifts: async (): Promise<{ ended_count: number; user_ids: string[] }> => {
+    const response = await apiClient.post('/users/shift/end-all');
+    return response.data;
+  },
 };
 
 export const inboundService = {
