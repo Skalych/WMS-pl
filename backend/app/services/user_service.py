@@ -294,6 +294,22 @@ async def end_shift(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
     await db.commit()
     return shift
 
+
+async def list_open_shift_user_ids(db: AsyncSession) -> list[uuid.UUID]:
+    result = await db.execute(
+        select(Shift.user_id).where(Shift.end_time.is_(None)).distinct()
+    )
+    return list(result.scalars().all())
+
+
+async def end_all_shifts(db: AsyncSession) -> list[uuid.UUID]:
+    ended: list[uuid.UUID] = []
+    for user_id in await list_open_shift_user_ids(db):
+        shift = await end_shift(db, user_id)
+        if shift:
+            ended.append(user_id)
+    return ended
+
 async def start_break(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
     shift = await get_current_shift(db, user_id)
     if not shift:

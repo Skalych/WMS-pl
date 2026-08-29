@@ -11,7 +11,6 @@ import Waves from './pages/Waves';
 import Admin from './pages/Admin';
 import Inbound from './pages/Inbound';
 import Login from './pages/Login';
-import ShiftBoardPage from './pages/ShiftBoardPage';
 import ShiftReportsPage from './pages/ShiftReportsPage';
 import ShiftReportEditorPage from './pages/ShiftReportEditorPage';
 import MyShift from './pages/MyShift';
@@ -126,9 +125,6 @@ export default function App() {
             <Route path="/login" element={<Login />} />
 
             <Route element={<PrivateRoute />}>
-              <Route element={<AdminRoute />}>
-                <Route path="/shift/board" element={<ShiftBoardPage />} />
-              </Route>
               <Route element={<MainLayout />}>
                 <Route element={<AdminRoute />}>
                   <Route path="/" element={<Dashboard />} />

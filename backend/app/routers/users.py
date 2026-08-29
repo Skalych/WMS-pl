@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.deps import get_current_user, require_roles
-from app.schemas.users import UserResponse, UserStatusUpdate, BulkShiftUpdate, ShiftResponse, MyShiftResponse, TeamMemberResponse
+from app.schemas.users import UserResponse, UserStatusUpdate, BulkShiftUpdate, EndAllShiftsResponse, ShiftResponse, MyShiftResponse, TeamMemberResponse
 from app.services import user_service
 from app.models.enums import UserRole, WorkerStatus
 from app.models.users import User
@@ -118,6 +118,19 @@ async def end_shift(
     await warehouse_shift_service.maybe_close_warehouse_shift(db, ended_by=current_user.id)
     await publish_shift_live_update(db)
     return [await user_service.get_user_by_id(db, uid) for uid in data.user_ids]
+
+
+@router.post("/shift/end-all", response_model=EndAllShiftsResponse)
+async def end_all_shifts(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.ADMIN_MANAGER)),
+):
+    ended_ids = await user_service.end_all_shifts(db)
+    from app.services import warehouse_shift_service
+    from app.services.shift_live_service import publish_shift_live_update
+    await warehouse_shift_service.maybe_close_warehouse_shift(db, ended_by=current_user.id)
+    await publish_shift_live_update(db)
+    return EndAllShiftsResponse(ended_count=len(ended_ids), user_ids=ended_ids)
 
 
 @router.get("/{user_id}/shift/current", response_model=ShiftResponse)
