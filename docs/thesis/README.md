@@ -1,6 +1,6 @@
-# Dokumentacja techniczna pracy dyplomowej (WMS Nexus)
+# Dokumentacja techniczna pracy inżynierskiej (WMS Nexus)
 
-Te pliki są źródłem rozdziałów pracy dyplomowej o architekturze, bazie danych, modułach i bezpieczeństwie.
+Te pliki są źródłem rozdziałów pracy inżynierskiej o architekturze, bazie danych, modułach i bezpieczeństwie.
 
 | Plik | Zawartość |
 |------|-----------|
@@ -12,7 +12,7 @@ Te pliki są źródłem rozdziałów pracy dyplomowej o architekturze, bazie dan
 
 ## Zasady aktualizacji (dla agenta)
 
-- Pisz **po polsku**, technicznie ale zrozumiale dla pracy dyplomowej.
+- Pisz **po polsku**, technicznie ale zrozumiale dla pracy inżynierskiej.
 - Aktualizuj tylko te sekcje, które dotyczą zmian w kodzie; nie przepisuj wszystkiego bez potrzeby.
 - Dodawaj odniesienia do konkretnych ścieżek w repozytorium (`backend/…`, `frontend/…`).
 - W `changelog_thesis.md` dodawaj wpis z datą i krótkim opisem zmian (dla rozdziału «Postęp prac»).

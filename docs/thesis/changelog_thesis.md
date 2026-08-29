@@ -1,4 +1,4 @@
-# Raport zmian dla pracy dyplomowej
+# Raport zmian dla pracy inżynierskiej
 
 Krótkie wpisy do rozdziału «Postęp prac» / «Implementacja». Nowe wpisy dodawane są **na górze**.
 
@@ -17,6 +17,10 @@ Krótkie wpisy do rozdziału «Postęp prac» / «Implementacja». Nowe wpisy do
 ---
 
 ## Wpisy
+
+### 2026-08-29 — Korekta terminologii: praca inżynierska
+
+- Zastąpiono określenie «praca dyplomowa» → «praca inżynierska» w README i changelog.
 
 ### 2026-08-29 — Aktywacja Cursor Automation (Generate docs)
 
