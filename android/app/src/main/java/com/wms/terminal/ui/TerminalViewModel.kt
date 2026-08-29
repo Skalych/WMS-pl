@@ -27,6 +27,7 @@ data class TerminalUiState(
     val tasks: List<AvailableTaskDto> = emptyList(),
     val session: SessionDto? = null,
     val willPickQuantity: String = "",
+    val showExitConfirm: Boolean = false,
 )
 
 class TerminalViewModel(app: Application) : AndroidViewModel(app) {
@@ -113,33 +114,23 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun advanceLocation() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(loading = true, error = null)
-            try {
-                openSession(api.advanceLocation())
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(loading = false, error = "Advance failed")
-            }
-        }
-    }
-
     fun onScan(barcode: String) {
         val session = _state.value.session ?: return
         when (session.step) {
-            "GO_TO_LOCATION" -> return
-            "QUANTITY_CONFIRM" -> return
-            "COMPLETED" -> return
+            "QUANTITY_CONFIRM", "COMPLETED" -> return
             else -> submitScan(barcode)
         }
     }
 
     fun submitScan(barcode: String) {
+        val session = _state.value.session ?: return
+        if (session.step == "QUANTITY_CONFIRM" || session.step == "COMPLETED") return
+
         viewModelScope.launch {
             _state.value = _state.value.copy(loading = true, error = null)
             try {
-                val session = api.scan(ScanRequest(barcode))
-                handleSessionAfterAction(session)
+                val updated = api.scan(ScanRequest(barcode))
+                handleSessionAfterAction(updated)
             } catch (e: Exception) {
                 _state.value = _state.value.copy(loading = false, error = "Scan rejected")
             }
@@ -151,26 +142,43 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun confirmQuantity() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(loading = true, error = null)
+            confirmQuantityInternal()
+        }
+    }
+
+    private suspend fun confirmQuantityInternal() {
         val qtyText = _state.value.willPickQuantity.ifBlank {
             _state.value.session?.quantityDefault?.toString() ?: "0"
         }
         val qty = qtyText.toDoubleOrNull() ?: run {
-            _state.value = _state.value.copy(error = "Invalid quantity")
+            _state.value = _state.value.copy(loading = false, error = "Invalid quantity")
             return
         }
-        viewModelScope.launch {
-            _state.value = _state.value.copy(loading = true, error = null)
-            try {
-                val session = api.confirmQuantity(ConfirmQuantityRequest(qty))
-                handleSessionAfterAction(session)
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(loading = false, error = "Quantity confirm failed")
-            }
+        try {
+            val session = api.confirmQuantity(ConfirmQuantityRequest(qty))
+            handleSessionAfterAction(session)
+        } catch (e: Exception) {
+            _state.value = _state.value.copy(loading = false, error = "Quantity confirm failed")
         }
     }
 
+    fun requestBackToHome() {
+        _state.value = _state.value.copy(showExitConfirm = true)
+    }
+
+    fun dismissExitConfirm() {
+        _state.value = _state.value.copy(showExitConfirm = false)
+    }
+
     fun backToHome() {
-        _state.value = _state.value.copy(screen = AppScreen.Home, session = null, error = null)
+        _state.value = _state.value.copy(
+            screen = AppScreen.Home,
+            session = null,
+            error = null,
+            showExitConfirm = false,
+        )
     }
 
     private fun openSession(session: SessionDto) {
@@ -199,6 +207,6 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun formatQty(value: Double): String {
-        return if (value % 1.0 == 0.0) "${value.toInt()}.0" else value.toString()
+        return if (value % 1.0 == 0.0) value.toInt().toString() else value.toString()
     }
 }

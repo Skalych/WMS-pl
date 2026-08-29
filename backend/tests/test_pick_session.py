@@ -24,9 +24,6 @@ async def test_full_pick_session_flow(picker_client, packer_client, seeded_db):
     assert scan_container.status_code == 200
     assert scan_container.json()["step"] == "GO_TO_LOCATION"
 
-    advance = await picker_client.post("/api/v1/terminal/session/advance-location")
-    assert advance.status_code == 200
-
     location_barcode = encode_location_barcode_from_code(seeded_db["storage_loc"].code)
     await picker_client.post("/api/v1/terminal/session/scan", json={"barcode": location_barcode})
     await picker_client.post(
@@ -53,7 +50,6 @@ async def test_full_pick_session_flow(picker_client, packer_client, seeded_db):
 async def test_partial_pick_stays_on_task(picker_client, packer_client, seeded_db):
     barcode, _ = await _start_pick_session(picker_client, packer_client, seeded_db)
     await picker_client.post("/api/v1/terminal/session/scan", json={"barcode": barcode})
-    await picker_client.post("/api/v1/terminal/session/advance-location")
 
     loc_barcode = encode_location_barcode_from_code(seeded_db["storage_loc"].code)
     await picker_client.post("/api/v1/terminal/session/scan", json={"barcode": loc_barcode})
@@ -74,7 +70,6 @@ async def test_partial_pick_stays_on_task(picker_client, packer_client, seeded_d
 async def test_invalid_location_scan_rejected(picker_client, packer_client, seeded_db):
     barcode, _ = await _start_pick_session(picker_client, packer_client, seeded_db)
     await picker_client.post("/api/v1/terminal/session/scan", json={"barcode": barcode})
-    await picker_client.post("/api/v1/terminal/session/advance-location")
 
     bad = await picker_client.post(
         "/api/v1/terminal/session/scan", json={"barcode": "99999999"}

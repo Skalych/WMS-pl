@@ -62,9 +62,21 @@ async def _load_task(db: AsyncSession, task_id: uuid.UUID) -> Optional[MicroTask
     return result.unique().scalar_one_or_none()
 
 
+def _resolve_current_item(session: PickSession) -> Optional[MicroTaskItem]:
+    """Resolve the active line from task.items by id — avoids stale ORM relationships after commit."""
+    task = session.micro_task
+    if not task:
+        return None
+    if session.current_item_id:
+        matched = next((i for i in task.items if i.id == session.current_item_id), None)
+        if matched is not None:
+            return matched
+    return _active_item(task)
+
+
 def _session_payload(session: PickSession) -> dict:
     task = session.micro_task
-    item = session.current_item or (task and _active_item(task))
+    item = _resolve_current_item(session)
     location_code = item.source_location.code if item and item.source_location else ""
     product_sku = item.product.sku if item and item.product else ""
     qty_remaining = float(_remaining(item)) if item else 0.0
@@ -199,8 +211,8 @@ async def process_session_scan(db: AsyncSession, user: User, barcode: str) -> di
         session.container_id = container.id
         session.step = PickStep.GO_TO_LOCATION
 
-    elif step == PickStep.LOCATION_VERIFY:
-        item = session.current_item or _active_item(session.micro_task)
+    elif step in (PickStep.GO_TO_LOCATION, PickStep.LOCATION_VERIFY):
+        item = _resolve_current_item(session)
         if not item or not item.source_location:
             raise HTTPException(status_code=400, detail="No active pick line")
         if not location_barcode_matches(item.source_location.code, scanned):
@@ -209,7 +221,7 @@ async def process_session_scan(db: AsyncSession, user: User, barcode: str) -> di
         session.step = PickStep.SKU_SCAN
 
     elif step == PickStep.SKU_SCAN:
-        item = session.current_item or _active_item(session.micro_task)
+        item = _resolve_current_item(session)
         if not item or not item.product:
             raise HTTPException(status_code=400, detail="No active pick line")
         expected = {item.product.sku, item.product.barcode or ""}
@@ -252,7 +264,7 @@ async def confirm_quantity(db: AsyncSession, user: User, quantity: float) -> dic
     if session.step != PickStep.QUANTITY_CONFIRM:
         raise HTTPException(status_code=400, detail="Not at quantity confirm step")
 
-    item = session.current_item or _active_item(session.micro_task)
+    item = _resolve_current_item(session)
     if not item:
         raise HTTPException(status_code=400, detail="No active pick line")
 
@@ -304,6 +316,7 @@ async def confirm_quantity(db: AsyncSession, user: User, quantity: float) -> dic
 
     await publish_shift_live_update(db)
 
+    await db.refresh(session, attribute_names=["current_item_id", "step"])
     session = await _load_session(db, user.id)
     if session:
         return _session_payload(session)
