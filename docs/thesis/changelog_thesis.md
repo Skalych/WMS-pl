@@ -18,6 +18,11 @@ Krótkie wpisy do rozdziału «Postęp prac» / «Implementacja». Nowe wpisy do
 
 ## Wpisy
 
+### 2026-08-29 — Aktywacja Cursor Automation (Generate docs)
+
+- Włączono automatyzację aktualizacji dokumentacji po pushu do `main`.
+- Trigger testowy — weryfikacja działania agenta.
+
 ### 2026-08-29 — Przełączenie dokumentacji na język polski
 
 - Przetłumaczono szablony w `docs/thesis/` z ukraińskiego na polski.
