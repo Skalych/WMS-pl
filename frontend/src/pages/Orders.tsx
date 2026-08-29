@@ -159,16 +159,16 @@ export default function Orders() {
         ))}
       </div>
 
-      <div className="data-panel">
-        <div className="data-panel-header">
-          <h3 className="data-panel-title">{t('orders.customerOrders')}</h3>
+      <section className="page-section">
+        <div className="page-section-header">
+          <h3 className="page-section-title">{t('orders.customerOrders')}</h3>
         </div>
 
         {isLoading && orders.length === 0 ? (
           <div className="panel-empty">{t('orders.loadingOrders')}</div>
         ) : (
           <div
-            className={`table-scroll data-table-wrap${!isLoading && filteredOrders.length > 0 ? ' is-ready' : ''}`}
+            className={`flat-table-wrap table-scroll data-table-wrap${!isLoading && filteredOrders.length > 0 ? ' is-ready' : ''}`}
           >
             <table className="data-table">
               <thead>
@@ -254,7 +254,7 @@ export default function Orders() {
             </table>
           </div>
         )}
-      </div>
+      </section>
 
       {selectedOrders.length > 0 && (
         <div className="wave-action-bar">

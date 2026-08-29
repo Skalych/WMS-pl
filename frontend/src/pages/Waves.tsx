@@ -28,6 +28,25 @@ export default function Waves() {
     return () => clearInterval(interval);
   }, []);
 
+  const badgeForStatus = (wave: Wave) => {
+    const isCompleted = wave.status === WaveStatus.COMPLETED;
+    const isSorting = wave.status === WaveStatus.SORTING;
+    const isActive =
+      wave.status === WaveStatus.IN_PROGRESS ||
+      wave.status === WaveStatus.RELEASED ||
+      wave.status === WaveStatus.PICKED;
+
+    if (isCompleted) return 'badge-active';
+    if (isSorting) return 'badge-info';
+    if (isActive) return 'badge-accent';
+    return 'badge-muted';
+  };
+
+  const rowClassForStatus = (wave: Wave) => {
+    if (wave.status === WaveStatus.COMPLETED) return 'wave-status-row--done';
+    return '';
+  };
+
   return (
     <div className="page-stack">
       <header className="page-header">
@@ -40,80 +59,66 @@ export default function Waves() {
         </div>
       </header>
 
-      <div className={`wave-grid${!isLoading && waves.length > 0 ? ' data-list-wrap is-ready' : ''}`}>
-        {isLoading && waves.length === 0 ? (
-          <div className="panel-empty">{t('orders.loadingWaves')}</div>
-        ) : waves.length === 0 ? (
-          <div className="panel-empty">{t('orders.noWaves')}</div>
-        ) : (
-          waves.map((wave, rowIndex) => {
-            const isCompleted = wave.status === WaveStatus.COMPLETED;
-            const isSorting = wave.status === WaveStatus.SORTING;
-            const isActive =
-              wave.status === WaveStatus.IN_PROGRESS ||
-              wave.status === WaveStatus.RELEASED ||
-              wave.status === WaveStatus.PICKED;
+      {isLoading && waves.length === 0 ? (
+        <div className="panel-empty">{t('orders.loadingWaves')}</div>
+      ) : waves.length === 0 ? (
+        <div className="panel-empty">{t('orders.noWaves')}</div>
+      ) : (
+        <div className={`flat-table-wrap data-table-wrap${waves.length > 0 ? ' is-ready' : ''}`}>
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>{t('orders.wave')}</th>
+                  <th>Status</th>
+                  <th>Orders</th>
+                  <th>Zone</th>
+                  <th>{t('orders.progress')}</th>
+                </tr>
+              </thead>
+              <tbody className="data-list-wrap is-ready">
+                {waves.map((wave, rowIndex) => {
+                  const isCompleted = wave.status === WaveStatus.COMPLETED;
+                  const isSorting = wave.status === WaveStatus.SORTING;
 
-            let cardClass = 'wave-card data-list-row';
-            if (isCompleted) cardClass += ' wave-card--done';
-            else if (isSorting) cardClass += ' wave-card--sorting';
-            else if (isActive) cardClass += ' wave-card--active';
-
-            return (
-              <div key={wave.id} className={`data-panel ${cardClass}`} style={rowStaggerStyle(rowIndex)}>
-                <div className="wave-card-body">
-                  <div className="wave-card-header">
-                    <div>
-                      <span className="wave-card-label">{t('orders.wave')}</span>
-                      <h3 className="text-mono">WAVE-{wave.waveNumber}</h3>
-                    </div>
-                    <span
-                      className={`badge ${
-                        isCompleted
-                          ? 'badge-active'
-                          : isSorting
-                            ? 'badge-info'
-                            : isActive
-                              ? 'badge-accent'
-                              : 'badge-muted'
-                      }`}
+                  return (
+                    <tr
+                      key={wave.id}
+                      className={`data-list-row ${rowClassForStatus(wave)}`}
+                      style={rowStaggerStyle(rowIndex)}
                     >
-                      {wave.status}
-                    </span>
-                  </div>
-
-                  <div className="wave-card-meta">
-                    <div>
-                      <span className="wave-card-meta-label">Orders</span>
-                      <span className="wave-card-meta-value">{wave.ordersCount}</span>
-                    </div>
-                    <div>
-                      <span className="wave-card-meta-label">Zone</span>
-                      <span className="badge badge-muted">{wave.zone || 'Mixed'}</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex-between" style={{ fontSize: '0.8rem', marginBottom: 8 }}>
-                      <span className="text-muted">{t('orders.progress')}</span>
-                      <span className="text-mono">{wave.progress}%</span>
-                    </div>
-                    <div className="progress-bar">
-                      <div
-                        className={`progress-bar-fill ${isSorting ? 'cyan' : ''}`}
-                        style={{
-                          width: `${wave.progress}%`,
-                          background: isCompleted ? 'var(--color-success)' : undefined,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+                      <td className="text-mono" style={{ fontWeight: 600 }}>
+                        WAVE-{wave.waveNumber}
+                      </td>
+                      <td>
+                        <span className={`badge ${badgeForStatus(wave)}`}>{wave.status}</span>
+                      </td>
+                      <td>{wave.ordersCount}</td>
+                      <td>
+                        <span className="badge badge-muted">{wave.zone || 'Mixed'}</span>
+                      </td>
+                      <td className="wave-progress-cell">
+                        <div className="flex-between text-muted" style={{ fontSize: '0.75rem', marginBottom: 6 }}>
+                          <span>{wave.progress}%</span>
+                        </div>
+                        <div className="progress-bar">
+                          <div
+                            className={`progress-bar-fill ${isSorting ? 'cyan' : ''}`}
+                            style={{
+                              width: `${wave.progress}%`,
+                              background: isCompleted ? 'var(--color-success)' : undefined,
+                            }}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
