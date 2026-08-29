@@ -3886,3 +3886,61 @@ select:focus:not(:focus-visible) {
   }
 }
 
+.label-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.label-chip {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 8px;
+  background: var(--surface-raised, #f8fafc);
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.packer-labels-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+}
+
+.packer-labels-count {
+  min-width: 120px;
+}
+
+.packer-labels-presets {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.packer-labels-presets .btn.is-active {
+  border-color: var(--accent, #2563eb);
+  color: var(--accent, #2563eb);
+}
+
+.packer-labels-print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.packer-labels-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  border-top: 1px solid var(--border-subtle, #e2e8f0);
+}
+
+.packer-labels-summary {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+

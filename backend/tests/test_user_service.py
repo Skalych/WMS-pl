@@ -97,6 +97,21 @@ async def test_count_online_users(seeded_db, db_session):
     assert await user_service.count_online_users(db_session) == 1
 
 
+@pytest.mark.asyncio
+async def test_team_members_normalize_stale_status(seeded_db, db_session):
+    picker = seeded_db["picker"]
+    picker.status = WorkerStatus.PICKING
+    await db_session.commit()
+
+    members = await user_service.get_team_members(db_session)
+    picker_row = next(m for m in members if m.id == picker.id)
+    assert picker_row.has_active_shift is False
+    assert picker_row.status == WorkerStatus.OFFLINE
+
+    refreshed = await user_service.get_user_by_id(db_session, picker.id)
+    assert refreshed.status == WorkerStatus.OFFLINE
+
+
 def _event(event_type: ShiftEventType, at: datetime) -> ShiftEvent:
     return ShiftEvent(id=__import__("uuid").uuid4(), shift_id=__import__("uuid").uuid4(), event_type=event_type, timestamp=at)
 

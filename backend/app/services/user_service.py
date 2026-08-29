@@ -116,6 +116,15 @@ async def get_team_members(
     )
     shifts_by_user = {s.user_id: s for s in shift_result.unique().scalars().all()}
 
+    stale_users = [
+        u for u in users
+        if u.id not in shifts_by_user and u.status != WorkerStatus.OFFLINE
+    ]
+    for user in stale_users:
+        user.status = WorkerStatus.OFFLINE
+    if stale_users:
+        await db.commit()
+
     members: list[TeamMemberResponse] = []
     for user in users:
         enriched = enrich_user(user)
@@ -125,13 +134,18 @@ async def get_team_members(
         if shift:
             summary = compute_break_summary(list(shift.events or []), now=now)
             break_summary = _break_summary_brief(summary)
+        display_status = enriched.status
+        if not has_active_shift and enriched.status != WorkerStatus.OFFLINE:
+            display_status = WorkerStatus.OFFLINE
+            enriched.status = WorkerStatus.OFFLINE
+            enriched.current_location_code = "OFFLINE"
         members.append(
             TeamMemberResponse(
                 id=enriched.id,
                 email=enriched.email,
                 full_name=enriched.full_name,
                 role=enriched.role,
-                status=enriched.status,
+                status=display_status,
                 efficiency=enriched.efficiency,
                 current_location_id=enriched.current_location_id,
                 current_location_code=enriched.current_location_code,
@@ -225,7 +239,7 @@ async def bulk_update_status(db: AsyncSession, user_ids: list[uuid.UUID], status
 
 async def count_online_users(db: AsyncSession) -> int:
     result = await db.execute(
-        select(func.count()).select_from(User).where(User.status != WorkerStatus.OFFLINE)
+        select(func.count(func.distinct(Shift.user_id))).where(Shift.end_time.is_(None))
     )
     return result.scalar_one()
 

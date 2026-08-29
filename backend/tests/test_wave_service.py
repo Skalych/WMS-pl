@@ -4,7 +4,7 @@ import uuid
 import pytest
 from sqlalchemy import select
 
-from app.models.enums import OrderStatus, TaskStatus, TaskType
+from app.models.enums import OrderStatus, TaskStatus, TaskType, WaveStatus
 from app.models.inventory import InventoryBalance
 from app.models.orders import Order, OrderItem
 from app.models.waves import MicroTask, MicroTaskItem
@@ -166,3 +166,54 @@ async def test_empty_wave_rejected(seeded_db, db_session):
             order_ids=[order.id],
             created_by_user_id=data["admin"].id,
         )
+
+
+@pytest.mark.asyncio
+async def test_cancel_wave_with_partial_picks(seeded_db, db_session):
+    data = seeded_db
+    task = data["micro_task"]
+    item = data["micro_task_item"]
+    item.quantity_picked = 2
+    item.quantity_to_pick = 3
+    await db_session.commit()
+
+    result = await wave_service.create_wave(
+        db_session,
+        order_ids=[data["order"].id],
+        created_by_user_id=data["admin"].id,
+    )
+    wave = result.wave
+    wave_item = wave.micro_tasks[0].items[0]
+    wave_item.quantity_picked = 2
+    wave_item.quantity_to_pick = 3
+    await db_session.commit()
+
+    cancelled = await wave_service.cancel_wave(db_session, wave.id)
+    assert cancelled.status == WaveStatus.CANCELLED
+    data = seeded_db
+    result = await wave_service.create_wave(
+        db_session,
+        order_ids=[data["order"].id],
+        created_by_user_id=data["admin"].id,
+    )
+    wave = result.wave
+
+    balance_before = await db_session.scalar(
+        select(InventoryBalance).where(
+            InventoryBalance.product_id == data["product_small"].id,
+            InventoryBalance.location_id == data["storage_loc"].id,
+        )
+    )
+    reserved_before = balance_before.reserved_quantity
+
+    cancelled = await wave_service.cancel_wave(db_session, wave.id)
+    assert cancelled.status == WaveStatus.CANCELLED
+
+    await db_session.refresh(balance_before)
+    assert balance_before.reserved_quantity == reserved_before - 10
+
+    order = await db_session.get(Order, data["order"].id)
+    assert order.status == OrderStatus.PENDING
+
+    active = await wave_service.count_active_waves(db_session)
+    assert active >= 0

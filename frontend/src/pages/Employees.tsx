@@ -98,17 +98,17 @@ const mapEmployeeData = (emp: {
     efficiency: emp.efficiency ?? 1.0,
     currentCartItems: emp.currentCartItems ?? 0,
     cartCapacityItems: emp.cartCapacityItems ?? 15,
-    hasActiveShift: emp.hasActiveShift ?? emp.status !== 'OFFLINE',
+    hasActiveShift: emp.hasActiveShift ?? false,
     breakSummary: emp.breakSummary ?? null,
   };
 };
 
 function matchesStatFilter(emp: EmployeeView, filter: StatFilter | null): boolean {
-  if (!filter) return emp.status !== 'OFFLINE';
-  if (filter === 'online') return emp.status !== 'OFFLINE' && emp.status !== 'IDLE';
-  if (filter === 'active') return ACTIVE_STATUSES.includes(emp.status);
-  if (filter === 'break') return emp.status === 'BREAK';
-  return emp.status === 'OFFLINE' || emp.status === 'IDLE';
+  if (!filter) return emp.hasActiveShift;
+  if (filter === 'online') return emp.hasActiveShift && emp.status !== 'IDLE';
+  if (filter === 'active') return emp.hasActiveShift && ACTIVE_STATUSES.includes(emp.status);
+  if (filter === 'break') return emp.hasActiveShift && emp.status === 'BREAK';
+  return !emp.hasActiveShift || emp.status === 'OFFLINE' || emp.status === 'IDLE';
 }
 
 export default function Employees() {
@@ -224,10 +224,10 @@ export default function Employees() {
   ];
 
   const onShiftCount = employees.filter((e) => e.hasActiveShift).length;
-  const onlineCount = employees.filter((e) => e.status !== 'OFFLINE' && e.status !== 'IDLE').length;
-  const activeCount = employees.filter((e) => ACTIVE_STATUSES.includes(e.status)).length;
-  const breakCount = employees.filter((e) => e.status === 'BREAK').length;
-  const offlineCount = employees.filter((e) => e.status === 'OFFLINE' || e.status === 'IDLE').length;
+  const onlineCount = employees.filter((e) => e.hasActiveShift && e.status !== 'OFFLINE' && e.status !== 'IDLE').length;
+  const activeCount = employees.filter((e) => e.hasActiveShift && ACTIVE_STATUSES.includes(e.status)).length;
+  const breakCount = employees.filter((e) => e.hasActiveShift && e.status === 'BREAK').length;
+  const offlineCount = employees.filter((e) => !e.hasActiveShift || e.status === 'OFFLINE' || e.status === 'IDLE').length;
 
   const toggleStatFilter = (filter: StatFilter) => {
     setStatFilter((prev) => (prev === filter ? null : filter));

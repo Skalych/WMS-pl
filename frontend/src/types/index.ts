@@ -70,6 +70,8 @@ export enum ShiftEventType {
   BREAK_END = 'BREAK_END',
   IDLE_START = 'IDLE_START',
   IDLE_END = 'IDLE_END',
+  SHIFT_CLOCK_IN = 'SHIFT_CLOCK_IN',
+  SHIFT_CLOCK_OUT = 'SHIFT_CLOCK_OUT',
 }
 
 export interface ShiftEvent {
@@ -249,6 +251,25 @@ export interface TerminalScanResult {
   message: string;
   quantity_picked?: number;
   task_completed?: boolean;
+}
+
+export interface ContainerLabel {
+  barcode: string;
+  status: string;
+}
+
+export interface ContainerLabelBatch {
+  count: number;
+  fromBarcode: string;
+  toBarcode: string;
+  labels: ContainerLabel[];
+}
+
+export interface BufferEntry {
+  buffer: string | null;
+  containerBarcode: string;
+  pickerName: string | null;
+  taskNumber: string | null;
 }
 
 export interface ShiftLiveBucket {

@@ -3,6 +3,7 @@ import {
   UserRole, WorkerStatus, Employee, DashboardStats, 
   Order, Wave, WaveCreateResult, MicroTask, InventoryItem, MacroOrder, InboundShipment, InventoryTransaction,
   TerminalTask, TerminalScanResult, MyShiftSnapshot, Shift, BreakSummary,
+  ContainerLabelBatch, BufferEntry,
 } from '../types';
 
 function mapMicroTask(m: Record<string, unknown>): MicroTask {
@@ -283,7 +284,12 @@ export const orderService = {
         totalUnitsAllocated: Number(summary.total_units_allocated || 0),
       },
     };
-  }
+  },
+
+  cancelWave: async (waveId: string): Promise<Wave> => {
+    const response = await apiClient.post(`/waves/${waveId}/cancel`);
+    return mapWave(response.data);
+  },
 };
 
 function mapBreakSummary(raw: Record<string, unknown>): BreakSummary {
@@ -392,6 +398,36 @@ export const terminalService = {
       quantity,
     });
     return response.data;
+  },
+};
+
+export const packerService = {
+  generateContainers: async (count: number): Promise<ContainerLabelBatch> => {
+    const response = await apiClient.post('/packer/containers/generate', { count });
+    const data = response.data as Record<string, unknown>;
+    const rawLabels = Array.isArray(data.labels) ? data.labels : [];
+    return {
+      count: Number(data.count ?? rawLabels.length),
+      fromBarcode: String(data.from_barcode ?? ''),
+      toBarcode: String(data.to_barcode ?? ''),
+      labels: rawLabels.map((row) => {
+        const r = row as Record<string, unknown>;
+        return {
+          barcode: String(r.barcode ?? ''),
+          status: String(r.status ?? ''),
+        };
+      }),
+    };
+  },
+
+  listBuffers: async (): Promise<BufferEntry[]> => {
+    const response = await apiClient.get('/packer/buffers');
+    return (response.data as Array<Record<string, unknown>>).map((row) => ({
+      buffer: row.buffer ? String(row.buffer) : null,
+      containerBarcode: String(row.container_barcode ?? ''),
+      pickerName: row.picker_name ? String(row.picker_name) : null,
+      taskNumber: row.task_number ? String(row.task_number) : null,
+    }));
   },
 };
 

@@ -11,11 +11,20 @@ function microTaskBadgeClass(status: string): string {
   return 'badge-muted';
 }
 
+function canCancelWave(wave: Wave): boolean {
+  return (
+    wave.status === WaveStatus.DRAFT ||
+    wave.status === WaveStatus.RELEASED ||
+    wave.status === WaveStatus.IN_PROGRESS
+  );
+}
+
 export default function Waves() {
   const { t } = useTranslation();
   const [waves, setWaves] = useState<Wave[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedWaveId, setExpandedWaveId] = useState<string | null>(null);
+  const [cancellingWaveId, setCancellingWaveId] = useState<string | null>(null);
 
   const fetchData = async (isPolling = false) => {
     try {
@@ -39,14 +48,42 @@ export default function Waves() {
     setExpandedWaveId((prev) => (prev === waveId ? null : waveId));
   };
 
+  const handleCancelWave = async (wave: Wave) => {
+    if (!canCancelWave(wave) || cancellingWaveId) return;
+    if (!window.confirm(t('orders.cancelWaveConfirm', { number: wave.waveNumber }))) return;
+
+    setCancellingWaveId(wave.id);
+    try {
+      await orderService.cancelWave(wave.id);
+      await fetchData(true);
+      if (expandedWaveId === wave.id) {
+        setExpandedWaveId(null);
+      }
+    } catch (error: unknown) {
+      console.error('Failed to cancel wave:', error);
+      const detail =
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error &&
+        typeof (error as { response?: { data?: { detail?: string } } }).response?.data?.detail === 'string'
+          ? (error as { response: { data: { detail: string } } }).response.data.detail
+          : null;
+      alert(detail || t('orders.cancelWaveFailed'));
+    } finally {
+      setCancellingWaveId(null);
+    }
+  };
+
   const badgeForStatus = (wave: Wave) => {
     const isCompleted = wave.status === WaveStatus.COMPLETED;
+    const isCancelled = wave.status === WaveStatus.CANCELLED;
     const isSorting = wave.status === WaveStatus.SORTING;
     const isActive =
       wave.status === WaveStatus.IN_PROGRESS ||
       wave.status === WaveStatus.RELEASED ||
       wave.status === WaveStatus.PICKED;
 
+    if (isCancelled) return 'badge-muted';
     if (isCompleted) return 'badge-active';
     if (isSorting) return 'badge-info';
     if (isActive) return 'badge-accent';
@@ -55,6 +92,7 @@ export default function Waves() {
 
   const rowClassForStatus = (wave: Wave) => {
     if (wave.status === WaveStatus.COMPLETED) return 'wave-status-row--done';
+    if (wave.status === WaveStatus.CANCELLED) return 'wave-status-row--done';
     return '';
   };
 
@@ -86,6 +124,7 @@ export default function Waves() {
                   <th>Orders</th>
                   <th>Zone</th>
                   <th>{t('orders.progress')}</th>
+                  <th style={{ width: 140 }} />
                 </tr>
               </thead>
               <tbody className="data-list-wrap is-ready">
@@ -94,6 +133,7 @@ export default function Waves() {
                   const isSorting = wave.status === WaveStatus.SORTING;
                   const isExpanded = expandedWaveId === wave.id;
                   const hasMicroTasks = wave.microTasksTotal > 0;
+                  const showCancel = canCancelWave(wave);
 
                   return (
                     <Fragment key={wave.id}>
@@ -152,10 +192,22 @@ export default function Waves() {
                             />
                           </div>
                         </td>
+                        <td onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                          {showCancel && (
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-sm"
+                              disabled={cancellingWaveId === wave.id}
+                              onClick={() => handleCancelWave(wave)}
+                            >
+                              {cancellingWaveId === wave.id ? t('orders.cancelling') : t('orders.cancelWave')}
+                            </button>
+                          )}
+                        </td>
                       </tr>
                       {isExpanded && hasMicroTasks && (
                         <tr className="wave-microtasks-row">
-                          <td colSpan={6}>
+                          <td colSpan={7}>
                             <div className="wave-microtasks-panel">
                               <div className="wave-microtasks-header">
                                 {t('orders.microTasksTitle', { count: wave.microTasksTotal })}

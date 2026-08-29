@@ -24,6 +24,29 @@ class ShiftEventType(str, enum.Enum):
     BREAK_END = "BREAK_END"
     IDLE_START = "IDLE_START"
     IDLE_END = "IDLE_END"
+    SHIFT_CLOCK_IN = "SHIFT_CLOCK_IN"
+    SHIFT_CLOCK_OUT = "SHIFT_CLOCK_OUT"
+
+
+class ContainerStatus(str, enum.Enum):
+    IN_PICKING = "IN_PICKING"
+    AT_BUFFER = "AT_BUFFER"
+    CLOSED = "CLOSED"
+
+
+class IssuedLabelStatus(str, enum.Enum):
+    ISSUED = "ISSUED"
+    CONSUMED = "CONSUMED"
+
+
+class PickStep(str, enum.Enum):
+    CONTAINER_SCAN = "CONTAINER_SCAN"
+    GO_TO_LOCATION = "GO_TO_LOCATION"
+    LOCATION_VERIFY = "LOCATION_VERIFY"
+    SKU_SCAN = "SKU_SCAN"
+    QUANTITY_CONFIRM = "QUANTITY_CONFIRM"
+    BUFFER_SCAN = "BUFFER_SCAN"
+    COMPLETED = "COMPLETED"
 
 class LocationType(str, enum.Enum):
     RECEIVING = "RECEIVING"

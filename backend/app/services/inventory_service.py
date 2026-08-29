@@ -111,6 +111,20 @@ async def reserve_stock(
     return balance
 
 
+async def release_reserved_stock(
+    db: AsyncSession,
+    product_id: uuid.UUID,
+    location_id: uuid.UUID,
+    quantity: int,
+) -> InventoryBalance:
+    balance = await get_balance_at_location_for_update(db, product_id, location_id)
+    if not balance:
+        raise BalanceNotFoundError(product_id, location_id)
+    release_qty = min(quantity, balance.reserved_quantity)
+    balance.reserved_quantity -= release_qty
+    return balance
+
+
 async def commit_pick(
     db: AsyncSession,
     product_id: uuid.UUID,

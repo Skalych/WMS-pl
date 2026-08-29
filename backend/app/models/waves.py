@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Optional, List
-from sqlalchemy import String, Enum, Integer, DateTime, ForeignKey, UniqueConstraint, func, UUID
+from sqlalchemy import String, Enum, Integer, Numeric, DateTime, ForeignKey, UniqueConstraint, func, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.models.enums import WaveStatus, TaskStatus, TaskType
@@ -62,8 +62,8 @@ class MicroTaskItem(Base):
     product_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
     source_location_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("locations.id", ondelete="CASCADE"), nullable=False)
     target_location_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("locations.id", ondelete="CASCADE"), nullable=False)
-    quantity_to_pick: Mapped[int] = mapped_column(Integer, nullable=False)
-    quantity_picked: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    quantity_to_pick: Mapped[float] = mapped_column(Numeric(10, 1), nullable=False)
+    quantity_picked: Mapped[float] = mapped_column(Numeric(10, 1), default=0, nullable=False)
     status: Mapped[TaskStatus] = mapped_column(Enum(TaskStatus), nullable=False, default=TaskStatus.PENDING)
 
     micro_task: Mapped["MicroTask"] = relationship("MicroTask", back_populates="items")
