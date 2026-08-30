@@ -196,6 +196,34 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Reload available micro-tasks without leaving the task list screen. */
+    fun refreshTasks() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(loading = true, error = null)
+            try {
+                val session = api.currentSession().body()
+                if (session != null && session.step != "COMPLETED") {
+                    openSession(session)
+                    return@launch
+                }
+                val tasks = api.availableTasks()
+                _state.value = _state.value.copy(
+                    loading = false,
+                    screen = AppScreen.TaskList,
+                    tasks = tasks,
+                    hasActiveSession = false,
+                    statusMessage = if (tasks.isEmpty()) "No tasks yet — tap Refresh again later" else null,
+                )
+            } catch (e: Exception) {
+                if (handleAuthFailure(e)) return@launch
+                _state.value = _state.value.copy(
+                    loading = false,
+                    error = friendlyError(e, "Failed to refresh tasks"),
+                )
+            }
+        }
+    }
+
     fun onScan(barcode: String) {
         val session = _state.value.session ?: return
         when (session.step) {
