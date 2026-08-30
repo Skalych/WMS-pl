@@ -85,6 +85,12 @@ async def terminal_login(
     return await terminal_service.terminal_login(db, data.email, data.pin)
 
 
+class ShiftStatusResponse(BaseModel):
+    has_open_shift: bool
+    clocked_in: bool
+    shift_id: Optional[uuid.UUID] = None
+
+
 @router.post("/shift/clock-in")
 async def shift_clock_in(
     db: AsyncSession = Depends(get_db),
@@ -99,6 +105,14 @@ async def shift_clock_out(
     current_user: User = Depends(TERMINAL_ACCESS),
 ):
     return await pick_session_service.clock_shift(db, current_user, clock_in=False)
+
+
+@router.get("/shift/status", response_model=ShiftStatusResponse)
+async def shift_status(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(TERMINAL_ACCESS),
+):
+    return await pick_session_service.get_shift_status(db, current_user)
 
 
 @router.get("/spheres", response_model=list[SphereResponse])

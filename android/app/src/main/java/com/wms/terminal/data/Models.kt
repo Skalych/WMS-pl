@@ -37,3 +37,9 @@ data class ScanRequest(val barcode: String)
 data class ConfirmQuantityRequest(val quantity: Double)
 
 data class ShiftClockResponse(val status: String, val event: String)
+
+data class ShiftStatusDto(
+    @SerializedName("has_open_shift") val hasOpenShift: Boolean,
+    @SerializedName("clocked_in") val clockedIn: Boolean,
+    @SerializedName("shift_id") val shiftId: String?,
+)

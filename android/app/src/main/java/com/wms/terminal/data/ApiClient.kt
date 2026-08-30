@@ -22,6 +22,9 @@ interface WmsApi {
     @POST("terminal/shift/clock-out")
     suspend fun clockOut(): ShiftClockResponse
 
+    @GET("terminal/shift/status")
+    suspend fun shiftStatus(): ShiftStatusDto
+
     @GET("terminal/spheres")
     suspend fun spheres(): List<SphereDto>
 

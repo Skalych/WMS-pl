@@ -10,10 +10,15 @@ import com.wms.terminal.data.LoginRequest
 import com.wms.terminal.data.ScanRequest
 import com.wms.terminal.data.SessionDto
 import com.wms.terminal.data.TokenStore
+import java.io.IOException
+import java.net.ConnectException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 enum class AppScreen {
     Login, Home, TaskList, Picking,
@@ -24,6 +29,10 @@ data class TerminalUiState(
     val loading: Boolean = false,
     val error: String? = null,
     val statusMessage: String? = null,
+    val clockedIn: Boolean = false,
+    val hasActiveSession: Boolean = false,
+    val showShiftDialog: Boolean = false,
+    val showEndShiftConfirm: Boolean = false,
     val tasks: List<AvailableTaskDto> = emptyList(),
     val session: SessionDto? = null,
     val willPickQuantity: String = "",
@@ -42,6 +51,12 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
     )
     val state: StateFlow<TerminalUiState> = _state.asStateFlow()
 
+    init {
+        if (token != null) {
+            refreshHomeStatus()
+        }
+    }
+
     fun login(email: String, pin: String) {
         viewModelScope.launch {
             _state.value = _state.value.copy(loading = true, error = null)
@@ -50,8 +65,9 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
                 token = response.accessToken
                 tokenStore.saveToken(response.accessToken)
                 _state.value = _state.value.copy(loading = false, screen = AppScreen.Home)
+                refreshHomeStatus()
             } catch (e: Exception) {
-                _state.value = _state.value.copy(loading = false, error = "Login failed")
+                _state.value = _state.value.copy(loading = false, error = friendlyError(e, "Login failed"))
             }
         }
     }
@@ -60,6 +76,22 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
         token = null
         tokenStore.clear()
         _state.value = TerminalUiState(screen = AppScreen.Login)
+    }
+
+    fun openShiftDialog() {
+        _state.value = _state.value.copy(showShiftDialog = true, showEndShiftConfirm = false)
+    }
+
+    fun dismissShiftDialog() {
+        _state.value = _state.value.copy(showShiftDialog = false, showEndShiftConfirm = false)
+    }
+
+    fun requestEndShift() {
+        _state.value = _state.value.copy(showEndShiftConfirm = true)
+    }
+
+    fun dismissEndShiftConfirm() {
+        _state.value = _state.value.copy(showEndShiftConfirm = false)
     }
 
     fun clockIn() = clock(shiftIn = true)
@@ -73,11 +105,52 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
                 val result = if (shiftIn) api.clockIn() else api.clockOut()
                 _state.value = _state.value.copy(
                     loading = false,
+                    clockedIn = shiftIn,
                     statusMessage = if (shiftIn) "Shift started" else "Shift ended: ${result.event}",
+                    showShiftDialog = false,
+                    showEndShiftConfirm = false,
                 )
+                refreshShiftStatus()
             } catch (e: Exception) {
-                _state.value = _state.value.copy(loading = false, error = "Clock action failed")
+                if (handleAuthFailure(e)) return@launch
+                _state.value = _state.value.copy(
+                    loading = false,
+                    error = friendlyError(e, "Clock action failed"),
+                )
             }
+        }
+    }
+
+    fun refreshHomeStatus() {
+        viewModelScope.launch {
+            refreshShiftStatus()
+            refreshActiveSessionFlag()
+        }
+    }
+
+    private suspend fun refreshShiftStatus() {
+        try {
+            val status = api.shiftStatus()
+            _state.value = _state.value.copy(clockedIn = status.clockedIn)
+        } catch (e: Exception) {
+            if (handleAuthFailure(e)) return
+            // Keep previous clockedIn; surface soft error only when on Home.
+            if (_state.value.screen == AppScreen.Home) {
+                _state.value = _state.value.copy(
+                    error = friendlyError(e, "Could not load shift status"),
+                )
+            }
+        }
+    }
+
+    private suspend fun refreshActiveSessionFlag() {
+        try {
+            val session = api.currentSession().body()
+            val active = session != null && session.step != "COMPLETED"
+            _state.value = _state.value.copy(hasActiveSession = active)
+        } catch (e: Exception) {
+            if (handleAuthFailure(e)) return
+            _state.value = _state.value.copy(hasActiveSession = false)
         }
     }
 
@@ -94,10 +167,15 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
                         loading = false,
                         screen = AppScreen.TaskList,
                         tasks = tasks,
+                        hasActiveSession = false,
                     )
                 }
             } catch (e: Exception) {
-                _state.value = _state.value.copy(loading = false, error = "Failed to load tasks")
+                if (handleAuthFailure(e)) return@launch
+                _state.value = _state.value.copy(
+                    loading = false,
+                    error = friendlyError(e, "Failed to load tasks"),
+                )
             }
         }
     }
@@ -109,7 +187,11 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
                 val session = api.claimTask(taskId)
                 openSession(session)
             } catch (e: Exception) {
-                _state.value = _state.value.copy(loading = false, error = "Could not claim task")
+                if (handleAuthFailure(e)) return@launch
+                _state.value = _state.value.copy(
+                    loading = false,
+                    error = friendlyError(e, "Could not claim task"),
+                )
             }
         }
     }
@@ -132,7 +214,11 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
                 val updated = api.scan(ScanRequest(barcode))
                 handleSessionAfterAction(updated)
             } catch (e: Exception) {
-                _state.value = _state.value.copy(loading = false, error = "Scan rejected")
+                if (handleAuthFailure(e)) return@launch
+                _state.value = _state.value.copy(
+                    loading = false,
+                    error = friendlyError(e, "Scan rejected"),
+                )
             }
         }
     }
@@ -160,7 +246,11 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
             val session = api.confirmQuantity(ConfirmQuantityRequest(qty))
             handleSessionAfterAction(session)
         } catch (e: Exception) {
-            _state.value = _state.value.copy(loading = false, error = "Quantity confirm failed")
+            if (handleAuthFailure(e)) return
+            _state.value = _state.value.copy(
+                loading = false,
+                error = friendlyError(e, "Quantity confirm failed"),
+            )
         }
     }
 
@@ -179,6 +269,7 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
             error = null,
             showExitConfirm = false,
         )
+        refreshHomeStatus()
     }
 
     private fun openSession(session: SessionDto) {
@@ -188,6 +279,7 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
             session = session,
             willPickQuantity = session.quantityDefault?.let { formatQty(it) } ?: "",
             error = null,
+            hasActiveSession = session.step != "COMPLETED",
         )
     }
 
@@ -199,11 +291,43 @@ class TerminalViewModel(app: Application) : AndroidViewModel(app) {
                 session = null,
                 statusMessage = "Task completed — scan next task",
                 tasks = emptyList(),
+                hasActiveSession = false,
             )
             openPicking()
             return
         }
         openSession(session)
+    }
+
+    private fun handleAuthFailure(e: Exception): Boolean {
+        if (e !is HttpException || e.code() != 401) return false
+        token = null
+        tokenStore.clear()
+        _state.value = TerminalUiState(
+            screen = AppScreen.Login,
+            error = "Session expired — please log in again",
+        )
+        return true
+    }
+
+    private fun friendlyError(e: Exception, fallback: String): String {
+        when (e) {
+            is HttpException -> {
+                val detail = e.response()?.errorBody()?.string()?.takeIf { it.isNotBlank() }
+                val code = e.code()
+                return when {
+                    !detail.isNullOrBlank() && detail.length < 200 -> "$fallback ($code): $detail"
+                    else -> "$fallback (HTTP $code)"
+                }
+            }
+            is ConnectException, is UnknownHostException ->
+                return "Cannot reach server — is the backend running?"
+            is SocketTimeoutException ->
+                return "Server timed out — try again"
+            is IOException ->
+                return "Network error — check connection"
+            else -> return fallback
+        }
     }
 
     private fun formatQty(value: Double): String {
