@@ -71,6 +71,43 @@ fun TerminalApp(viewModel: TerminalViewModel) {
         )
     }
 
+    if (state.showEndShiftConfirm) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissEndShiftConfirm,
+            title = { Text("End shift?") },
+            text = { Text("Are you sure you want to end your shift?") },
+            confirmButton = {
+                TextButton(onClick = viewModel::clockOut) { Text("End shift") }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissEndShiftConfirm) { Text("Cancel") }
+            },
+        )
+    }
+
+    if (state.showShiftDialog && !state.showEndShiftConfirm) {
+        AlertDialog(
+            onDismissRequest = viewModel::dismissShiftDialog,
+            title = { Text("Shift") },
+            text = {
+                Text(
+                    if (state.clockedIn) "You are clocked in."
+                    else "You are not clocked in.",
+                )
+            },
+            confirmButton = {
+                if (state.clockedIn) {
+                    TextButton(onClick = viewModel::requestEndShift) { Text("End shift") }
+                } else {
+                    TextButton(onClick = viewModel::clockIn) { Text("Start shift") }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = viewModel::dismissShiftDialog) { Text("Close") }
+            },
+        )
+    }
+
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -94,8 +131,9 @@ fun TerminalApp(viewModel: TerminalViewModel) {
             when (state.screen) {
                 AppScreen.Login -> LoginScreen(onLogin = viewModel::login)
                 AppScreen.Home -> HomeScreen(
-                    onClockIn = viewModel::clockIn,
-                    onClockOut = viewModel::clockOut,
+                    clockedIn = state.clockedIn,
+                    hasActiveSession = state.hasActiveSession,
+                    onOpenShift = viewModel::openShiftDialog,
                     onPicking = viewModel::openPicking,
                     onLogout = viewModel::logout,
                 )
@@ -149,20 +187,48 @@ private fun LoginScreen(onLogin: (String, String) -> Unit) {
 
 @Composable
 private fun HomeScreen(
-    onClockIn: () -> Unit,
-    onClockOut: () -> Unit,
+    clockedIn: Boolean,
+    hasActiveSession: Boolean,
+    onOpenShift: () -> Unit,
     onPicking: () -> Unit,
     onLogout: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Shift", fontSize = 22.sp)
-        Button(onClick = onClockIn, modifier = Modifier.fillMaxWidth()) { Text("Start shift") }
-        Button(onClick = onClockOut, modifier = Modifier.fillMaxWidth()) { Text("End shift") }
+        Text(
+            if (clockedIn) "Shift: clocked in" else "Shift: not clocked in",
+            fontSize = 18.sp,
+            color = if (clockedIn) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+        )
+        TextButton(onClick = onOpenShift, modifier = Modifier.fillMaxWidth()) {
+            Text("Shift…")
+        }
+
         Spacer(Modifier.height(8.dp))
         Text("Sphere", fontSize = 22.sp)
-        Button(onClick = onPicking, modifier = Modifier.fillMaxWidth()) { Text("Picking") }
+
+        if (hasActiveSession) {
+            Button(onClick = onPicking, modifier = Modifier.fillMaxWidth()) {
+                Text("Continue picking", fontSize = 20.sp)
+            }
+            Text(
+                "You have an unfinished pick session.",
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        } else {
+            Button(onClick = onPicking, modifier = Modifier.fillMaxWidth()) {
+                Text("Picking", fontSize = 20.sp)
+            }
+        }
+
         Spacer(Modifier.height(16.dp))
-        Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text("Logout") }
+        Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
+            Text("Logout")
+        }
     }
 }
 

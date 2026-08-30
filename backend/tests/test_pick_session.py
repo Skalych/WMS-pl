@@ -117,6 +117,76 @@ async def test_shift_clock_in_out(picker_client):
     assert clock_in.status_code == 200
     assert clock_in.json()["event"] == "SHIFT_CLOCK_IN"
 
+    status_in = await picker_client.get("/api/v1/terminal/shift/status")
+    assert status_in.status_code == 200
+    body_in = status_in.json()
+    assert body_in["has_open_shift"] is True
+    assert body_in["clocked_in"] is True
+    assert body_in["shift_id"] is not None
+
     clock_out = await picker_client.post("/api/v1/terminal/shift/clock-out")
     assert clock_out.status_code == 200
     assert clock_out.json()["event"] == "SHIFT_CLOCK_OUT"
+
+    status_out = await picker_client.get("/api/v1/terminal/shift/status")
+    assert status_out.status_code == 200
+    body_out = status_out.json()
+    assert body_out["has_open_shift"] is True
+    assert body_out["clocked_in"] is False
+
+
+@pytest.mark.asyncio
+async def test_shift_status_when_never_clocked(picker_client):
+    status = await picker_client.get("/api/v1/terminal/shift/status")
+    assert status.status_code == 200
+    body = status.json()
+    assert body["has_open_shift"] is False
+    assert body["clocked_in"] is False
+    assert body["shift_id"] is None
+
+
+@pytest.mark.asyncio
+async def test_current_session_resumes_existing(picker_client, packer_client, seeded_db):
+    barcode, _ = await _start_pick_session(picker_client, packer_client, seeded_db)
+    await picker_client.post("/api/v1/terminal/session/scan", json={"barcode": barcode})
+
+    current = await picker_client.get("/api/v1/terminal/session/current")
+    assert current.status_code == 200
+    body = current.json()
+    assert body is not None
+    assert body["step"] == "GO_TO_LOCATION"
+    assert body["container_barcode"] == barcode
+
+
+@pytest.mark.asyncio
+async def test_current_session_restores_orphan_in_progress(
+    picker_client, packer_client, seeded_db, db_session
+):
+    import uuid as uuid_mod
+
+    from sqlalchemy import delete, select
+    from app.models.enums import TaskStatus
+    from app.models.pick_sessions import PickSession
+    from app.models.waves import MicroTask
+
+    barcode, task_id = await _start_pick_session(picker_client, packer_client, seeded_db)
+    await picker_client.post("/api/v1/terminal/session/scan", json={"barcode": barcode})
+    task_uuid = uuid_mod.UUID(str(task_id))
+
+    # Drop the pick session row while leaving the task IN_PROGRESS (orphan).
+    await db_session.execute(delete(PickSession).where(PickSession.user_id == seeded_db["picker"].id))
+    await db_session.commit()
+    db_session.expire_all()
+
+    task = (
+        await db_session.execute(select(MicroTask).where(MicroTask.id == task_uuid))
+    ).scalar_one()
+    assert task.status == TaskStatus.IN_PROGRESS
+
+    current = await picker_client.get("/api/v1/terminal/session/current")
+    assert current.status_code == 200
+    body = current.json()
+    assert body is not None
+    assert body["step"] == "GO_TO_LOCATION"
+    assert body["task_id"] == str(task_uuid)
+    assert body["container_barcode"] == barcode

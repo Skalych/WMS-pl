@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Optional
 
@@ -96,25 +97,62 @@ def _session_payload(session: PickSession) -> dict:
     }
 
 
-async def clock_shift(db: AsyncSession, user: User, *, clock_in: bool) -> dict:
-    """Informational shift clock — does not block picking."""
+async def _open_shift(db: AsyncSession, user_id: uuid.UUID) -> Optional[Shift]:
     result = await db.execute(
         select(Shift)
-        .where(Shift.user_id == user.id)
+        .where(Shift.user_id == user_id)
         .where(Shift.end_time.is_(None))
         .order_by(Shift.start_time.desc())
         .limit(1)
     )
-    shift = result.scalar_one_or_none()
+    return result.scalar_one_or_none()
+
+
+async def clock_shift(db: AsyncSession, user: User, *, clock_in: bool) -> dict:
+    """Informational shift clock — does not block picking."""
+    shift = await _open_shift(db, user.id)
     if not shift:
         shift = Shift(id=uuid.uuid4(), user_id=user.id)
         db.add(shift)
         await db.flush()
 
     event_type = ShiftEventType.SHIFT_CLOCK_IN if clock_in else ShiftEventType.SHIFT_CLOCK_OUT
-    db.add(ShiftEvent(id=uuid.uuid4(), shift_id=shift.id, event_type=event_type))
+    db.add(
+        ShiftEvent(
+            id=uuid.uuid4(),
+            shift_id=shift.id,
+            event_type=event_type,
+            timestamp=datetime.now(timezone.utc),
+        )
+    )
     await db.commit()
     return {"status": "ok", "event": event_type.value}
+
+
+async def get_shift_status(db: AsyncSession, user: User) -> dict:
+    """Return open shift + whether the last terminal clock event was clock-in."""
+    shift = await _open_shift(db, user.id)
+    if not shift:
+        return {"has_open_shift": False, "clocked_in": False, "shift_id": None}
+
+    result = await db.execute(
+        select(ShiftEvent)
+        .where(ShiftEvent.shift_id == shift.id)
+        .where(
+            ShiftEvent.event_type.in_(
+                (ShiftEventType.SHIFT_CLOCK_IN, ShiftEventType.SHIFT_CLOCK_OUT)
+            )
+        )
+        .order_by(ShiftEvent.timestamp.desc(), ShiftEvent.id.desc())
+        .limit(1)
+    )
+    last_clock = result.scalar_one_or_none()
+    clocked_in = last_clock is not None and last_clock.event_type == ShiftEventType.SHIFT_CLOCK_IN
+    return {
+        "has_open_shift": True,
+        "clocked_in": clocked_in,
+        "shift_id": shift.id,
+    }
 
 
 async def list_spheres() -> list[dict]:
@@ -173,8 +211,67 @@ async def claim_task(db: AsyncSession, user: User, task_id: uuid.UUID) -> dict:
     return _session_payload(session)
 
 
+async def _load_orphan_in_progress_task(db: AsyncSession, user_id: uuid.UUID) -> Optional[MicroTask]:
+    result = await db.execute(
+        select(MicroTask)
+        .options(
+            selectinload(MicroTask.items).selectinload(MicroTaskItem.product),
+            selectinload(MicroTask.items).selectinload(MicroTaskItem.source_location),
+        )
+        .where(MicroTask.status == TaskStatus.IN_PROGRESS)
+        .where(MicroTask.assigned_user_id == user_id)
+        .order_by(MicroTask.created_at.desc())
+        .limit(1)
+    )
+    return result.unique().scalar_one_or_none()
+
+
+async def _container_for_task(db: AsyncSession, task_id: uuid.UUID) -> Optional[Container]:
+    result = await db.execute(
+        select(Container)
+        .where(Container.micro_task_id == task_id)
+        .where(Container.status == ContainerStatus.IN_PICKING)
+        .order_by(Container.updated_at.desc())
+        .limit(1)
+    )
+    return result.scalar_one_or_none()
+
+
+def _infer_resume_step(task: MicroTask, container: Optional[Container]) -> PickStep:
+    if container is None:
+        return PickStep.CONTAINER_SCAN
+    if _active_item(task) is None:
+        return PickStep.BUFFER_SCAN
+    return PickStep.GO_TO_LOCATION
+
+
+async def _restore_orphan_session(db: AsyncSession, user: User) -> Optional[PickSession]:
+    """Recreate a PickSession when a task is IN_PROGRESS but the session row was lost."""
+    task = await _load_orphan_in_progress_task(db, user.id)
+    if not task:
+        return None
+
+    container = await _container_for_task(db, task.id)
+    active = _active_item(task)
+    step = _infer_resume_step(task, container)
+    session = PickSession(
+        id=uuid.uuid4(),
+        user_id=user.id,
+        micro_task_id=task.id,
+        container_id=container.id if container else None,
+        current_item_id=active.id if active else None,
+        step=step,
+    )
+    db.add(session)
+    user.status = WorkerStatus.PICKING
+    await db.commit()
+    return await _load_session(db, user.id)
+
+
 async def get_current_session(db: AsyncSession, user: User) -> Optional[dict]:
     session = await _load_session(db, user.id)
+    if not session:
+        session = await _restore_orphan_session(db, user)
     if not session:
         return None
     return _session_payload(session)
