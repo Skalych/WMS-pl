@@ -12,13 +12,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -41,7 +38,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.wms.terminal.scanner.ZebraScannerManager
 
 @Composable
@@ -108,22 +104,26 @@ fun TerminalApp(viewModel: TerminalViewModel) {
         )
     }
 
-    Surface(modifier = Modifier.fillMaxSize()) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background,
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.Top,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (state.screen != AppScreen.Picking) {
-                Text("WMS Terminal", fontSize = 28.sp, modifier = Modifier.padding(bottom = 8.dp))
+                Text(
+                    "WMS Terminal",
+                    style = MaterialTheme.typography.headlineLarge,
+                )
             }
-            state.statusMessage?.let {
-                Text(it, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(bottom = 8.dp))
-            }
-            state.error?.let {
-                Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 8.dp))
-            }
+
+            state.error?.let { StatusBanner(message = it, isError = true) }
+            state.statusMessage?.let { StatusBanner(message = it, isError = false) }
+
             if (state.loading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             }
@@ -140,6 +140,7 @@ fun TerminalApp(viewModel: TerminalViewModel) {
                 AppScreen.TaskList -> TaskListScreen(
                     tasks = state.tasks,
                     onClaim = viewModel::claimTask,
+                    onRefresh = viewModel::refreshTasks,
                     onBack = viewModel::requestBackToHome,
                 )
                 AppScreen.Picking -> PickingScreen(
@@ -159,29 +160,35 @@ fun TerminalApp(viewModel: TerminalViewModel) {
 private fun LoginScreen(onLogin: (String, String) -> Unit) {
     var email by remember { mutableStateOf("") }
     var pin by remember { mutableStateOf("") }
-    Column {
+
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            "Sign in to continue",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
+            shape = TerminalCorner,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
         )
-        Spacer(Modifier.height(8.dp))
         OutlinedTextField(
             value = pin,
             onValueChange = { pin = it },
             label = { Text("PIN") },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
+            shape = TerminalCorner,
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onLogin(email, pin) }),
         )
-        Spacer(Modifier.height(16.dp))
-        Button(onClick = { onLogin(email, pin) }, modifier = Modifier.fillMaxWidth()) {
-            Text("Login", fontSize = 20.sp)
-        }
+        Spacer(Modifier.height(4.dp))
+        TerminalPrimaryButton(text = "Login", onClick = { onLogin(email, pin) })
     }
 }
 
@@ -193,42 +200,60 @@ private fun HomeScreen(
     onPicking: () -> Unit,
     onLogout: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            if (clockedIn) "Shift: clocked in" else "Shift: not clocked in",
-            fontSize = 18.sp,
-            color = if (clockedIn) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            },
-        )
-        TextButton(onClick = onOpenShift, modifier = Modifier.fillMaxWidth()) {
-            Text("Shift…")
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = TerminalCorner,
+            colors = CardDefaults.cardColors(
+                containerColor = if (clockedIn) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                },
+            ),
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    if (clockedIn) "Shift: clocked in" else "Shift: not clocked in",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = if (clockedIn) {
+                        MaterialTheme.colorScheme.onPrimaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                )
+                Text(
+                    "Tap Shift to start or end your shift.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
 
-        Spacer(Modifier.height(8.dp))
-        Text("Sphere", fontSize = 22.sp)
+        TerminalSecondaryButton(text = "Shift…", onClick = onOpenShift)
+
+        Spacer(Modifier.height(4.dp))
+        Text("Sphere", style = MaterialTheme.typography.headlineMedium)
 
         if (hasActiveSession) {
-            Button(onClick = onPicking, modifier = Modifier.fillMaxWidth()) {
-                Text("Continue picking", fontSize = 20.sp)
-            }
+            TerminalPrimaryButton(text = "Continue picking", onClick = onPicking)
             Text(
                 "You have an unfinished pick session.",
-                fontSize = 13.sp,
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else {
-            Button(onClick = onPicking, modifier = Modifier.fillMaxWidth()) {
-                Text("Picking", fontSize = 20.sp)
-            }
+            TerminalPrimaryButton(text = "Picking", onClick = onPicking)
         }
 
-        Spacer(Modifier.height(16.dp))
-        Button(onClick = onLogout, modifier = Modifier.fillMaxWidth()) {
-            Text("Logout")
-        }
+        Spacer(Modifier.weight(1f))
+        TerminalDangerButton(text = "Logout", onClick = onLogout)
     }
 }
 
@@ -236,40 +261,45 @@ private fun HomeScreen(
 private fun TaskListScreen(
     tasks: List<com.wms.terminal.data.AvailableTaskDto>,
     onClaim: (String) -> Unit,
+    onRefresh: () -> Unit,
     onBack: () -> Unit,
 ) {
-    Column {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         ScreenHeader(title = "Micro-tasks", onBack = onBack)
-        LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
-            items(tasks) { task ->
-                Button(
-                    onClick = { onClaim(task.taskId) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                ) {
-                    Column {
-                        Text(task.taskNumber, fontSize = 18.sp)
-                        Text("${task.itemCount} lines · ${task.totalQuantity}", fontSize = 14.sp)
-                    }
+        TerminalSecondaryButton(text = "Refresh", onClick = onRefresh)
+
+        if (tasks.isEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = TerminalCorner,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                ),
+            ) {
+                Text(
+                    "No available tasks.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(20.dp),
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                items(tasks) { task ->
+                    TaskCard(
+                        title = task.taskNumber,
+                        subtitle = "${task.itemCount} lines · qty ${task.totalQuantity}",
+                        onClick = { onClaim(task.taskId) },
+                    )
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun ScreenHeader(title: String, onBack: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-        }
-        Text(title, fontSize = 24.sp)
     }
 }
 
@@ -283,7 +313,7 @@ private fun PickingScreen(
     onBack: () -> Unit,
 ) {
     if (session == null) {
-        Text("No active session")
+        Text("No active session", style = MaterialTheme.typography.bodyLarge)
         return
     }
 
@@ -292,7 +322,6 @@ private fun PickingScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         ScreenHeader(title = "Picking", onBack = onBack)
-
         PickingMeta(session)
 
         val scanKey = "${session.step}:${session.locationCode}:${session.productSku}"
@@ -318,41 +347,10 @@ private fun PickingMeta(session: com.wms.terminal.data.SessionDto) {
     if (parts.isNotEmpty()) {
         Text(
             parts.joinToString(" · "),
-            fontSize = 13.sp,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
-}
-
-@Composable
-private fun StepTitle(text: String) {
-    Text(
-        text,
-        fontSize = 14.sp,
-        fontWeight = FontWeight.Medium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        letterSpacing = 0.5.sp,
-    )
-}
-
-@Composable
-private fun MainValue(text: String) {
-    Text(
-        text,
-        fontSize = 40.sp,
-        fontWeight = FontWeight.Bold,
-        lineHeight = 44.sp,
-        modifier = Modifier.fillMaxWidth(),
-    )
-}
-
-@Composable
-private fun ContextInfo(label: String, value: String) {
-    Text(
-        "$label  $value",
-        fontSize = 13.sp,
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-    )
 }
 
 @Composable
@@ -369,6 +367,8 @@ private fun ScanInput(
             label = { Text(label) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
+            shape = TerminalCorner,
+            textStyle = MaterialTheme.typography.bodyLarge,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = {
                 if (value.isNotBlank()) {
@@ -381,9 +381,25 @@ private fun ScanInput(
 }
 
 @Composable
+private fun StepCard(content: @Composable () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = TerminalCorner,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            content = { content() },
+        )
+    }
+}
+
+@Composable
 private fun ContainerStep(scanKey: String, onScan: (String) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        StepTitle("CONTAINER")
+    StepCard {
+        StepLabel("Container")
         MainValue("Scan sticker")
         ScanInput(scanKey = scanKey, label = "Container barcode", onSubmit = onScan)
     }
@@ -391,8 +407,8 @@ private fun ContainerStep(scanKey: String, onScan: (String) -> Unit) {
 
 @Composable
 private fun LocationStep(locationCode: String?, scanKey: String, onScan: (String) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        StepTitle("LOCATION")
+    StepCard {
+        StepLabel("Location")
         MainValue(locationCode?.ifBlank { "—" } ?: "—")
         ScanInput(scanKey = scanKey, label = "Scan location barcode", onSubmit = onScan)
     }
@@ -404,10 +420,9 @@ private fun SkuStep(
     scanKey: String,
     onScan: (String) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        ContextInfo("Location", session.locationCode?.ifBlank { "—" } ?: "—")
-        Spacer(Modifier.height(4.dp))
-        StepTitle("PRODUCT")
+    StepCard {
+        ContextLine("Location", session.locationCode?.ifBlank { "—" } ?: "—")
+        StepLabel("Product")
         MainValue(session.productSku?.ifBlank { "—" } ?: "—")
         ScanInput(scanKey = scanKey, label = "Scan product barcode", onSubmit = onScan)
     }
@@ -420,37 +435,32 @@ private fun QuantityStep(
     onWillPickChange: (String) -> Unit,
     onConfirmQty: () -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        ContextInfo("Location", session.locationCode?.ifBlank { "—" } ?: "—")
-        ContextInfo("SKU", session.productSku?.ifBlank { "—" } ?: "—")
-
-        Spacer(Modifier.height(8.dp))
-        StepTitle("QUANTITY")
+    StepCard {
+        ContextLine("Location", session.locationCode?.ifBlank { "—" } ?: "—")
+        ContextLine("SKU", session.productSku?.ifBlank { "—" } ?: "—")
+        StepLabel("Quantity")
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     "To pick",
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     formatQtyDisplay(session.quantityRemaining),
-                    fontSize = 40.sp,
+                    style = MaterialTheme.typography.displayLarge,
                     fontWeight = FontWeight.Bold,
                 )
             }
-            Column(
-                modifier = Modifier.weight(1f),
-                horizontalAlignment = Alignment.End,
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     "Picking",
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.End,
@@ -460,6 +470,7 @@ private fun QuantityStep(
                     onValueChange = onWillPickChange,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
+                    shape = TerminalCorner,
                     textStyle = MaterialTheme.typography.headlineLarge.copy(
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.End,
@@ -475,27 +486,22 @@ private fun QuantityStep(
 
         Text(
             "Change only if picking less than required.",
-            fontSize = 13.sp,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
-        Button(
-            onClick = onConfirmQty,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text("Confirm pick", fontSize = 18.sp)
-        }
+        TerminalPrimaryButton(text = "Confirm pick", onClick = onConfirmQty)
     }
 }
 
 @Composable
 private fun BufferStep(scanKey: String, onScan: (String) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        StepTitle("BUFFER")
+    StepCard {
+        StepLabel("Buffer")
         MainValue("b-1-acc")
         Text(
             "Also: b-2-acc · b-3-acc",
-            fontSize = 14.sp,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         ScanInput(scanKey = scanKey, label = "Scan buffer barcode", onSubmit = onScan)
@@ -504,17 +510,19 @@ private fun BufferStep(scanKey: String, onScan: (String) -> Unit) {
 
 @Composable
 private fun CompletedStep() {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text("Done", fontSize = 40.sp, fontWeight = FontWeight.Bold)
-        Text(
-            "Returning to task list…",
-            fontSize = 14.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+    StepCard {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text("Done", style = MaterialTheme.typography.displayLarge)
+            Text(
+                "Returning to task list…",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
