@@ -1,12 +1,12 @@
 # 4. Bezpieczeństwo i role (RBAC)
 
-> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: _[TODO]_
+> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: 2026-08-31
 
 ## 4.1. Model autoryzacji
 
-- **Tokeny JWT** — wydawane przy logowaniu (`routers/auth.py`).
+- **Tokeny JWT** — wydawane przy logowaniu (`routers/auth.py`, `terminal_service.terminal_login`).
 - **Bearer token** — przekazywany w nagłówku `Authorization`.
-- **token_version** — unieważnianie sesji przy zmianie hasła/roli.
+- **token_version** (`users.token_version`) — pole `tv` w payload JWT; przy każdej zmianie hasła lub roli (`user_service`) wersja jest inkrementowana, co unieważnia wcześniejsze tokeny (`deps.get_current_user`).
 
 ## 4.2. Role użytkowników (UserRole)
 
@@ -29,9 +29,11 @@ Zob. `backend/app/models/enums.py` oraz `backend/app/core/deps.py` (`require_rol
 
 | Mechanizm | Plik | Opis |
 |-----------|------|------|
-| Rate limiting | `core/rate_limit.py` | Ograniczenie częstotliwości żądań |
-| CORS | `main.py` | Polityka cross-origin |
-| Seed guard | `core/seed_guard.py` | Ochrona demo-seed w produkcji |
+| Rate limiting | `core/rate_limit.py` | Limit logowań (domyślnie 10/min/IP); `/auth/login` i `/terminal/login` |
+| CORS | `main.py` | Polityka cross-origin (`settings.CORS_ORIGINS`) |
+| Seed guard | `core/seed_guard.py` | Blokada `seed` w `APP_ENV=production` bez `ALLOW_SEED=1` |
+| Symulacja | `config.py`, `app_settings_service.py` | Domyślnie wyłączona w produkcji (`SIMULATION_ENABLED=false`) |
+| Nagłówki HTTP | `frontend/nginx.conf` | `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` (prod) |
 
 ## 4.5. WebSocket
 
