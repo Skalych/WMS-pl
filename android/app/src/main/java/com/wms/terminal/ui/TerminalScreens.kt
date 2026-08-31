@@ -498,12 +498,7 @@ private fun QuantityStep(
 private fun BufferStep(scanKey: String, onScan: (String) -> Unit) {
     StepCard {
         StepLabel("Buffer")
-        MainValue("b-1-acc")
-        Text(
-            "Also: b-2-acc · b-3-acc",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        MainValue("Scan buffer")
         ScanInput(scanKey = scanKey, label = "Scan buffer barcode", onSubmit = onScan)
     }
 }
