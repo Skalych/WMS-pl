@@ -1,6 +1,6 @@
 # 4. Bezpieczeństwo i role (RBAC)
 
-> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: _[TODO]_
+> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: 2026-09-01
 
 ## 4.1. Model autoryzacji
 
@@ -23,7 +23,9 @@ Zob. `backend/app/models/enums.py` oraz `backend/app/core/deps.py` (`require_rol
 
 - `get_current_user` — uwierzytelnianie na podstawie JWT.
 - `require_roles(...)` — ograniczenie endpointów według ról.
-- Przykład: `terminal.py` — dostęp dla PICKER, PACKER_DISPATCHER, ADMIN_MANAGER.
+- `terminal.py` — `TERMINAL_ACCESS`: PICKER, PACKER_DISPATCHER, ADMIN_MANAGER.
+- `packer.py` — `PACKER_ACCESS`: PACKER_DISPATCHER, ADMIN_MANAGER.
+- `POST /users/shift/end-all` — wyłącznie ADMIN_MANAGER.
 
 ## 4.4. Dodatkowe mechanizmy
 

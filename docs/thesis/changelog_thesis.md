@@ -18,6 +18,15 @@ Krótkie wpisy do rozdziału «Postęp prac» / «Implementacja». Nowe wpisy do
 
 ## Wpisy
 
+### 2026-09-01 — Terminal kompletacji, fale częściowe, konteneryzacja prod
+
+- **Infrastruktura** — `docker-compose.prod.yml`, Dockerfile backend/frontend, nginx SPA z proxy `/api/v1`.
+- **WMS core** — częściowe fale (`PARTIALLY_IN_WAVE`, `allocated_quantity`), rezerwacje stanów, FIFO claim zadań, anulowanie fal.
+- **Terminal** — `pick_sessions`, `containers`, `issued_container_labels`; API `/terminal/*` i `/packer/*`; wznowienie sesji po restarcie; status zmiany na terminalu.
+- **Frontend** — rozwijane micro-tasks na `Waves.tsx`, strona `PackerLabels`, `end-all-shifts`, raporty zmian.
+- **Android** — aplikacja terminala w `android/` (Kotlin, Compose, Zebra DataWedge).
+- Zaktualizowano: `01_architecture.md`, `02_database.md`, `03_modules_logic.md`, `04_security_roles.md`.
+
 ### 2026-08-29 — Korekta terminologii: praca inżynierska
 
 - Zastąpiono określenie «praca dyplomowa» → «praca inżynierska» w README i changelog.
