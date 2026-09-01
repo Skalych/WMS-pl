@@ -12,9 +12,11 @@ import {
   LayoutGrid,
   List,
   LogOut,
+  UserPlus,
 } from 'lucide-react';
 import { BreakSummary, UserRole, WorkerStatus } from '../types';
 import EmployeeProfileModal from '../components/EmployeeProfileModal';
+import RegisterUserModal from '../components/RegisterUserModal';
 import WorkerLiveCard from '../components/WorkerLiveCard';
 import { rowStaggerStyle } from '../utils/rowStagger';
 
@@ -124,6 +126,8 @@ export default function Employees() {
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<Set<string>>(new Set());
   const [profileModalEmployee, setProfileModalEmployee] = useState<EmployeeView | null>(null);
   const [isEndingAllShifts, setIsEndingAllShifts] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [registerSuccessMessage, setRegisterSuccessMessage] = useState('');
 
   const fetchEmployees = async () => {
     try {
@@ -293,6 +297,18 @@ export default function Employees() {
         </div>
 
         <div className="header-actions">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              setRegisterSuccessMessage('');
+              setShowRegisterModal(true);
+            }}
+          >
+            <UserPlus size={16} />
+            {t('registerUser.addEmployee')}
+          </button>
+
           {onShiftCount > 0 && (
             <button
               type="button"
@@ -330,6 +346,10 @@ export default function Employees() {
           </div>
         </div>
       </header>
+
+      {registerSuccessMessage && (
+        <div className="alert alert-success">{registerSuccessMessage}</div>
+      )}
 
       <div className="kpi-strip">
         <button type="button" className={kpiItemClass('online')} onClick={() => toggleStatFilter('online')}>
@@ -585,6 +605,15 @@ export default function Employees() {
           }}
         />
       )}
+
+      <RegisterUserModal
+        isOpen={showRegisterModal}
+        onClose={() => setShowRegisterModal(false)}
+        onSuccess={() => {
+          void fetchEmployees();
+          setRegisterSuccessMessage(t('registerUser.success'));
+        }}
+      />
     </div>
   );
 }
