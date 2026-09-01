@@ -18,6 +18,16 @@ Krótkie wpisy do rozdziału «Postęp prac» / «Implementacja». Nowe wpisy do
 
 ## Wpisy
 
+### 2026-09-01 — Operacje magazynowe: partial waves, terminal, etykiety, prod stack
+
+- **Partial waves i rezerwacja stanów** — migracja `b1c2d3e4f5a6`, `allocated_quantity`, status `PARTIALLY_IN_WAVE`, CHECK constraints na `inventory_balances`.
+- **Terminal kompletacji** — modele `Container`, `PickSession`, enum `PickStep`; router `/terminal/*`, serwis `pick_session_service` (claim FIFO, sesja krokowa, wznowienie po restarcie).
+- **Etykiety kontenerów** — `IssuedContainerLabel`, router `/packer/*`, strona `PackerLabels.tsx`.
+- **Anulowanie fal** — `POST /waves/{id}/cancel`, UI na stronie Waves (rozwijane micro-tasks).
+- **Zmiany pracowników** — `end-all-shifts`, wspólny floor status, raporty zmian (seed + UI).
+- **Infrastruktura prod** — `docker-compose.prod.yml`, `frontend/nginx.conf` (reverse proxy API/WS).
+- Zaktualizowano: `01_architecture.md`, `02_database.md`, `03_modules_logic.md`, `04_security_roles.md`.
+
 ### 2026-08-29 — Korekta terminologii: praca inżynierska
 
 - Zastąpiono określenie «praca dyplomowa» → «praca inżynierska» w README i changelog.
