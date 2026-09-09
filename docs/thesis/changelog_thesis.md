@@ -18,6 +18,16 @@ Krótkie wpisy do rozdziału «Postęp prac» / «Implementacja». Nowe wpisy do
 
 ## Wpisy
 
+### 2026-08-29 — Synchronizacja po tygodniu rozwoju (push main)
+
+- **Bezpieczeństwo:** `SECRET_KEY` z env, CORS allowlist, rate limit logowania, `token_version` + unieważnianie JWT, seed guard (`ALLOW_SEED`, blokada production).
+- **BD:** migracje `warehouse_shifts`, `token_version`, partial waves (`PARTIALLY_IN_WAVE`, `allocated_quantity`, constrainty inventory).
+- **Moduły:** partial waves + rezerwacja stanów, FIFO claim zadań terminala, generator raportów zmian (PDF/DOCX/HTML), `end-all-shifts`, backfill historycznych zmian magazynowych.
+- **Infra:** `docker-compose.prod.yml`, Dockerfile backend/frontend, CI GitHub Actions; skrypt `wms.command` zamiast Makefile.
+- **Frontend:** strony `/reports`, `/reports/:shiftId`, odświeżony layout tabel (Dashboard, Employees, Waves, Inventory, Orders).
+- **Seed:** 7 historycznych `WarehouseShift` z metrykami demo dla raportów.
+- Zaktualizowano: `01_architecture.md`, `02_database.md`, `03_modules_logic.md`, `04_security_roles.md`.
+
 ### 2026-08-29 — Korekta terminologii: praca inżynierska
 
 - Zastąpiono określenie «praca dyplomowa» → «praca inżynierska» w README i changelog.
