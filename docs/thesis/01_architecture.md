@@ -1,6 +1,6 @@
 # 1. Architektura systemu WMS Nexus
 
-> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: _[TODO]_
+> Sekcja utrzymywana automatycznie. Ostatnia aktualizacja: _2026-08-30_
 
 ## 1.1. Przeznaczenie systemu
 
@@ -10,18 +10,19 @@ WMS Nexus — system zarządzania magazynem z kompletacją falową (wave batch p
 
 | Warstwa | Technologie |
 |---------|-------------|
-| Frontend | React 18, TypeScript, Vite, vanilla CSS |
+| Frontend (panel) | React 18, TypeScript, Vite, vanilla CSS |
+| Terminal mobilny | Android (Kotlin, Jetpack Compose), skaner Zebra — `android/` |
 | Backend | FastAPI, SQLAlchemy 2.0 (async), Alembic |
 | Baza danych | PostgreSQL 16 |
-| Autoryzacja | JWT + RBAC |
-| Infrastruktura | Docker Compose, nginx (frontend produkcyjny) |
+| Autoryzacja | JWT + RBAC (`token_version` w payload) |
+| Infrastruktura | Docker Compose (`docker-compose.yml` dev, `docker-compose.prod.yml` prod), nginx (SPA + reverse proxy API/WS) |
 
 ## 1.3. Architektura wysokiego poziomu
 
 ```
-[Przeglądarka / terminal] → [Frontend Vite] → [FastAPI REST + WebSocket]
-                                                      ↓
-                                                [PostgreSQL]
+[Przeglądarka] → [Frontend Vite / nginx] ──proxy──→ [FastAPI REST + WebSocket]
+[Android terminal] ───────────────────────────────→         ↓
+                                                      [PostgreSQL]
 ```
 
 ## 1.4. Struktura repozytorium
@@ -33,8 +34,10 @@ WMS Nexus — system zarządzania magazynem z kompletacją falową (wave batch p
 | `backend/app/models/` | Modele ORM SQLAlchemy |
 | `backend/app/schemas/` | Schematy Pydantic żądań/odpowiedzi |
 | `backend/alembic/` | Migracje BD |
-| `frontend/src/pages/` | Strony UI |
+| `frontend/src/pages/` | Strony UI panelu administracyjnego |
 | `frontend/src/api/` | Klient API |
+| `android/app/src/main/java/com/wms/terminal/` | Aplikacja terminala kompletacji (Android) |
+| `docker-compose.prod.yml` | Stos produkcyjny: Postgres + backend + frontend/nginx |
 
 ## 1.5. Wzorce architektoniczne
 
@@ -45,4 +48,12 @@ WMS Nexus — system zarządzania magazynem z kompletacją falową (wave batch p
 
 ## 1.6. Interakcja komponentów
 
-_[TODO: dodać diagram przepływów dla inbound → inventory → waves → terminal]_
+Główny przepływ kompletacji fali:
+
+1. **Inbound** — przyjęcie towaru, putaway → `inventory_balances`.
+2. **Orders / Waves** — tworzenie fali z rezerwacją stanów (`reserved_quantity`, partial waves) → `micro_tasks`.
+3. **Packer** — generowanie kodów kontenerów (`issued_container_labels`) do druku.
+4. **Terminal (Android)** — claim zadania, sesja `pick_sessions`, skan kontenera → lokalizacja → SKU → ilość → bufor.
+5. **Shift live** — WebSocket (`shift_ws`) publikuje metryki zmiany po operacjach pickera.
+
+_[TODO: doprecyzować diagram dla sortowania i dispatch po buforze]_
